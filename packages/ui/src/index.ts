@@ -4,4 +4,20 @@
 // Does NOT: Re-export framework-specific helpers or app-level layouts.
 
 export { Button, type ButtonProps, type ButtonVariant } from './Button';
-export { colors, space, radius, type Tokens } from './tokens';
+export {
+  colors,
+  text,
+  border,
+  space,
+  radius,
+  typography,
+  motion,
+  type Tokens,
+  type Colors,
+  type Text,
+  type Border,
+  type Space,
+  type Radius,
+  type Typography,
+  type Motion,
+} from './tokens';
