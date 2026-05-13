@@ -75,17 +75,24 @@ pnpm db:gen-types               # regen types from local stack (relay → supaba
 
 ## Deploy Configuration (configured by /setup-deploy)
 
-- Platform: <fill in>
-- Production URL: <fill in>
-- Deploy workflow: <fill in>
-- Deploy status command: <fill in>
-- Merge method: <fill in — typically squash>
-- Project type: <fill in>
-- Post-deploy health check: <fill in>
+- Platform: Vercel (team `homeos`, project `home-os`, `prj_4dMkbHkxYohqABcKt1SwaprZv3JM`)
+- Production URL: https://home-os.vercel.app _(inferred — confirm after first successful deploy; Vercel may allocate `home-os-<team-hash>.vercel.app` if the bare alias is reserved)_
+- Deploy workflow: Vercel auto-deploys on push — preview URL on every PR, production on merge to `main`. Supplementary GitHub Actions: `deploy-migrations.yml` (Supabase schema push) + `deploy-functions.yml` (Supabase edge fns) + `keepalive.yml` (weekly Supabase ping).
+- Deploy status command: `pnpm exec vercel ls --token "$VERCEL_TOKEN" --scope homeos` (deployments) or `pnpm exec vercel inspect home-os --token "$VERCEL_TOKEN" --scope homeos` (project meta).
+- Merge method: squash (linear history, branch protection enforces)
+- Project type: web app — Next.js 16 PWA hosted on Vercel
+- Post-deploy health check: `curl -sf https://home-os.vercel.app/ -o /dev/null -w "%{http_code}"` expects `200`.
 
 ### Custom deploy hooks
 
-- Pre-merge: <none, or specify>
-- Deploy trigger: <e.g. automatic on push to main>
-- Deploy status: <e.g. poll production URL>
-- Health check: <URL>
+- Pre-merge: none (CI fast-job covers typecheck + tests; slow-job uncomments after Phase 1c/1g when integration / E2E specs land)
+- Deploy trigger: automatic on push to `main` via Vercel GitHub App
+- Deploy status: poll production URL until it returns 200 with the new build hash header
+- Health check: https://home-os.vercel.app/
+
+### Vercel dashboard follow-ups (operator)
+
+- Set **Framework Preset** → `Next.js` (currently `Other` — affects build cache + image optimization)
+- Set **Root Directory** → `apps/web` (currently `.` — required for monorepo build to find `next.config.ts`)
+- Set **Install Command** → `pnpm install --frozen-lockfile` (optional but explicit)
+- Establish **GitHub Login Connection** at vercel.com/account/login-connections so the project can auto-import + auto-deploy on push (initial `vercel link` reported "Failed to link meirmsn/home-os. You need to add a Login Connection")
