@@ -86,3 +86,10 @@ create table public.usage_counters (
   constraint usage_counters_non_negative
     check (triage_session_count >= 0 and card_count >= 0)
 );
+
+-- ROLLBACK:
+-- drop table if exists public.usage_counters;
+-- drop table if exists public.card_photos;
+-- drop table if exists public.triage_conversations;
+-- drop table if exists public.cards;
+-- drop table if exists public.users;

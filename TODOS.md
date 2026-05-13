@@ -19,6 +19,11 @@ Organized by version to mirror `PRODUCT-ROADMAP.md`:
   - **How**: change `--dport 54321` → `--dport 54421` and `--dport 54322` → `--dport 54422` in `init-firewall.sh` (lines 233-234). Re-run `sudo /usr/local/bin/init-firewall.sh` in the workspace, or `Reopen in Container` to re-apply.
   - **Where**: `.devcontainer/init-firewall.sh:213-237`. Discovered while implementing `supabase-schema-and-rls` PR — the isolation E2E parses cleanly but cannot reach the local stack from workspace because of the stale port allowlist.
 
+- **firewall-google-fonts** — Add `fonts.googleapis.com` to `.devcontainer/firewall-extra-domains` so local `pnpm turbo run build` can fetch the Inter font at build time.
+  - **Why**: `apps/web/app/layout.tsx` uses `next/font/google` for `Inter`, which fetches the font CSS from `https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap` during Turbopack build. The workspace's egress firewall does not allow `fonts.googleapis.com`, so local builds fail with `Failed to fetch 'Inter' from Google Fonts`. CI builds (Vercel) succeed because they run outside this firewalled container — CI is the canonical enforcement surface for build verification.
+  - **How**: append `fonts.googleapis.com` (and likely `fonts.gstatic.com`, which serves the actual woff2 files) to `.devcontainer/firewall-extra-domains`, then `sudo /usr/local/bin/init-firewall.sh` to re-apply.
+  - **Where**: `.devcontainer/firewall-extra-domains`. Discovered while running pre-ship Gate 4 on `supabase-schema-and-rls` PR.
+
 <!--
 Each entry:
 

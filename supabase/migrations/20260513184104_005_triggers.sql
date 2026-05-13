@@ -48,3 +48,9 @@ create trigger cards_updated_at
   before update on public.cards
   for each row
   execute function public.set_updated_at();
+
+-- ROLLBACK:
+-- drop trigger if exists cards_updated_at on public.cards;
+-- drop function if exists public.set_updated_at();
+-- drop trigger if exists on_auth_user_created on auth.users;
+-- drop function if exists public.create_public_user_profile();

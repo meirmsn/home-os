@@ -45,3 +45,13 @@ create policy card_photos_delete_own on storage.objects
     bucket_id = 'card-photos'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- ROLLBACK:
+-- drop policy if exists card_photos_delete_own on storage.objects;
+-- drop policy if exists card_photos_update_own on storage.objects;
+-- drop policy if exists card_photos_insert_own on storage.objects;
+-- drop policy if exists card_photos_select_own on storage.objects;
+-- delete from storage.buckets where id = 'card-photos';
+-- Note: rolling back the bucket also removes any objects it contains. In a
+-- non-empty bucket, the operator must first empty it (or accept the loss);
+-- the migration is destructive on rollback.

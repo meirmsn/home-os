@@ -58,3 +58,12 @@ create type triage_role as enum (
   'user',
   'assistant'
 );
+
+-- ROLLBACK:
+-- drop type if exists triage_role;
+-- drop type if exists photo_slot;
+-- drop type if exists touchpoint_type;
+-- drop type if exists contractor_tag;
+-- drop type if exists severity;
+-- drop type if exists system_tag;
+-- drop type if exists card_state;

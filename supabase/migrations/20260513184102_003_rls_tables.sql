@@ -69,3 +69,30 @@ create policy usage_counters_update_own on public.usage_counters
   for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy usage_counters_delete_own on public.usage_counters
   for delete using (auth.uid() = user_id);
+
+-- ROLLBACK:
+-- drop policy if exists usage_counters_delete_own on public.usage_counters;
+-- drop policy if exists usage_counters_update_own on public.usage_counters;
+-- drop policy if exists usage_counters_insert_own on public.usage_counters;
+-- drop policy if exists usage_counters_select_own on public.usage_counters;
+-- alter table public.usage_counters disable row level security;
+-- drop policy if exists card_photos_delete_own on public.card_photos;
+-- drop policy if exists card_photos_update_own on public.card_photos;
+-- drop policy if exists card_photos_insert_own on public.card_photos;
+-- drop policy if exists card_photos_select_own on public.card_photos;
+-- alter table public.card_photos disable row level security;
+-- drop policy if exists triage_conversations_delete_own on public.triage_conversations;
+-- drop policy if exists triage_conversations_update_own on public.triage_conversations;
+-- drop policy if exists triage_conversations_insert_own on public.triage_conversations;
+-- drop policy if exists triage_conversations_select_own on public.triage_conversations;
+-- alter table public.triage_conversations disable row level security;
+-- drop policy if exists cards_delete_own on public.cards;
+-- drop policy if exists cards_update_own on public.cards;
+-- drop policy if exists cards_insert_own on public.cards;
+-- drop policy if exists cards_select_own on public.cards;
+-- alter table public.cards disable row level security;
+-- drop policy if exists users_delete_own on public.users;
+-- drop policy if exists users_update_own on public.users;
+-- drop policy if exists users_insert_own on public.users;
+-- drop policy if exists users_select_own on public.users;
+-- alter table public.users disable row level security;
