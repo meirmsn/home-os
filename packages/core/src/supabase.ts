@@ -20,7 +20,10 @@ export interface CoreConfig {
  * in .devcontainer/.env. Matched by `assertNotProdUrlInTestEnv` to catch
  * tests that would dial prod.
  */
-const PRODUCTION_PROJECT_REF = 'PROJECT_REF_PLACEHOLDER';
+// Type widened to `string` so TS doesn't narrow the literal and flag the
+// self-disable sentinel comparison below as "never true". The const is still
+// effectively constant at runtime.
+const PRODUCTION_PROJECT_REF: string = 'kxhxbbljgunpjfhivccb';
 
 /**
  * Throw when a test-env caller would instantiate a Supabase client pointing
@@ -32,7 +35,10 @@ const PRODUCTION_PROJECT_REF = 'PROJECT_REF_PLACEHOLDER';
  */
 export function assertNotProdUrlInTestEnv(url: string): void {
   if (process.env.NODE_ENV !== 'test') return;
-  if (PRODUCTION_PROJECT_REF === 'PROJECT_REF_PLACEHOLDER') return;
+  // Sentinel literal — must NOT match PRODUCTION_PROJECT_REF after substitution.
+  // If the skill's sed substitutes both lines (the original bug), the guard
+  // self-disables permanently. 'UNSCAFFOLDED' is the stable sentinel.
+  if (PRODUCTION_PROJECT_REF === 'UNSCAFFOLDED') return;
   if (!url.includes(`${PRODUCTION_PROJECT_REF}.supabase.co`)) return;
   throw new Error(
     `Refusing to instantiate a Supabase client pointing at the production ` +
