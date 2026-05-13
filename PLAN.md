@@ -10,9 +10,7 @@ Forward-looking plan at the feature/PR grain.
 
 ## Active
 
-| Branch                 | Spec                            | Notes                                                                                                                                                                                                                                                                                 |
-| ---------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `feat/auth-magic-link` | `specs/auth-magic-link/spec.md` | Magic-link sign-in/up, user profile on first session, `/login`, post-auth `/(app)` shell, sign-out. Extends existing `apps/web/middleware.ts` + `apps/web/lib/supabase/*`. Spec source: `.gstack/eng-review-home-os-2026-05-01.md` § Architecture (Auth). PRODUCT-ROADMAP.md § v0 #2. |
+_No work in progress._
 
 ## Planned
 
