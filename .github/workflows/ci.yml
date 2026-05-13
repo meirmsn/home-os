@@ -1,0 +1,185 @@
+name: CI
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches-ignore: [main]
+
+jobs:
+  fast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: gitleaks
+        run: |
+          # GITLEAKS_VERSION source-of-truth lives in .devcontainer/compose.yml
+          # (YAML, unquoted) under the workspace service's `args:` block. The
+          # sed strips both the `KEY: ` prefix and any quoting / whitespace so
+          # this works regardless of the YAML quoting style.
+          GITLEAKS_VERSION=$(grep 'GITLEAKS_VERSION:' .devcontainer/compose.yml | head -1 | sed 's/.*: //;s/[" ]//g')
+          if [ -z "$GITLEAKS_VERSION" ]; then echo "ERROR: GITLEAKS_VERSION not found in .devcontainer/compose.yml"; exit 1; fi
+          wget -q "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -O /tmp/gitleaks.tar.gz
+          tar xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          /tmp/gitleaks detect --source . --redact --log-opts="${{ github.event.pull_request.base.sha || 'HEAD~1' }}..HEAD"
+
+      - run: pnpm turbo run lint typecheck test:unit build
+
+    env:
+      # Public values resolved from GH Variables (post-security-posture-cleanup):
+      # SUPABASE_URL = http://127.0.0.1:54321 (CI local stack — fast-job doesn't dial,
+      #   build just needs the env var present).
+      # SUPABASE_ANON_KEY = published local-stack default JWT.
+      # NEXT_PUBLIC_POSTHOG_KEY = public by NEXT_PUBLIC_* convention.
+      # See /ak-new-project § Security Posture for the rationale.
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+      NEXT_PUBLIC_POSTHOG_KEY: ${{ vars.NEXT_PUBLIC_POSTHOG_KEY }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+  # Slow job — runs only on PRs to main, after fast passes.
+  # Phase 1c: add supabase start + integration tests + type drift check
+  # Phase 1g: add Playwright E2E
+  #
+  # When uncommenting: source SUPABASE_URL / SUPABASE_ANON_KEY /
+  # SUPABASE_SERVICE_ROLE_KEY from the live local-stack via
+  # `supabase status -o env >> $GITHUB_ENV` (after `supabase start`); these
+  # match the GH Variables by design (published local-stack defaults). Add
+  # a defense-in-depth step that decodes $SERVICE_ROLE_KEY and asserts
+  # `iss == "supabase-demo"` + `role == "service_role"` — catches a
+  # misconfiguration where someone wires `secrets.SUPABASE_SERVICE_ROLE_KEY`
+  # (which would carry the prod admin key) instead of the env var derived
+  # from the local stack.
+  #
+  # IMPORTANT — supabase_edge_runtime startup flake retry (codified from
+  # lalista PR 26 incident, 2026-04-26): the `supabase_edge_runtime_*`
+  # container occasionally fails health-check on cold start in GH-Actions
+  # runners (visible as "Error status 502" in startup logs). When this
+  # happens, every test that calls an edge function fails with "Couldn't
+  # add. Check your connection and try again." or similar — the test code
+  # is correct; the local stack just isn't fully healthy. Without retry,
+  # the run fails red on a transient infra issue. Add a health-check
+  # step after `supabase start` that polls the edge-functions endpoint
+  # and retries the start ONCE on 502/timeout. ~30s extra in the unhappy
+  # path; zero cost in the happy path.
+  #
+  # SKIP-ON-DOCS-ONLY FILTER — uncomment the `changes:` job below TOGETHER
+  # with the `slow:` job. The slow-job's `needs: [fast, changes]` and
+  # `if: … needs.changes.outputs.runtime == 'true'` reference the upstream
+  # `changes:` job; uncommenting `slow:` without `changes:` produces a
+  # dangling `needs:` reference that fails at YAML-load time. The two
+  # stubs ride the same uncomment ritual on purpose — see
+  # kit/docs/guide/conventions.md § Slow-Job Lifecycle § Skip-on-docs-only
+  # filter for the full rationale (D1: job-level `paths-ignore:` is
+  # invalid YAML; D2: ignore list; branch-protection `skipped`-as-success
+  # contract). Docs-only diffs (matching `*.md`, `specs/**`, `PLAN.md`,
+  # `BUILD-LOG.md`, `TODOS.md`, `.gstack/**`, `.devshop/**`) skip the
+  # ~8–10min slow-job; `changes:` always succeeds (~5s) so it stays a
+  # non-required context.
+  #
+  # changes:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     runtime: ${{ steps.classify.outputs.runtime }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0  # required for `git diff base.sha...HEAD` (default depth-1 clone errors)
+  #     - id: classify
+  #       name: Classify diff (docs-only → runtime=false)
+  #       run: |
+  #         set -euo pipefail
+  #         # Three-dot diff = merge-base diff (the changes the PR introduces).
+  #         # Two-dot would diff against base's current tip and pick up unrelated commits.
+  #         changed_files=$(git diff --name-only "${{ github.event.pull_request.base.sha }}...HEAD" || true)
+  #         # Empty diff → runtime=true (safer default — run slow-job rather than silently skip).
+  #         if [ -z "$changed_files" ]; then
+  #           echo "Empty diff; defaulting runtime=true"
+  #           echo "runtime=true" >> "$GITHUB_OUTPUT"
+  #           exit 0
+  #         fi
+  #         # `*.md` (not `**/*.md`): bash `case` is pattern matching, not
+  #         # pathname expansion — inside `case`, `*` already matches `/`,
+  #         # so `*.md` covers both `CLAUDE.md` and `apps/web/README.md`.
+  #         # `shopt -s globstar` only affects globbing for filename
+  #         # expansion, NOT `case` semantics. `**/*.md` in `case` behaves
+  #         # like `*/*.md` and silently fails to match root-level markdown.
+  #         # Lalista hit this regression on PR #63 (2026-05-12). Do NOT
+  #         # "fix" this back to `**/*.md`.
+  #         runtime=false
+  #         while IFS= read -r path; do
+  #           [ -z "$path" ] && continue
+  #           case "$path" in
+  #             *.md) ;;
+  #             specs/**) ;;
+  #             PLAN.md) ;;
+  #             BUILD-LOG.md) ;;
+  #             TODOS.md) ;;
+  #             .gstack/**) ;;
+  #             .devshop/**) ;;
+  #             *)
+  #               runtime=true
+  #               break
+  #               ;;
+  #           esac
+  #         done <<< "$changed_files"
+  #         echo "runtime=$runtime" >> "$GITHUB_OUTPUT"
+  #
+  # slow:
+  #   if: github.event_name == 'pull_request' && needs.changes.outputs.runtime == 'true'
+  #   runs-on: ubuntu-latest
+  #   needs: [fast, changes]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     # ... pnpm/setup-node/install ...
+  #     - uses: supabase/setup-cli@v1
+  #     - name: Start local Supabase (with edge-runtime health-check retry)
+  #       run: |
+  #         set -e
+  #         start_supabase() {
+  #           supabase start --ignore-health-check
+  #           # Probe edge-functions endpoint for ~10s; expect 401/404 on the
+  #           # base path (means service is up, just no function at /), NOT 502.
+  #           for i in $(seq 1 10); do
+  #             code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 \
+  #               "http://127.0.0.1:54321/functions/v1/" 2>/dev/null || echo "000")
+  #             if [ "$code" = "401" ] || [ "$code" = "404" ]; then
+  #               echo "Edge runtime healthy (HTTP $code)"
+  #               return 0
+  #             fi
+  #             echo "Edge runtime probe $i/10 returned HTTP $code; waiting..."
+  #             sleep 3
+  #           done
+  #           echo "Edge runtime didn't pass health-check"
+  #           return 1
+  #         }
+  #         if ! start_supabase; then
+  #           echo "::warning::supabase_edge_runtime_workspace failed first health-check; restarting once"
+  #           supabase stop || true
+  #           start_supabase  # second attempt; if this fails, fail the job
+  #         fi
+  #         supabase status -o env >> "$GITHUB_ENV"
+  #   env:
+  #     SUPABASE_URL: ${{ vars.SUPABASE_URL }}                    # local stack
+  #     SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}          # local stack
+  #     SUPABASE_SERVICE_ROLE_KEY: ${{ vars.SUPABASE_SERVICE_ROLE_KEY }}  # local stack
+  #     # Re-export ANTHROPIC_API_KEY_QA (the GH Secret name) as ANTHROPIC_API_KEY
+  #     # for the local edge-function runtime (Deno.env.get('ANTHROPIC_API_KEY')).
+  #     # ANTHROPIC_API_KEY_PROD MUST NOT be wired here — CI runs against the
+  #     # local Supabase stack and should never burn prod billing. See
+  #     # /ak-new-project § Security Posture for the QA/PROD split rationale.
+  #     ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_QA }}     # QA-tier secret
