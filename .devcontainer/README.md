@@ -198,7 +198,7 @@ The `..` is relative to compose.yml's directory (`.devcontainer/`), so it resolv
 // ...plus a few more (turbo telemetry, gstack state dir, Playwright Chromium path)
 
 // AND, in compose.yml under services.workspace.environment:
-SUPABASE_URL: http://host.docker.internal:54321
+SUPABASE_URL: http://host.docker.internal:54421
 SUPABASE_ANON_KEY: <well-known supabase-local default JWT>
 SUPABASE_SERVICE_ROLE_KEY: <well-known supabase-local default JWT>
 ```
@@ -237,14 +237,14 @@ command:
   - sh
   - -c
   - |
-    socat -d TCP-LISTEN:54321,fork,reuseaddr,bind=127.0.0.1 TCP:host.docker.internal:54321 &
-    socat -d TCP-LISTEN:54322,fork,reuseaddr,bind=127.0.0.1 TCP:host.docker.internal:54322 &
+    socat -d TCP-LISTEN:54421,fork,reuseaddr,bind=127.0.0.1 TCP:host.docker.internal:54421 &
+    socat -d TCP-LISTEN:54422,fork,reuseaddr,bind=127.0.0.1 TCP:host.docker.internal:54422 &
     sleep 0.5
     supabase start
     exec /usr/local/bin/cmd-relay.mjs
 ```
 
-The runner holds the docker socket and a NARROW bind (only `<host>/supabase`, not the whole repo). `supabase start` spawns sibling containers (`supabase_db_<project>`, `supabase_kong_<project>`, etc.) on the HOST docker engine — those siblings bind ports 54321/54322 directly to the host. The socat tunnels work around supabase CLI's hardcoded-localhost healthcheck (the runner's loopback isn't where the spawned siblings are listening; host.docker.internal is). Workspace reaches the relay (port 9000) via compose-internal DNS as `supabase-runner:9000`; reaches the data plane (54321/54322) via `host.docker.internal:54321/54322` (Docker Desktop auto-resolves the hostname inside containers; macOS browser resolves it via the `127.0.0.1 host.docker.internal` `/etc/hosts` entry from "Getting started" Step 2).
+The runner holds the docker socket and a NARROW bind (only `<host>/supabase`, not the whole repo). `supabase start` spawns sibling containers (`supabase_db_<project>`, `supabase_kong_<project>`, etc.) on the HOST docker engine — those siblings bind ports 54421/54422 directly to the host. The socat tunnels work around supabase CLI's hardcoded-localhost healthcheck (the runner's loopback isn't where the spawned siblings are listening; host.docker.internal is). Workspace reaches the relay (port 9000) via compose-internal DNS as `supabase-runner:9000`; reaches the data plane (54421/54422) via `host.docker.internal:54421/54422` (Docker Desktop auto-resolves the hostname inside containers; macOS browser resolves it via the `127.0.0.1 host.docker.internal` `/etc/hosts` entry from "Getting started" Step 2).
 
 Full architecture + lifecycle table + smoke tests + debugging tree: see [`/devshop/kit/docs/guide/local-supabase-compose-isolation.md`](../../devshop/kit/docs/guide/local-supabase-compose-isolation.md).
 
@@ -271,7 +271,7 @@ The general pattern is: explicitly allow the things you trust, then block everyt
   - Processes on the container talking to each other
 - Host machine's local network
   - The script detects the host machine's local network range (e.g. `192.168.x.x`) and allows traffic to it. This lets the container reach your local machine and LAN resources without opening the broader internet
-- `host.docker.internal:54321/54322` (compose isolation — supabase data plane bound on the host by spawned siblings; resolved via `getent ahostsv4` to force IPv4 since iptables is IPv4-only and Docker Desktop's resolution can flip to IPv6 between restarts)
+- `host.docker.internal:54421/54422` (compose isolation — supabase data plane bound on the host by spawned siblings; resolved via `getent ahostsv4` to force IPv4 since iptables is IPv4-only and Docker Desktop's resolution can flip to IPv6 between restarts)
 - GitHub IP ranges (fetched dynamically from `api.github.com/meta`) + GitHub Actions artifact-storage Azure Blob shards
 - Specific domains: `registry.npmjs.org`, `api.anthropic.com`, `sentry.io`, `statsig.anthropic.com`, `statsig.com`, VS Code marketplace and update servers, Playwright CDNs, Vercel API + project domain (filled in by `/ak-new-project`), Sentry ingest endpoint (filled in by `/ak-new-project`), PostHog ingest, the project's `<ref>.supabase.co` data-plane host (anon-key data plane only — added by `/ak-new-project` Step 6)
 

@@ -5,10 +5,21 @@ paths = [
 ]
 regexTarget = "match"
 regexes = [
-  # Supabase anon key (public, embedded in client JS — not a secret)
+  # ENV-VAR NAMES — covers references in code that name a key without holding a value
   '''SUPABASE_ANON_KEY''',
-  # PostHog public project key (designed to be client-side)
   '''POSTHOG_KEY''',
-  # Sentry DSN (public, used in client error reporting)
   '''SENTRY_DSN''',
+  # VALUE PATTERNS — public-by-design values that may legitimately appear in
+  # committed config / scripts (e.g. CI workflow defaults, public docs).
+  # Supabase publishable key (`sb_publishable_*`) — anon-tier, public in the
+  # front-end bundle by design.
+  '''sb_publishable_[A-Za-z0-9_-]+''',
+  # Supabase JWT anon/service-role keys (legacy `eyJ*` format). Caveat: the
+  # service_role variant has admin privileges — keep it OUT of any committed
+  # file in practice. This regex doesn't distinguish role from payload.
+  '''eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]+''',
+  # PostHog public project key (`phc_*`) — client-side by design.
+  '''phc_[A-Za-z0-9]+''',
+  # Sentry DSN — public, embedded in front-end error reporter.
+  '''https://[A-Fa-f0-9]+@o[0-9]+\.ingest\.[a-z]+\.sentry\.io/[0-9]+''',
 ]

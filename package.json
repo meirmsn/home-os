@@ -1,5 +1,5 @@
 {
-  "name": "project-name",
+  "name": "home-os",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -42,7 +42,9 @@
       "esbuild",
       "@sentry/cli",
       "core-js",
-      "protobufjs",
+      "protobufjs"
+    ],
+    "ignoredBuiltDependencies": [
       "sharp",
       "unrs-resolver"
     ]

@@ -1,0 +1,100 @@
+@import 'tailwindcss';
+
+/* What:  Tailwind v4 design token registration for @home-os/web.
+   Why:   Mirrors packages/ui/src/tokens.ts so JSX components can use either
+          (Tailwind utility OR direct token import). Single source of truth
+          for the value lives in tokens.ts; this file restates the values as
+          CSS variables so Tailwind v4 can generate utilities (`bg-act-soon`,
+          `text-primary`, etc.). Source of truth for naming:
+          .gstack/design-review-home-os-2026-05-02.md
+   Does NOT: Generate components — chip / card variants ship per-feature. */
+
+@theme {
+  /* Backgrounds — dark warm charcoal ground */
+  --color-background: #1c1b18;
+  --color-background-raised: #242320;
+
+  /* Neutral palette */
+  --color-neutral-50: #f7f7f5;
+  --color-neutral-100: #eeecea;
+  --color-neutral-150: #e2e0dc;
+  --color-neutral-200: #c8c6c0;
+  --color-neutral-500: #8a8880;
+  --color-neutral-800: #2c2b27;
+
+  /* Severity — urgency without alarm */
+  --color-act-soon: #c4622d;
+  --color-watch: #a07c2e;
+  --color-note: #4a7b6f;
+
+  /* Resolved / active states */
+  --color-planned: #5c6bc0;
+  --color-monitor: #7b6ba8;
+
+  /* Semantic text on the appropriate ground */
+  --color-text-primary: var(--color-neutral-800);
+  --color-text-primary-inverse: #f0efeb;
+  --color-text-secondary: var(--color-neutral-500);
+  --color-text-secondary-inverse: #6b6a63;
+
+  /* Borders */
+  --color-border-default: var(--color-neutral-200);
+
+  /* Type family (Inter loaded via next/font in layout.tsx) */
+  --font-sans:
+    var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+
+  /* Type sizes — 4px grid */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-display: 32px;
+
+  /* Type weights — only the three loaded weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Spacing — 8px base, stops 1/2/3/4/5/6/8 */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 24px;
+  --spacing-6: 32px;
+  --spacing-8: 64px;
+
+  /* Radius — none on Tier 1, sm everywhere else */
+  --radius-none: 0;
+  --radius-sm: 4px;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text-primary-inverse);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+/* Focus ring — designed, not browser-default. Dark-ground default; cards
+   override locally with their own focus ring via Tailwind utilities. */
+:focus-visible {
+  outline: 2px solid var(--color-text-primary-inverse);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

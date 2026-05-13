@@ -22,15 +22,15 @@
 #   shape produces that mirroring. Without it, the function container
 #   start fails with "no such file or directory" on the bind path.
 #
-# Why supabase-runner does NOT forward 54321 / 54322 to the host:
+# Why supabase-runner does NOT forward 54421 / 54422 to the host:
 #   `supabase start` spawns sibling containers (supabase_kong_*,
 #   supabase_db_*, ...) on the HOST docker engine — outside this compose
-#   project. Those siblings bind 54321 (REST/kong) and 54322 (Postgres)
+#   project. Those siblings bind 54421 (REST/kong) and 54422 (Postgres)
 #   to the host themselves. If supabase-runner ALSO declared
-#   `ports: ["54321:54321"]`, the host port allocation conflicts and
-#   `supabase start` fails with "Bind for 0.0.0.0:54322 failed: port is
+#   `ports: ["54421:54421"]`, the host port allocation conflicts and
+#   `supabase start` fails with "Bind for 0.0.0.0:54422 failed: port is
 #   already allocated". Workspace + macOS browser reach the supabase
-#   data plane via http://host.docker.internal:54321 (Docker Desktop
+#   data plane via http://host.docker.internal:54421 (Docker Desktop
 #   maps host.docker.internal to the host gateway from any container,
 #   and the operator adds `127.0.0.1 host.docker.internal` to macOS
 #   /etc/hosts so the browser resolves it too — see template README §
@@ -44,10 +44,10 @@
 #   own healthcheck connections to the spawned db / kong containers,
 #   but those containers are siblings on the HOST docker engine — their
 #   ports are bound to the host, NOT to the runner's loopback. Without
-#   forwarding, the healthcheck fails with "dial tcp 127.0.0.1:54322:
+#   forwarding, the healthcheck fails with "dial tcp 127.0.0.1:54422:
 #   connect: connection refused" and supabase tears the stack down.
-#   The two `socat` lines forward 127.0.0.1:54321 / :54322 inside the
-#   runner to host.docker.internal:54321 / :54322 (where the spawned
+#   The two `socat` lines forward 127.0.0.1:54421 / :54422 inside the
+#   runner to host.docker.internal:54421 / :54422 (where the spawned
 #   siblings' host-bound ports actually live). socat's lazy-connect
 #   behavior + supabase's healthcheck retry loop handle the brief
 #   window where the spawned db isn't yet up — by the time supabase's
@@ -86,7 +86,7 @@ services:
       # supabase-demo defaults (same string across every Supabase install)
       # — safe to commit. Prod values live on a separate surface (Vercel
       # for NEXT_PUBLIC_*, never on this devcontainer's local-dev surface).
-      SUPABASE_URL: http://host.docker.internal:54321
+      SUPABASE_URL: http://host.docker.internal:54421
       SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
       SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
       CONTAINER: '1'
@@ -118,8 +118,8 @@ services:
       - sh
       - -c
       - |
-        socat -d TCP-LISTEN:54321,fork,reuseaddr,bind=127.0.0.1 TCP:host.docker.internal:54321 &
-        socat -d TCP-LISTEN:54322,fork,reuseaddr,bind=127.0.0.1 TCP:host.docker.internal:54322 &
+        socat -d TCP-LISTEN:54421,fork,reuseaddr,bind=127.0.0.1 TCP:host.docker.internal:54421 &
+        socat -d TCP-LISTEN:54422,fork,reuseaddr,bind=127.0.0.1 TCP:host.docker.internal:54422 &
         sleep 0.5
         supabase start
         exec /usr/local/bin/cmd-relay.mjs
