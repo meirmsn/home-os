@@ -13,7 +13,10 @@ Intelligent home maintenance companion. Captures a homeowner's issues (photo + d
 
 Path map of every documented surface. Update this section when introducing a new page, API wrapper, edge function, design token surface, or CI/CD workflow — `kit/scripts/commit-hooks/check-docs-freshness-project.sh` blocks PRs that add a triggering surface without updating this section.
 
-- **App router root + landing**: `apps/web/app/layout.tsx` (Inter font, PWA metadata, dark ground), `apps/web/app/page.tsx` (placeholder landing until first feature ships).
+- **App router root + landing**: `apps/web/app/layout.tsx` (Inter font, PWA metadata, dark ground, `<PostHogProvider>` mount), `apps/web/app/page.tsx` (placeholder landing until first feature ships).
+- **Analytics provider (client boundary)**: `apps/web/app/_components/PostHogProvider.tsx` — `'use client'` wrapper that triggers `initPostHog()` once per browser session.
+- **PostHog init**: `apps/web/lib/posthog.ts` — `initPostHog()` reads `NEXT_PUBLIC_POSTHOG_KEY` (`.trim()`-defended), no-ops on SSR or missing key, dials `us.i.posthog.com`.
+- **Sentry init (client / server / edge)**: `apps/web/sentry.client.config.ts`, `apps/web/sentry.server.config.ts`, `apps/web/sentry.edge.config.ts`. Server + edge are wired by `apps/web/instrumentation.ts` via `process.env.NEXT_RUNTIME`. `next.config.ts` is wrapped with `withSentryConfig` for sourcemap upload (driven by `SENTRY_AUTH_TOKEN`; silently no-ops without it).
 - **Global styles + Tailwind v4 @theme**: `apps/web/app/globals.css` (mirrors `packages/ui/src/tokens.ts` — single naming source).
 - **Supabase SSR client (browser)**: `apps/web/lib/supabase/client.ts` — `createBrowserClient` with the canonical `.trim()` env-var defense.
 - **Supabase SSR client (server)**: `apps/web/lib/supabase/server.ts` — `createServerClient` reading from Next's async `cookies()` store.

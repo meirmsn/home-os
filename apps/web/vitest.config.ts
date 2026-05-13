@@ -6,12 +6,24 @@
 // Does NOT: Run E2E tests (Playwright lives in e2e/ and reads its own
 //           config; vitest excludes that directory).
 
+import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  resolve: {
+    // Mirror tsconfig.json `paths`: "@/*": ["./*"]. Vite/Vitest doesn't
+    // read tsconfig paths automatically; without this alias, tests that
+    // import from `@/lib/...` fail at resolve time.
+    alias: { '@': path.resolve(__dirname, './') },
+  },
   test: {
     setupFiles: ['./vitest.setup.ts'],
-    include: ['lib/**/*.test.ts', 'lib/**/*.test.tsx'],
+    include: [
+      'lib/**/*.test.ts',
+      'lib/**/*.test.tsx',
+      'app/**/*.test.ts',
+      'app/**/*.test.tsx',
+    ],
     exclude: ['node_modules', 'dist', '.next', 'e2e'],
   },
 });

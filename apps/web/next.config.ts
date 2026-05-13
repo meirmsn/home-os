@@ -3,9 +3,11 @@
 //      build step. Security headers below are the minimum production baseline
 //      — `connect-src` is composed at runtime from env so the CSP picks up the
 //      live Supabase project (prod) or local stack (dev) without a code change.
-// Does NOT: Configure Sentry sourcemap upload (that wraps this config via
-//           @sentry/nextjs's withSentryConfig in a later commit).
+//      Wrapped with `withSentryConfig` to enable sourcemap upload at build
+//      time (driven by SENTRY_AUTH_TOKEN — silently no-ops when the token
+//      isn't set, e.g., local dev).
 
+import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from 'next';
 
 /** Build CSP `connect-src` from $NEXT_PUBLIC_SUPABASE_URL.
@@ -60,4 +62,10 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Org + project default to env-only — Sentry's `withSentryConfig` reads
+  // SENTRY_ORG / SENTRY_PROJECT at build time when these aren't passed.
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  sourcemaps: { disable: false },
+});
