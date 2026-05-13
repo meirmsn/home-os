@@ -4,9 +4,10 @@ Event taxonomy and feature flags. Updated alongside every new `posthog.capture(.
 
 ## Events
 
-| Event        | When it fires                                          | Key properties  | Why we care                                                   |
-| ------------ | ------------------------------------------------------ | --------------- | ------------------------------------------------------------- |
-| <event-name> | <call-site description: which file, which user action> | `{ key: type }` | <one-sentence rationale: what regression or KPI this signals> |
+| Event               | When it fires                                                                                                                                                                              | Key properties             | Why we care                                                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `sign_in_requested` | Fired from the `/login` form's submit handler in `apps/web/app/login/_components/LoginForm.tsx` after `supabase.auth.signInWithOtp` resolves without error.                                | `{ method: 'magic_link' }` | Top of the auth funnel — a drop between "requested" and "completed" is a deliverability / UX regression.      |
+| `sign_in_completed` | Fired from `apps/web/app/(app)/_components/SignInCompletedCapture.tsx` on first authenticated mount per (user × session). Identifies the user with `posthog.identify(user.id)` first (D7). | `{ method: 'magic_link' }` | Bottom of the auth funnel — measures realized conversion to a signed-in session; the only conversion KPI now. |
 
 <!--
 Authoring rules:

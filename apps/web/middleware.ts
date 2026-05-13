@@ -1,10 +1,21 @@
-// What: Edge middleware that refreshes the Supabase session on every request.
-// Why:  Without per-request session refresh, an expired access token leads
-//       to silent 401s in route handlers. Trim env reads to dodge
-//       trailing-whitespace SSR-500s (kit/docs/guide/supabase-ssr-boilerplate.md
-//       § Pattern 1).
-// Does NOT: Authorize routes — the matcher excludes static + image paths;
-//           route-level auth is enforced in server components / actions.
+// What: Edge middleware. Two responsibilities:
+//       1. Refresh the Supabase session on every non-asset request (the
+//          getUser() call has a side effect that rotates the access /
+//          refresh cookies via setAll).
+//       2. Enforce D6 redirect rules:
+//          - anonymous + path startsWith /home -> /login?next=<path>
+//          - authenticated + path === /login   -> /home
+//          Public marketing /, /auth/* callback URLs, and asset paths
+//          stay untouched. Public /login stays untouched for anonymous
+//          users (otherwise they could never sign in).
+// Why:  One enforcement surface, declarative redirects, no per-route
+//       guards. Middleware reads cookies only — defense-in-depth lives
+//       on the (app) layout (spec § Gotchas: tampered cookie can pass
+//       middleware but fail the layout-side getUser()).
+// Does NOT: Validate JWT signatures — that's Supabase's job on the wire.
+//           getUser() may throw on a malformed/stale cookie; the catch
+//           treats that as "anonymous" so a bad cookie can't bypass the
+//           gated-path check (spec § Gotchas).
 
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
@@ -15,7 +26,18 @@ type CookieSetter = {
   options: CookieOptions;
 };
 
-/** Refresh session cookies on every non-asset request. */
+const GATED_PREFIXES = ['/home'];
+
+/**
+ *
+ */
+function isGated(pathname: string): boolean {
+  return GATED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
+
+/** Refresh session cookies + enforce D6 redirect rules. */
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
   const url = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').trim();
@@ -38,8 +60,31 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // Triggers the session refresh side effect on getUser().
-  await supabase.auth.getUser();
+  // Triggers the session refresh side effect on getUser(). Wrap in
+  // try/catch so a malformed/stale cookie throw (spec § Gotchas) is
+  // treated as "anonymous" rather than 500-ing the request.
+  let user: { id: string } | null = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    user = null;
+  }
+
+  const { pathname, search } = request.nextUrl;
+
+  // Rule 1: anonymous request to a gated path -> /login?next=<path>
+  if (!user && isGated(pathname)) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('next', `${pathname}${search}`);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Rule 2: authenticated request to /login -> /home
+  if (user && pathname === '/login') {
+    return NextResponse.redirect(new URL('/home', request.url));
+  }
+
   return response;
 }
 

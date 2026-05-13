@@ -8,6 +8,15 @@ Project build history. One entry per merged PR, most-recent first. Written by `/
 
 For forward-looking plan: `PLAN.md`. For deferred/long-term work: `PRODUCT-ROADMAP.md`.
 
+### auth-magic-link (2026-05-13)
+
+- **Branch**: `feat/auth-magic-link` (merging via [#10](https://github.com/meirmsn/home-os/pull/10))
+- **PR**: [#10](https://github.com/meirmsn/home-os/pull/10)
+- **Spec**: `specs/auth-magic-link/spec.md`
+- **Summary**: Magic-link sign-in/up on top of PR #9's schema. `/login` page + client form calling `signInWithOtp`, PKCE `/auth/callback` exchange with `safeNext()` open-redirect guard, POST-only `/auth/signout`, `(app)/` route group with `/home` authenticated shell + sign-out form, and middleware-enforced redirects (anon + gated → `/login?next=<orig>`; authed + `/login` → `/home`). Two new PostHog events (`sign_in_requested`, `sign_in_completed`) wired to the conversion funnel. Inbucket-backed Playwright E2E spec covering the full round-trip.
+- **Commits**: 15 atomic commits — 1 PLAN flip to Active, 1 spec (skeleton + Phase 1 expand combined), 8 implement (one per spec § Task order entry), 1 tasks.md bookkeeping, 4 pre-ship findings (open-redirect defense + 44px touch targets + safeNext docs + review.md+hero shots), plus the BUILD-LOG bookkeeping commit on top.
+- **Quality gates**: 13 passed, 4 n/a, 0 high-severity blockers; 2 findings_pending (devcontainer-environment carry-overs from PR #9: workspace firewall blocks `fonts.googleapis.com`; slow-job CI stub remains commented) and 1 blocked (Gate 9 `/qa` — devcontainer can't reach local Supabase Kong on :54421). All three are infrastructure / env defects, NOT code regressions; Vercel preview Ready (deploy URL in PR body). Slow-job CI is the canonical Playwright E2E enforcement surface per spec D10.
+
 ### supabase-schema-and-rls (2026-05-13)
 
 - **Branch**: `feature/supabase-schema-and-rls` (merging via [#9](https://github.com/meirmsn/home-os/pull/9))
