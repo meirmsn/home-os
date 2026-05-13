@@ -10,14 +10,15 @@ Forward-looking plan at the feature/PR grain.
 
 ## Active
 
-_No work in progress._
+| Branch                 | Spec                            | Notes                                                                                                                                                                                                                                                                                 |
+| ---------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `feat/auth-magic-link` | `specs/auth-magic-link/spec.md` | Magic-link sign-in/up, user profile on first session, `/login`, post-auth `/(app)` shell, sign-out. Extends existing `apps/web/middleware.ts` + `apps/web/lib/supabase/*`. Spec source: `.gstack/eng-review-home-os-2026-05-01.md` § Architecture (Auth). PRODUCT-ROADMAP.md § v0 #2. |
 
 ## Planned
 
-| #   | Feature           | Notes                                                                                                                                                                                                                                                                                    |
-| --- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `auth-magic-link` | PRODUCT-ROADMAP.md § v0 #2. Spec source: `.gstack/eng-review-home-os-2026-05-01.md` § Architecture (Auth). Magic-link sign-in/up, user profile on first session, `/login`, post-auth `/(app)` shell, sign-out. Extends existing `apps/web/middleware.ts` + `apps/web/lib/supabase/*`.    |
-| 2   | `pwa-spike`       | PRODUCT-ROADMAP.md § v0 #3. Spec source: `.gstack/eng-review-home-os-2026-05-01.md` § Pre-Ship Requirements #1. Validates iOS Safari camera + full-res Storage + sync zoom + bounce mode (750ms). Output is `.gstack/pwa-spike-result.md` which gates #11 (`photo-comparison-ui`) scope. |
+| #   | Feature     | Notes                                                                                                                                                                                                                                                                                    |
+| --- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `pwa-spike` | PRODUCT-ROADMAP.md § v0 #3. Spec source: `.gstack/eng-review-home-os-2026-05-01.md` § Pre-Ship Requirements #1. Validates iOS Safari camera + full-res Storage + sync zoom + bounce mode (750ms). Output is `.gstack/pwa-spike-result.md` which gates #11 (`photo-comparison-ui`) scope. |
 
 <!--
 Conventions:
