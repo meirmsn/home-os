@@ -30,9 +30,7 @@ export default function SpikeCameraPage() {
   // Pull the signed-in user id once on first interaction so the upload
   // helper can stamp the {auth.uid()}/spike/ path prefix. Layout already
   // guarantees auth — this is just a getter, not a guard.
-  /**
-   *
-   */
+  /** Lazy getter for the signed-in user id (cached after first read). */
   async function ensureUserId(): Promise<string | null> {
     if (userId) return userId;
     const supabase = createClient();

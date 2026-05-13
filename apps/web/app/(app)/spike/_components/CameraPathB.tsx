@@ -227,9 +227,7 @@ export function CameraPathB({
   );
 }
 
-/**
- *
- */
+/** Render the current Path B status as labeled rows (or error chip). */
 function Readout({ status }: { status: Status }) {
   if (status.kind === 'idle') {
     return (
@@ -297,9 +295,7 @@ function Readout({ status }: { status: Status }) {
   );
 }
 
-/**
- *
- */
+/** One <dt>/<dd> pair laid out in a flex row. */
 function Row({
   label,
   children,

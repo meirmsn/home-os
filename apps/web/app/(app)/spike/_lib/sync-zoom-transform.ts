@@ -84,18 +84,14 @@ export function composeTransform(transform: Transform): string {
   return `translate(${origin.x}px, ${origin.y}px) scale(${scale})`;
 }
 
-/**
- *
- */
+/** Euclidean distance between two points. */
 function distance(a: Point, b: Point): number {
   const dx = a.x - b.x;
   const dy = a.y - b.y;
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-/**
- *
- */
+/** Constrain n into the inclusive range [lo, hi]. */
 function clamp(n: number, lo: number, hi: number): number {
   if (n < lo) return lo;
   if (n > hi) return hi;

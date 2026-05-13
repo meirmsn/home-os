@@ -44,9 +44,7 @@ export function CameraPathA({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
 
-  /**
-   *
-   */
+  /** Read the captured File, measure dimensions, upload to Storage. */
   async function handleFile(file: File) {
     setStatus({ kind: 'reading' });
 
@@ -115,9 +113,7 @@ export function CameraPathA({
     }
   }
 
-  /**
-   *
-   */
+  /** Forward the input event's first File to handleFile. */
   function onChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -163,9 +159,7 @@ export function CameraPathA({
   );
 }
 
-/**
- *
- */
+/** Render the current Path A status as labeled rows (or error chip). */
 function Readout({ status }: { status: Status }) {
   if (status.kind === 'idle') {
     return (
@@ -218,9 +212,7 @@ function Readout({ status }: { status: Status }) {
   );
 }
 
-/**
- *
- */
+/** One <dt>/<dd> pair laid out in a flex row. */
 function Row({
   label,
   children,
@@ -238,9 +230,7 @@ function Row({
   );
 }
 
-/**
- *
- */
+/** createImageBitmap fallback — measure dimensions via an <img> element. */
 async function dimsViaImageTag(
   file: File
 ): Promise<{ width: number; height: number }> {

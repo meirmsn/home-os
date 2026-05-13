@@ -73,9 +73,7 @@ export default function SpikeComparisonPage() {
   useEffect(() => {
     if (!useOwnPhotos) return;
     let cancelled = false;
-    /**
-     *
-     */
+    /** Fetch the two most-recent /spike/ uploads and create signed URLs. */
     async function loadOwn() {
       try {
         const supabase = createClient();
@@ -204,9 +202,7 @@ export default function SpikeComparisonPage() {
   );
 }
 
-/**
- *
- */
+/** Labeled stat cell for the readouts grid. */
 function Stat({
   label,
   children,

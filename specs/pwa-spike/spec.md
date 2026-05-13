@@ -139,7 +139,7 @@ Phase 6's audit comment will surface the same checklist so it's not lost between
 
 ## Core user story
 
-`N/A — internal capability spike. No user-facing flow ships. The three `/spike/\*`pages are operator-only validation surfaces with no production link from any other page; the deliverable is`.gstack/pwa-spike-result.md`filled with iOS Safari findings, not a shipped UX. Gate 9 (qa-walk) skips artifact assertion per the`N/A — <reason>` carve-out.`
+N/A — all `page.tsx` / `*.tsx` files added by this PR live under `apps/web/app/(app)/spike/**` (verifiable: `git diff --name-only --diff-filter=A origin/main...HEAD | grep -E '^apps/web/app/.*page\.tsx$'` returns only `apps/web/app/(app)/spike/{,camera/,comparison/}page.tsx`; no other `apps/web/app/**/page.tsx` is added). No production link reaches `/spike/*` (verifiable: `git grep -nE '"/spike(/|\")' apps/web/app | grep -v 'app/(app)/spike/'` returns no matches outside the spike directory itself). The deliverable is `.gstack/pwa-spike-result.md` (file present in the diff), operator-filled post-merge per D7. Gate 9 (qa-walk) skips artifact assertion per the `N/A — <reason>` carve-out.
 
 ## In scope
 

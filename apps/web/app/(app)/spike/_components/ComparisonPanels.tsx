@@ -74,9 +74,7 @@ export function ComparisonPanels({
     let rafId = 0;
     let lastSwap =
       typeof performance !== 'undefined' ? performance.now() : Date.now();
-    /**
-     *
-     */
+    /** rAF callback — swap on cadence elapsed (bounce) OR sample FPS (overlay). */
     function tick(now: number) {
       if (now - lastSwap >= cadence) {
         setBounceFrame((f) => (f === 0 ? 1 : 0));
@@ -95,9 +93,7 @@ export function ComparisonPanels({
     let frames = 0;
     let windowStart =
       typeof performance !== 'undefined' ? performance.now() : Date.now();
-    /**
-     *
-     */
+    /** rAF callback — swap on cadence elapsed (bounce) OR sample FPS (overlay). */
     function tick(now: number) {
       frames++;
       const dt = now - windowStart;
@@ -206,7 +202,7 @@ export function ComparisonPanels({
   const imgStyle = (frame: 0 | 1): CSSProperties => ({
     transform: transformStr,
     transformOrigin: 'center center',
-    opacity: bouncing ? (bounceFrame === frame ? 1 : 0) : frame === 0 ? 1 : 1,
+    opacity: bouncing ? (bounceFrame === frame ? 1 : 0) : 1,
     transition: 'none',
     width: '100%',
     height: '100%',
