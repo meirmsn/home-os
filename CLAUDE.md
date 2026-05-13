@@ -76,19 +76,19 @@ pnpm db:gen-types               # regen types from local stack (relay → supaba
 ## Deploy Configuration (configured by /setup-deploy)
 
 - Platform: Vercel (team `homeos`, project `home-os`, `prj_4dMkbHkxYohqABcKt1SwaprZv3JM`)
-- Production URL: https://home-os.vercel.app _(inferred — confirm after first successful deploy; Vercel may allocate `home-os-<team-hash>.vercel.app` if the bare alias is reserved)_
+- Production URL: https://home-os-homeos.vercel.app _(confirmed 2026-05-13 after first green deploy `dpl_Dgie2QVpqBeTdqNU9kHJQBE6spmU`. Vercel allocated this team-scoped form because `home-os.vercel.app` is taken by another project; additional aliases `home-os-nu-two.vercel.app` and `home-os-git-<branch>-homeos.vercel.app` are also live.)_
 - Deploy workflow: Vercel auto-deploys on push — preview URL on every PR, production on merge to `main`. Supplementary GitHub Actions: `deploy-migrations.yml` (Supabase schema push) + `deploy-functions.yml` (Supabase edge fns) + `keepalive.yml` (weekly Supabase ping).
 - Deploy status command: `pnpm exec vercel ls --token "$VERCEL_TOKEN" --scope homeos` (deployments) or `pnpm exec vercel inspect home-os --token "$VERCEL_TOKEN" --scope homeos` (project meta).
 - Merge method: squash (linear history, branch protection enforces)
 - Project type: web app — Next.js 16 PWA hosted on Vercel
-- Post-deploy health check: `curl -sf https://home-os.vercel.app/ -o /dev/null -w "%{http_code}"` expects `200`.
+- Post-deploy health check: `curl -sf https://home-os-homeos.vercel.app/ -o /dev/null -w "%{http_code}"` expects `200`.
 
 ### Custom deploy hooks
 
 - Pre-merge: none (CI fast-job covers typecheck + tests; slow-job uncomments after Phase 1c/1g when integration / E2E specs land)
 - Deploy trigger: automatic on push to `main` via Vercel GitHub App
 - Deploy status: poll production URL until it returns 200 with the new build hash header
-- Health check: https://home-os.vercel.app/
+- Health check: https://home-os-homeos.vercel.app/
 
 ### Vercel dashboard follow-ups (operator)
 
