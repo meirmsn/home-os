@@ -10,22 +10,16 @@ Forward-looking plan at the feature/PR grain.
 
 ## Active
 
-_No work in progress._
-
-<!-- When a feature is active, replace the placeholder with:
-
-| Branch | Spec | Notes |
-| --- | --- | --- |
-| feat/<name> | specs/<name>/spec.md | <scope pointer> |
--->
+| Branch                            | Spec                                    | Notes                                                                                                                                                             |
+| --------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `feature/supabase-schema-and-rls` | `specs/supabase-schema-and-rls/spec.md` | Foundation — all Phase 1 tables, all RLS, `card-photos` private bucket, auth-signup trigger, multi-user isolation E2E. Blocks every subsequent v0 feature. No UI. |
 
 ## Planned
 
-| #   | Feature                   | Notes                                                                                                                                                                                                                                                                                    |
-| --- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `supabase-schema-and-rls` | PRODUCT-ROADMAP.md § v0 #1. Foundation — blocks everything. Spec source: `.gstack/eng-review-home-os-2026-05-01.md` § Data Model + § RLS Policies + § Storage. Ships migrations, generated types, multi-user RLS isolation test. No user-facing UI.                                      |
-| 2   | `auth-magic-link`         | PRODUCT-ROADMAP.md § v0 #2. Spec source: `.gstack/eng-review-home-os-2026-05-01.md` § Architecture (Auth). Magic-link sign-in/up, user profile on first session, `/login`, post-auth `/(app)` shell, sign-out. Extends existing `apps/web/middleware.ts` + `apps/web/lib/supabase/*`.    |
-| 3   | `pwa-spike`               | PRODUCT-ROADMAP.md § v0 #3. Spec source: `.gstack/eng-review-home-os-2026-05-01.md` § Pre-Ship Requirements #1. Validates iOS Safari camera + full-res Storage + sync zoom + bounce mode (750ms). Output is `.gstack/pwa-spike-result.md` which gates #11 (`photo-comparison-ui`) scope. |
+| #   | Feature           | Notes                                                                                                                                                                                                                                                                                    |
+| --- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `auth-magic-link` | PRODUCT-ROADMAP.md § v0 #2. Spec source: `.gstack/eng-review-home-os-2026-05-01.md` § Architecture (Auth). Magic-link sign-in/up, user profile on first session, `/login`, post-auth `/(app)` shell, sign-out. Extends existing `apps/web/middleware.ts` + `apps/web/lib/supabase/*`.    |
+| 2   | `pwa-spike`       | PRODUCT-ROADMAP.md § v0 #3. Spec source: `.gstack/eng-review-home-os-2026-05-01.md` § Pre-Ship Requirements #1. Validates iOS Safari camera + full-res Storage + sync zoom + bounce mode (750ms). Output is `.gstack/pwa-spike-result.md` which gates #11 (`photo-comparison-ui`) scope. |
 
 <!--
 Conventions:
