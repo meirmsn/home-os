@@ -54,7 +54,7 @@ export default async function AppLayout({
           <form action="/auth/signout" method="post">
             <button
               type="submit"
-              className="rounded-md border border-[var(--color-border-subtle)] px-3 py-1 text-sm text-[var(--color-text-primary-inverse)] hover:bg-[var(--color-surface-raised)]"
+              className="inline-flex min-h-11 items-center rounded-md border border-[var(--color-border-subtle)] px-3 py-2 text-sm text-[var(--color-text-primary-inverse)] hover:bg-[var(--color-surface-raised)]"
             >
               Sign out
             </button>

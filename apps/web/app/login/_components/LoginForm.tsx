@@ -131,7 +131,7 @@ export function LoginForm({ initialErrorCode }: { initialErrorCode?: string }) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           disabled={stage === 'submitting'}
-          className="block w-full rounded-md border border-[var(--color-border-input)] bg-[var(--color-surface-input)] px-3 py-2 text-sm text-[var(--color-text-primary-inverse)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
+          className="block min-h-11 w-full rounded-md border border-[var(--color-border-input)] bg-[var(--color-surface-input)] px-3 py-2.5 text-sm text-[var(--color-text-primary-inverse)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
           placeholder="you@example.com"
         />
       </label>
@@ -139,7 +139,7 @@ export function LoginForm({ initialErrorCode }: { initialErrorCode?: string }) {
         type="submit"
         disabled={stage === 'submitting'}
         aria-disabled={stage === 'submitting'}
-        className="block w-full rounded-md bg-[var(--color-surface-primary)] px-3 py-2 text-sm font-semibold text-[var(--color-text-on-primary)] hover:bg-[var(--color-surface-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="block min-h-11 w-full rounded-md bg-[var(--color-surface-primary)] px-3 py-2.5 text-sm font-semibold text-[var(--color-text-on-primary)] hover:bg-[var(--color-surface-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {stage === 'submitting' ? 'Sending…' : 'Send magic link'}
       </button>
