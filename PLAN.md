@@ -12,24 +12,12 @@ Forward-looking plan at the feature/PR grain.
 
 _No work in progress._
 
-<!-- When a feature is active, replace the placeholder with:
-
-| Branch | Spec | Notes |
-| --- | --- | --- |
-| feat/<name> | specs/<name>/spec.md | <scope pointer> |
--->
-
 ## Planned
 
-_No planned work._
-
-<!-- When features are planned, replace the placeholder with:
-
-| # | Feature | Notes |
-| --- | --- | --- |
-| 1 | <feature-slug> | <scope pointer — e.g. PRODUCT-ROADMAP.md § v0 § Xa> |
-| 2 | <next-feature>  | ... |
--->
+| #   | Feature           | Notes                                                                                                                                                                                                                                                                                    |
+| --- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `auth-magic-link` | PRODUCT-ROADMAP.md § v0 #2. Spec source: `.gstack/eng-review-home-os-2026-05-01.md` § Architecture (Auth). Magic-link sign-in/up, user profile on first session, `/login`, post-auth `/(app)` shell, sign-out. Extends existing `apps/web/middleware.ts` + `apps/web/lib/supabase/*`.    |
+| 2   | `pwa-spike`       | PRODUCT-ROADMAP.md § v0 #3. Spec source: `.gstack/eng-review-home-os-2026-05-01.md` § Pre-Ship Requirements #1. Validates iOS Safari camera + full-res Storage + sync zoom + bounce mode (750ms). Output is `.gstack/pwa-spike-result.md` which gates #11 (`photo-comparison-ui`) scope. |
 
 <!--
 Conventions:
