@@ -10,9 +10,7 @@ Forward-looking plan at the feature/PR grain.
 
 ## Active
 
-| Branch                            | Spec                                    | Notes                                                                                                                                                             |
-| --------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `feature/supabase-schema-and-rls` | `specs/supabase-schema-and-rls/spec.md` | Foundation — all Phase 1 tables, all RLS, `card-photos` private bucket, auth-signup trigger, multi-user isolation E2E. Blocks every subsequent v0 feature. No UI. |
+_No work in progress._
 
 ## Planned
 
