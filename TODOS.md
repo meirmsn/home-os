@@ -14,7 +14,10 @@ Organized by version to mirror `PRODUCT-ROADMAP.md`:
 
 ### pre-ship
 
-_No pre-ship items._
+- **firewall-rebound-ports** — Update `.devcontainer/init-firewall.sh` to allow supabase ports `54421 + 54422` (the rebound `+100` ports per CLAUDE.md § Local Supabase ports), not the upstream-default `54321 + 54322`.
+  - **Why**: Without this, the workspace container's egress firewall blocks `host.docker.internal:54421`, so `apps/web/e2e/rls-isolation.spec.ts` (and any future supabase-touching test) cannot run from workspace — fails with `EHOSTUNREACH` before reaching any assertion.
+  - **How**: change `--dport 54321` → `--dport 54421` and `--dport 54322` → `--dport 54422` in `init-firewall.sh` (lines 233-234). Re-run `sudo /usr/local/bin/init-firewall.sh` in the workspace, or `Reopen in Container` to re-apply.
+  - **Where**: `.devcontainer/init-firewall.sh:213-237`. Discovered while implementing `supabase-schema-and-rls` PR — the isolation E2E parses cleanly but cannot reach the local stack from workspace because of the stale port allowlist.
 
 <!--
 Each entry:
