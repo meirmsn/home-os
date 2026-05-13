@@ -4,6 +4,8 @@
 
 > **[TODO] Preview-deploy email-auth deferred** — `uri_allow_list` is the minimal pair (`https://home-os-nu-two.vercel.app/**` + `http://localhost:3000/**`). Email-auth flows (password reset, magic link, signup confirm) will not work from Vercel PR preview deploys. When needed, append the team-hash wildcard (typically `https://*-<team-slug>-<team-hash>.vercel.app/**`) via the same Management API PATCH on `uri_allow_list`.
 
+> **[TODO] PWA-spike surfaces deferred for cleanup** — After `photo-comparison-ui` ships and its design decisions are baked in, delete: `apps/web/app/(app)/spike/`, `apps/web/public/spike/`, the `## Where Things Happen` entries for spike surfaces, and the spike paths from any `connect-src` / route allowlists. Remove this line when done.
+
 Project build history. One entry per merged PR, most-recent first. Written by `/ak-build` Phase 5.6 on the feature branch before merge, so the entry ships as part of its own PR.
 
 For forward-looking plan: `PLAN.md`. For deferred/long-term work: `PRODUCT-ROADMAP.md`.

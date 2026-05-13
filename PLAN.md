@@ -10,9 +10,9 @@ Forward-looking plan at the feature/PR grain.
 
 ## Active
 
-| Branch         | Spec                    | Notes                                                                                                                                                                                                                                        |
-| -------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| feat/pwa-spike | specs/pwa-spike/spec.md | iOS Safari camera API at full resolution + Storage upload + sync zoom interaction + bounce-mode cadence (750ms). Output: `.gstack/pwa-spike-result.md` documenting which comparison-UI features ship in `photo-comparison-ui` vs defer to v1 |
+| Branch            | Spec                    | Notes                                                                                                                                                                                                                                        |
+| ----------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| feature/pwa-spike | specs/pwa-spike/spec.md | iOS Safari camera API at full resolution + Storage upload + sync zoom interaction + bounce-mode cadence (750ms). Output: `.gstack/pwa-spike-result.md` documenting which comparison-UI features ship in `photo-comparison-ui` vs defer to v1 |
 
 ## Planned
 

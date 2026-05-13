@@ -227,19 +227,17 @@ export function ComparisonPanels({
           onPointerCancel={onPointerUp}
           data-testid="panel-left"
         >
-          <img
+          <RawImg
             src={leftSrc}
             alt="Left comparison panel"
             style={imgStyle(0)}
-            draggable={false}
           />
           {bouncing && (
-            <img
+            <RawImg
               src={rightSrc}
               alt="Bounce overlay — right photo"
               style={{ ...imgStyle(1), position: 'absolute', inset: 0 }}
-              draggable={false}
-              aria-hidden="true"
+              ariaHidden
             />
           )}
         </div>
@@ -254,19 +252,17 @@ export function ComparisonPanels({
           onPointerCancel={onPointerUp}
           data-testid="panel-right"
         >
-          <img
+          <RawImg
             src={rightSrc}
             alt="Right comparison panel"
             style={imgStyle(0)}
-            draggable={false}
           />
           {bouncing && (
-            <img
+            <RawImg
               src={leftSrc}
               alt="Bounce overlay — left photo"
               style={{ ...imgStyle(1), position: 'absolute', inset: 0 }}
-              draggable={false}
-              aria-hidden="true"
+              ariaHidden
             />
           )}
         </div>
@@ -280,5 +276,32 @@ export function ComparisonPanels({
         {fps} fps · scale {transform.scale.toFixed(2)}×
       </div>
     </div>
+  );
+}
+
+/** Plain <img> wrapper. Spike uses native <img> intentionally — dynamic
+ *  transform + opacity-swap bounce overlay would defeat next/image's
+ *  optimization layer (which lazy-loads and renders into its own DOM
+ *  wrapper). Operator-only surface deleted with photo-comparison-ui (D8),
+ *  not perf-critical. */
+function RawImg({
+  src,
+  alt,
+  style,
+  ariaHidden,
+}: {
+  src: string;
+  alt: string;
+  style: CSSProperties;
+  ariaHidden?: boolean;
+}) {
+  return (
+    <img
+      src={src}
+      alt={alt}
+      style={style}
+      draggable={false}
+      aria-hidden={ariaHidden}
+    />
   );
 }

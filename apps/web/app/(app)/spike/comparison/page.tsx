@@ -42,21 +42,36 @@ export default function SpikeComparisonPage() {
     setTimestamps(next);
   }, []);
 
-  // Clear timestamps when cadence changes — mixing cadence windows
-  // would corrupt the drift readout.
-  useEffect(() => {
+  // Clear timestamps when cadence or bouncing changes — mixing cadence
+  // windows would corrupt the drift readout. Reset is done in the
+  // wrapper handlers (not a useEffect) per React's "you might not need
+  // an effect" guidance — the dep change is event-driven, not synced
+  // from an external system.
+  const onCadenceChange = useCallback((c: Cadence) => {
     timestampsRef.current = [];
     setTimestamps([]);
-  }, [cadence, bouncing]);
+    setCadence(c);
+  }, []);
+  const onBouncingChange = useCallback((b: boolean) => {
+    timestampsRef.current = [];
+    setTimestamps([]);
+    setBouncing(b);
+  }, []);
+
+  // Toggle handler also resets the own-photos cache when flipping off,
+  // so the effect below doesn't need a synchronous setState branch.
+  const onUseOwnPhotosChange = useCallback((v: boolean) => {
+    if (!v) {
+      setOwnPhotos(null);
+      setOwnPhotosError(null);
+    }
+    setUseOwnPhotos(v);
+  }, []);
 
   // Load operator's two most-recent spike uploads when the toggle
   // flips on. List + signed-URL fetch fire once per toggle.
   useEffect(() => {
-    if (!useOwnPhotos) {
-      setOwnPhotos(null);
-      setOwnPhotosError(null);
-      return;
-    }
+    if (!useOwnPhotos) return;
     let cancelled = false;
     /**
      *
@@ -161,11 +176,11 @@ export default function SpikeComparisonPage() {
 
       <CadenceControls
         cadence={cadence}
-        onCadenceChange={setCadence}
+        onCadenceChange={onCadenceChange}
         bouncing={bouncing}
-        onBouncingChange={setBouncing}
+        onBouncingChange={onBouncingChange}
         useOwnPhotos={useOwnPhotos}
-        onUseOwnPhotosChange={setUseOwnPhotos}
+        onUseOwnPhotosChange={onUseOwnPhotosChange}
         ownPhotosAvailable={ownPhotos !== null}
       />
 
