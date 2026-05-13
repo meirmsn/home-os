@@ -24,6 +24,11 @@ Organized by version to mirror `PRODUCT-ROADMAP.md`:
   - **How**: append `fonts.googleapis.com` (and likely `fonts.gstatic.com`, which serves the actual woff2 files) to `.devcontainer/firewall-extra-domains`, then `sudo /usr/local/bin/init-firewall.sh` to re-apply.
   - **Where**: `.devcontainer/firewall-extra-domains`. Discovered while running pre-ship Gate 4 on `supabase-schema-and-rls` PR.
 
+- **ci-slow-job-activation** — Uncomment the `slow:` job in `.github/workflows/ci.yml` so the integration + E2E specs that landed in PR #9 (`rls-isolation.spec.ts`) and PR #10 (`magic-link.spec.ts`) actually run in CI.
+  - **Why**: Per `.github/workflows/ci.yml` lines 80-83, the slow-job's `needs: [fast, changes]` plus the path-filter `changes:` job were stubbed when the workflow was scaffolded, on the premise that there were no slow specs to run yet. PR #9 + PR #10 crossed that threshold. Until the stub is uncommented, slow specs land green on push but are not enforced by CI — silent regression risk grows with every PR that touches Supabase or auth.
+  - **How**: uncomment the `slow:` job block (`.github/workflows/ci.yml` line 142 onward) plus the dependent `changes:` job that `needs:` references. Verify locally with `act` if available, otherwise push to a draft PR and watch the workflow.
+  - **Where**: `.github/workflows/ci.yml:80-83 + 142+`. Discovered as Gate 2c finding during `/ak-pre-ship` for `pwa-spike` PR; pre-existing on `origin/main` (not caused by `pwa-spike`).
+
 <!--
 Each entry:
 

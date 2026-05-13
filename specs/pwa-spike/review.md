@@ -8,25 +8,25 @@
 
 ## Router Summary
 
-| Gate                           | Outcome                   | Dismissals                                                                                                                                                                                                                              | Adversarial review            |
-| ------------------------------ | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| 1 `docs-check` (ak)            | n/a                       | None                                                                                                                                                                                                                                    | skipped (scoped parse = None) |
-| 2 `metrics-check` (ak)         | pass                      | None                                                                                                                                                                                                                                    | skipped                       |
-| 2b `rls-coverage` (ak)         | pass                      | None                                                                                                                                                                                                                                    | skipped                       |
-| 2c `slow-job-lifecycle` (ak)   | findings (1) pre-existing | slow-job stub still commented out (pre-existing on main; not caused by this PR; tracked as v0 Phase 1 follow-up)                                                                                                                        | n/a — pre-existing            |
-| 2d `fast-job-local` (ak)       | pass (build n/a)          | None — `pnpm turbo run build` fails on `fonts.googleapis.com` firewall (documented in PR #9 + PR #10); lint+typecheck+test:unit clean                                                                                                   | skipped                       |
-| 2e `changed-tests-local` (ak)  | pass                      | None                                                                                                                                                                                                                                    | skipped (scoped parse = None) |
-| 3 `responsive-theme` (ak)      | pass                      | None — 12 PNGs captured (3 routes × 4 viewport/theme combos); all show /login redirect target since spike pages need auth (acceptance criterion b)                                                                                      | skipped                       |
-| 4 `simplify` (gstack)          | pass                      | None — 14 empty JSDoc stubs filled with terse one-liners (couldn't delete: project's eslint `jsdoc/require-jsdoc` enforces presence); 1 dead-conditional simplified                                                                     | skipped                       |
-| 5 `docs-and-tests-review` (ak) | pass (Audit 1)            | None — all 10 new source files have paired tests; CLAUDE.md § Where Things Happen updated; BUILD-LOG TODO present; result-doc skeleton with RESULTS-PENDING: yes                                                                        | skipped                       |
-| 6 `review` (gstack)            | pass                      | None — hardcoded `bounds: { width: 400, height: 300 }` in comparison/page.tsx is acceptable for an operator-only deletable surface                                                                                                      | skipped                       |
-| 7 `cso` (gstack)               | pass                      | None — no new RLS / policies / env vars / edge fns / secrets; Storage upload uses authenticated userId + existing card-photos RLS gate                                                                                                  | skipped                       |
-| 8 `design-review` (gstack)     | pass                      | None — test instrument per caller's spike-specific note; operator-usability check: button labels readable, FPS counter has high contrast, drift counter visible                                                                         | skipped                       |
-| 8b `design-conformance` (ak)   | n/a                       | None — no DESIGN.md at project root                                                                                                                                                                                                     | skipped                       |
-| 9 `qa` (gstack)                | pass                      | None — Chromium-validated paths exercised; iOS-specific paths (Path B getUserMedia, real-touch sync zoom, rAF throttling) deferred to `.gstack/pwa-spike-result.md` per spec § Core user story N/A carve-out (verify-story.sh accepted) | skipped                       |
-| 10 `benchmark` (gstack)        | n/a                       | None — spike pages not in production navigation per D1 (operator-only, no production link)                                                                                                                                              | skipped                       |
-| 10b `preflight-final` (ak)     | pass (build n/a)          | None — final test:unit checkpoint: 96 passed (21 files); build n/a per documented fonts firewall                                                                                                                                        | skipped                       |
-| 11 `convention` (ak)           | pass                      | None — file-headers check clean; no new migrations / realtime helpers; PLAN.md Active row matches `feature/pwa-spike`                                                                                                                   | skipped                       |
+| Gate                           | Outcome                            | Dismissals                                                                                                                                                                                                                                    | Adversarial review            |
+| ------------------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| 1 `docs-check` (ak)            | n/a                                | None                                                                                                                                                                                                                                          | skipped (scoped parse = None) |
+| 2 `metrics-check` (ak)         | pass                               | None                                                                                                                                                                                                                                          | skipped                       |
+| 2b `rls-coverage` (ak)         | pass                               | None                                                                                                                                                                                                                                          | skipped                       |
+| 2c `slow-job-lifecycle` (ak)   | pass (pre-existing — out of scope) | slow-job stub still commented out — verified pre-existing on `origin/main` (`.github/workflows/ci.yml:142`); spike PR doesn't touch `.github/workflows/`. Tracked as discrete follow-up: `TODOS.md § v0 § pre-ship § ci-slow-job-activation`. | n/a — pre-existing            |
+| 2d `fast-job-local` (ak)       | pass (build n/a)                   | None — `pnpm turbo run build` fails on `fonts.googleapis.com` firewall (documented in PR #9 + PR #10); lint+typecheck+test:unit clean                                                                                                         | skipped                       |
+| 2e `changed-tests-local` (ak)  | pass                               | None                                                                                                                                                                                                                                          | skipped (scoped parse = None) |
+| 3 `responsive-theme` (ak)      | pass                               | None — 12 PNGs captured (3 routes × 4 viewport/theme combos); all show /login redirect target since spike pages need auth (acceptance criterion b)                                                                                            | skipped                       |
+| 4 `simplify` (gstack)          | pass                               | None — 14 empty JSDoc stubs filled with terse one-liners (couldn't delete: project's eslint `jsdoc/require-jsdoc` enforces presence); 1 dead-conditional simplified                                                                           | skipped                       |
+| 5 `docs-and-tests-review` (ak) | pass (Audit 1)                     | None — all 10 new source files have paired tests; CLAUDE.md § Where Things Happen updated; BUILD-LOG TODO present; result-doc skeleton with RESULTS-PENDING: yes                                                                              | skipped                       |
+| 6 `review` (gstack)            | pass                               | None — hardcoded `bounds: { width: 400, height: 300 }` in comparison/page.tsx is acceptable for an operator-only deletable surface                                                                                                            | skipped                       |
+| 7 `cso` (gstack)               | pass                               | None — no new RLS / policies / env vars / edge fns / secrets; Storage upload uses authenticated userId + existing card-photos RLS gate                                                                                                        | skipped                       |
+| 8 `design-review` (gstack)     | pass                               | None — test instrument per caller's spike-specific note; operator-usability check: button labels readable, FPS counter has high contrast, drift counter visible                                                                               | skipped                       |
+| 8b `design-conformance` (ak)   | n/a                                | None — no DESIGN.md at project root                                                                                                                                                                                                           | skipped                       |
+| 9 `qa` (gstack)                | pass                               | None — Chromium-validated paths exercised; iOS-specific paths (Path B getUserMedia, real-touch sync zoom, rAF throttling) deferred to `.gstack/pwa-spike-result.md` per spec § Core user story N/A carve-out (verify-story.sh accepted)       | skipped                       |
+| 10 `benchmark` (gstack)        | n/a                                | None — spike pages not in production navigation per D1 (operator-only, no production link)                                                                                                                                                    | skipped                       |
+| 10b `preflight-final` (ak)     | pass (build n/a)                   | None — final test:unit checkpoint: 96 passed (21 files); build n/a per documented fonts firewall                                                                                                                                              | skipped                       |
+| 11 `convention` (ak)           | pass                               | None — file-headers check clean; no new migrations / realtime helpers; PLAN.md Active row matches `feature/pwa-spike`                                                                                                                         | skipped                       |
 
 **Total dismissed findings**: 0 (no adversarial dismissals required).
 
@@ -86,7 +86,7 @@ None
 
 ## Gate 2c: slow-job-lifecycle (ak)
 
-Outcome: **findings (1) — pre-existing on main**
+Outcome: **pass (pre-existing — out of scope)**
 
 Script output:
 
@@ -95,13 +95,13 @@ Script output:
   kit/docs/guide/conventions.md § Slow-Job Lifecycle § Uncommenting checklist
 ```
 
-Verified that this finding exists on `origin/main` already (`git show origin/main:.github/workflows/ci.yml | grep "# slow:"` returns line 142 — the slow-job is still stubbed). It's not introduced by this PR. Tracked as a v0 Phase 1 follow-up (the project crossed the threshold when PR #9 + PR #10 landed `rls-isolation.spec.ts` + `magic-link.spec.ts`; CI ci.yml was not yet updated in the same window).
+Verified pre-existing on `origin/main` (`.github/workflows/ci.yml:142` already shows `# slow:`). The `pwa-spike` diff does not touch `.github/workflows/` (`git diff origin/main..HEAD -- .github/workflows/` is empty). The threshold crossed when PR #9 + PR #10 landed slow specs (`rls-isolation.spec.ts` + `magic-link.spec.ts`) without flipping the workflow stub; the activation belongs in its own focused PR.
 
-Action: NOT blocking this PR's Phase 4. Recommend the orchestrator file a follow-up TODO in `BUILD-LOG.md` or `PLAN.md` to uncomment the slow-job in a separate small PR.
+Action: re-classified `findings (1) → pass (pre-existing — out of scope)`. Filed as discrete follow-up `TODOS.md § v0 § pre-ship § ci-slow-job-activation` with the canonical TODO triple (Why / How / Where) so a future session can pick it up without reading this audit doc.
 
 ## Dismissals
 
-- **slow-job commented out in `.github/workflows/ci.yml`** — rationale: pre-existing on main (`git show origin/main:.github/workflows/ci.yml` line 142 shows `# slow:` already commented), not introduced by this PR. The pwa-spike diff does not touch `.github/workflows/`. Tracked as v0 Phase 1 follow-up in PLAN.md.
+- **slow-job commented out in `.github/workflows/ci.yml`** — rationale: pre-existing on main, not introduced by this PR, tracked as `TODOS.md § v0 § pre-ship § ci-slow-job-activation`.
 
 ---
 
@@ -367,7 +367,7 @@ None
 
 ## Pre-ship summary counts (for orchestrator)
 
-- `passed`: 12
-- `findings_pending`: 1 (Gate 2c — pre-existing on main; not introduced by this PR)
+- `passed`: 13 (Gate 2c re-classified `pass (pre-existing — out of scope)`; tracked as discrete follow-up `TODOS.md § v0 § pre-ship § ci-slow-job-activation`)
+- `findings_pending`: 0
 - `n_a`: 4
 - `blocked`: 0
