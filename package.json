@@ -42,7 +42,9 @@
       "esbuild",
       "@sentry/cli",
       "core-js",
-      "protobufjs",
+      "protobufjs"
+    ],
+    "ignoredBuiltDependencies": [
       "sharp",
       "unrs-resolver"
     ]
