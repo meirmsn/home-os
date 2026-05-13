@@ -435,3 +435,23 @@ Other convention checks:
 None
 
 ---
+
+## Audit 2: post-polish (2026-05-13)
+
+<!-- audited-at: 00e614f5b3ed270ecabe81b774803fea4d0690e7 -->
+<!-- range: 460d277901dabf26095273521588d9902241d7d0..HEAD -->
+
+findings: high=0 medium=0 low=0
+
+### Docs findings
+
+- (none)
+
+### Tests findings
+
+- (none)
+
+### Bypass trailer audit
+
+- `97bb365` Docs-Coverage-Bypass: "literal posthog.capture() string appears only inside specs/supabase-schema-and-rls/review.md § Gate 3 as audit-trail prose, not a new analytics call site; spec § In scope excludes app code" — VERIFIED
+- `8e88ca0` Docs-Coverage-Bypass: "same fact pattern — literal posthog.capture() text in review.md § Gate 3 documenting zero new analytics events; this PR is a database-foundation PR with no app code" — VERIFIED
