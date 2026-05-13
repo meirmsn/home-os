@@ -1,4 +1,4 @@
-<!-- audited-at: PENDING-COMMIT-SHA -->
+<!-- audited-at: ce71d9716161662e72971b0e7a6786769440aa3c -->
 
 <!-- /ak-pre-ship audit trail for pwa-spike -->
 <!-- Run date: 2026-05-13 -->
