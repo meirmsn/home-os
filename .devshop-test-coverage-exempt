@@ -8,3 +8,5 @@
 #
 # Pattern:
 #   path/to/file.ts  # covered by path/to/covering.test.ts § Section name
+
+apps/web/app/login/_components/LoginForm.tsx  # covered by apps/web/app/login/page.test.tsx § /login — <LoginForm />
