@@ -12,8 +12,14 @@ import type { CoreConfig } from './supabase';
 // PRODUCTION_PROJECT_REF constant in supabase.ts. While the placeholder is
 // unsubstituted, the guard self-disables (see supabase.ts), so the
 // "throws on prod URL" tests are skipped.
-const PROD_REF = 'PROJECT_REF_PLACEHOLDER';
-const guardActive = PROD_REF !== 'PROJECT_REF_PLACEHOLDER';
+// Type widened to `string` so TS doesn't narrow the literal and flag the
+// sentinel check as "never true".
+const PROD_REF: string = 'kxhxbbljgunpjfhivccb';
+// Sentinel literal — must NOT match PROD_REF after substitution. If the skill's
+// sed substitutes both lines (the original bug), guardActive collapses to false
+// and all prod-URL tests silently skip. Spelling the sentinel as 'UNSCAFFOLDED'
+// keeps it stable across re-runs.
+const guardActive = PROD_REF !== 'UNSCAFFOLDED';
 const PROD_URL = `https://${PROD_REF}.supabase.co`;
 
 describe('createClient', () => {

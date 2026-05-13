@@ -1,5 +1,5 @@
 {
-  "name": "@PROJECT_NAME_PLACEHOLDER/core",
+  "name": "@home-os/core",
   "version": "0.0.0",
   "private": true,
   "main": "src/index.ts",

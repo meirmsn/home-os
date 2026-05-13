@@ -1,0 +1,17 @@
+{
+  "name": "Home OS",
+  "short_name": "Home OS",
+  "description": "Intelligent home maintenance companion.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1C1B18",
+  "theme_color": "#1C1B18",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ]
+}
