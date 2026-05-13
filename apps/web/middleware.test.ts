@@ -49,14 +49,16 @@ describe('middleware — D6 redirect rules', () => {
   it('anonymous + /home -> 307 redirect to /login?next=/home', async () => {
     getUser.mockResolvedValue({ data: { user: null } });
     const response = await middleware(mockRequest('/home'));
+    expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe(
       'http://localhost:3000/login?next=%2Fhome'
     );
   });
 
-  it('anonymous + /home/anything -> redirect to /login?next=/home/anything', async () => {
+  it('anonymous + /home/anything -> 307 redirect to /login?next=/home/anything', async () => {
     getUser.mockResolvedValue({ data: { user: null } });
     const response = await middleware(mockRequest('/home/anything'));
+    expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe(
       'http://localhost:3000/login?next=%2Fhome%2Fanything'
     );
@@ -79,6 +81,7 @@ describe('middleware — D6 redirect rules', () => {
       data: { user: { id: 'u-1', email: 'a@b.test' } },
     });
     const response = await middleware(mockRequest('/login'));
+    expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe('http://localhost:3000/home');
   });
 
@@ -93,6 +96,7 @@ describe('middleware — D6 redirect rules', () => {
   it('preserves the original query string on the next= param', async () => {
     getUser.mockResolvedValue({ data: { user: null } });
     const response = await middleware(mockRequest('/home', '?foo=bar'));
+    expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe(
       'http://localhost:3000/login?next=%2Fhome%3Ffoo%3Dbar'
     );
@@ -101,6 +105,7 @@ describe('middleware — D6 redirect rules', () => {
   it('treats a stale-cookie getUser throw as anonymous (gated -> /login)', async () => {
     getUser.mockRejectedValue(new Error('stale cookie boot'));
     const response = await middleware(mockRequest('/home'));
+    expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe(
       'http://localhost:3000/login?next=%2Fhome'
     );

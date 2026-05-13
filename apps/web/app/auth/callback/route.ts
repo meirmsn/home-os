@@ -10,9 +10,13 @@
 //       `next/navigation` here would throw a NEXT_REDIRECT signal that
 //       Next's intercept layer can reorder or drop the cookies (spec §
 //       Gotchas, D4).
-// Does NOT: Validate the `next` value beyond accepting it as a string — the
-//           only callers are the Supabase server (controlled by us) and
-//           the /login form (hard-coded `/home`).
+// Does NOT: Trust an arbitrary `next` value. Same-origin enforcement: any
+//           `next` that isn't a same-origin relative path (must start with
+//           "/" and not "//" — protocol-relative URLs would inherit
+//           https://attacker.example/ from the magic-link host) falls back
+//           to `/home`. Closes the open-redirect class: an attacker crafting
+//           `?code=…&next=https://evil.example.com` cannot bounce the user
+//           off the home-os origin after the PKCE exchange.
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
@@ -23,11 +27,20 @@ import { createClient } from '@/lib/supabase/server';
 // (spec § Gotchas: "Route handlers must opt out of static rendering").
 export const dynamic = 'force-dynamic';
 
+/** Same-origin redirect target. Accept only paths that begin with `/` and
+ *  are NOT protocol-relative (`//evil.example`) — anything else falls back
+ *  to `/home`. Closes the open-redirect class flagged in /cso. */
+function safeNext(raw: string | null): string {
+  if (!raw) return '/home';
+  if (!raw.startsWith('/') || raw.startsWith('//')) return '/home';
+  return raw;
+}
+
 /** GET /auth/callback?code=<pkce-code>&next=<path> */
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
-  const next = url.searchParams.get('next') ?? '/home';
+  const next = safeNext(url.searchParams.get('next'));
 
   // Defensive — never call exchangeCodeForSession(undefined). A magic-link
   // URL with a missing `code` is malformed; surface it as callback_failed.

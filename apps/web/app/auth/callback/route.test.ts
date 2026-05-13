@@ -78,4 +78,37 @@ describe('/auth/callback GET', () => {
     );
     expect(exchangeCodeForSession).not.toHaveBeenCalled();
   });
+
+  it('refuses an absolute-URL `next` (open-redirect defense) — falls back to /home', async () => {
+    exchangeCodeForSession.mockResolvedValue({ error: null });
+    const response = await GET(
+      mockRequest(
+        'http://localhost:3000/auth/callback?code=abc&next=https%3A%2F%2Fevil.example.com%2Fphish'
+      )
+    );
+    expect(response.status).toBe(303);
+    expect(response.headers.get('location')).toBe('http://localhost:3000/home');
+  });
+
+  it('refuses a protocol-relative `next` (//evil.example) — falls back to /home', async () => {
+    exchangeCodeForSession.mockResolvedValue({ error: null });
+    const response = await GET(
+      mockRequest(
+        'http://localhost:3000/auth/callback?code=abc&next=%2F%2Fevil.example.com%2Fphish'
+      )
+    );
+    expect(response.status).toBe(303);
+    expect(response.headers.get('location')).toBe('http://localhost:3000/home');
+  });
+
+  it('refuses a non-/-prefixed `next` (e.g. "javascript:alert(1)") — falls back to /home', async () => {
+    exchangeCodeForSession.mockResolvedValue({ error: null });
+    const response = await GET(
+      mockRequest(
+        'http://localhost:3000/auth/callback?code=abc&next=javascript%3Aalert(1)'
+      )
+    );
+    expect(response.status).toBe(303);
+    expect(response.headers.get('location')).toBe('http://localhost:3000/home');
+  });
 });
