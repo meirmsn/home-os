@@ -371,3 +371,64 @@ None
 - `findings_pending`: 0
 - `n_a`: 4
 - `blocked`: 0
+
+---
+
+## Audit 2
+
+<!-- audited-at: 5f2d826cb1ae727d80d2d21d67d14f6c673828b4 -->
+
+Post-pre-ship audit (Phase 5.8) over commits `ce71d97..5f2d826` on `feature/pwa-spike`.
+
+Audited range is bookkeeping-only — the 3 commits in scope touch no source, test, migration, script, or runtime files:
+
+- `680f75f` — chore(pwa-spike): stamp review.md audited-at with HEAD SHA
+- `6c634c3` — chore(pwa-spike): file slow-job activation as discrete v0 follow-up
+- `5f2d826` — chore(build-log): record pwa-spike
+
+Classification: no code/test/runtime change since Audit 1 (the pre-ship snapshot captured in the gate sections above). Coverage and quality rubrics have no surface area to evaluate.
+
+### Docs findings
+
+### Docs review — pwa-spike Audit 2 (range ce71d97..HEAD)
+
+Clean — no docs findings.
+
+Bypass trailers: No Docs-Coverage-Bypass trailers in range.
+
+Coverage summary:
+
+- Diff touches only 4 top-level docs (BUILD-LOG.md, PLAN.md, TODOS.md, specs/pwa-spike/review.md). No source-code changes under apps/, packages/, supabase/migrations/, or supabase/functions/. With zero source changes, the surface-to-doc coverage rubric does not fire — these doc edits ARE the bookkeeping deliverables that close out the feature.
+
+Adequacy verification (each touched doc spot-checked):
+
+- TODOS.md ci-slow-job-activation (lines 27-30) — matches the canonical Why/How/Where triple at lines 32-39. Cited lines .github/workflows/ci.yml:80-83 + 142+ verified accurate (line 142 starts "# slow:").
+- BUILD-LOG.md pwa-spike entry (lines 13-20) — matches the format of auth-magic-link and supabase-schema-and-rls entries (Branch / PR / Spec / Summary / Commits / Quality gates). Quality-gate counts (13 passed / 0 findings_pending / 4 n/a / 0 blocked = 17 gates) match the 17 rows in review.md Router Summary. RESULTS-PENDING gate cited correctly — .gstack/pwa-spike-result.md exists with RESULTS-PENDING: yes frontmatter.
+- PLAN.md Active flipped to "_No work in progress._" — correct empty state per the convention at line 49.
+- review.md audited-at stamp set to Audit 1's HEAD (ce71d97); Gate 2c re-classification (findings (1) pre-existing → pass (pre-existing — out of scope)) is justified by the verified pre-existing state on origin/main. Pre-ship summary count flip (12→13 passed, 1→0 findings_pending) is internally consistent.
+
+Cross-doc coherence:
+
+- BUILD-LOG head TODO (line 7) cites apps/web/app/(app)/spike/ + apps/web/public/spike/ + Where-Things-Happen entries — all verified present in CLAUDE.md lines 29-35.
+- TODOS.md citation .github/workflows/ci.yml:80-83 + 142+ verified accurate.
+- No renamed or deleted files in the range; no stale path-references to sweep.
+
+### Tests findings
+
+### Tests review — pwa-spike Audit 2 (range ce71d97..HEAD)
+
+Tests look solid — no findings.
+
+Bypass trailers: No Tests-Coverage-Bypass trailers in range.
+
+Coverage summary:
+
+- Diff touches only 4 top-level docs (BUILD-LOG.md, PLAN.md, TODOS.md, specs/pwa-spike/review.md). No source code, no test files, no migrations, no scripts, no edge functions. Tests review rubric (Sections A/B/C) has no surface area to evaluate — no new behavior to demand coverage, no test files added/modified to inspect for quality, no bypass trailers harvested.
+
+Section A (coverage of new behavior): n/a — no source-code changes in range.
+Section B (test quality): n/a — no test files added or modified in range.
+Section C (bypass trailers): 0 rows harvested.
+
+### Summary
+
+findings: high=0 medium=0 low=0
