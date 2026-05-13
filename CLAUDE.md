@@ -28,6 +28,17 @@ Path map of every documented surface. Update this section when introducing a new
 - **UI primitives**: `packages/ui/src/Button.tsx` — proof-of-concept; chip / card variants ship per-feature via `/ak-build`.
 - **PWA manifest + icons**: `apps/web/public/manifest.json` + `apps/web/public/icon.svg` (placeholder house silhouette on dark ground). Apple touch icon + raster sizes 192/512 deferred until brand assets exist.
 - **Local Supabase ports (rebound +100)**: `.devcontainer/compose.yml` socat forwards, `.devcontainer/supabase-runner/Dockerfile` EXPOSE, `.devcontainer/init-firewall.sh` allowlist. Rebound to avoid lalista collision: api/kong 54421, db 54422, studio 54423, inbucket 54424, realtime/analytics 54427.
+- **Supabase schema migrations (foundation v0 Phase 1 PR #1)**:
+  - `supabase/migrations/20260513184100_001_enums.sql` — 7 native Postgres enums (`card_state`, `system_tag`, `severity`, `contractor_tag`, `touchpoint_type`, `photo_slot`, `triage_role`).
+  - `supabase/migrations/20260513184101_002_tables.sql` — 5 public-schema tables (`users`, `cards`, `triage_conversations`, `card_photos`, `usage_counters`) with FKs (`on delete cascade`), CHECK constraints (cards monitoring cadence + version; triage round 1-3; usage counters non-negative), and indexes on every FK column + `cards.state`.
+  - `supabase/migrations/20260513184102_003_rls_tables.sql` — `ENABLE ROW LEVEL SECURITY` + 4 per-action policies on each of the 5 public tables (20 total). Predicate is `auth.uid() = id` for `users` and `auth.uid() = user_id` everywhere else.
+  - `supabase/migrations/20260513184103_004_storage.sql` — private `card-photos` bucket (idempotent `ON CONFLICT DO NOTHING`) + 4 `storage.objects` policies gated by `bucket_id = 'card-photos' AND (storage.foldername(name))[1] = auth.uid()::text`.
+  - `supabase/migrations/20260513184104_005_triggers.sql` — `create_public_user_profile()` SECURITY DEFINER (with pinned `search_path`) + `on_auth_user_created` AFTER INSERT trigger on `auth.users` (D2); `set_updated_at()` + `cards_updated_at` BEFORE UPDATE trigger (D6).
+- **Storage bucket (private)**: `card-photos`. Path convention `{user_id}/cards/{card_id}/touchpoints/{touchpoint_id}/{slot}.jpg`; RLS scoped on the leading path segment matching `auth.uid()::text`.
+- **Auth-signup → profile trigger**: `public.create_public_user_profile()` + `on_auth_user_created` AFTER INSERT trigger on `auth.users`. Eliminates the race window between signup and the first app-side read against `public.users`.
+- **Cards `updated_at` trigger**: `public.set_updated_at()` (generic) + `cards_updated_at` BEFORE UPDATE trigger on `public.cards`. Other tables add the trigger in their own migrations when they grow update flows.
+- **Generated Database types**: `packages/core/src/supabase.types.ts` — regenerated via `pnpm db:gen-types` against the local stack (D11). Contains all 5 Tables and all 7 Enums.
+- **Multi-user RLS isolation E2E**: `apps/web/e2e/rls-isolation.spec.ts` — two-user Playwright spec (Pattern 3 helpers). Asserts SELECT/INSERT/UPDATE/DELETE + storage download/upload isolation in both directions on all 5 tables. Skips gracefully via `test.skip(!isLocalSupabase, …)` so CI fast-job reports skipped; slow-job is the enforcement surface.
 
 _This section grows as code is added. Update it when introducing new paths._
 
