@@ -104,9 +104,13 @@ begin
 end;
 $$;
 
+-- Rollback note: the 'dismissed' enum value added in 006a is irreversible
+-- (ALTER TYPE ADD VALUE is not undoable in standard Postgres). The ROLLBACK
+-- block below intentionally does not reference it. See 006a's header for
+-- the destructive recreate-the-type recipe.
+--
 -- ROLLBACK:
 -- drop function if exists public.claim_card_slot(uuid, text, text, system_tag, text);
 -- alter table public.cards drop constraint if exists cards_description_max_length;
 -- alter table public.usage_counters drop column if exists week_start;
 -- alter table public.cards drop column if exists room_tag;
--- (Note: ALTER TYPE ADD VALUE in 006a is not reversible — see 006a.)
