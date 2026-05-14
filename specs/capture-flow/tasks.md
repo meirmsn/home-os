@@ -11,8 +11,8 @@ per task.
 | 3   | `POST /api/card` route handler + `title-from-description` helper      | done        | 763f4c5    |
 | 4   | `POST /api/card/[id]/restore` route handler                           | done        | e2bccc4    |
 | 5   | `CaptureForm` client component (Path A photo + cap-hit preservation)  | done        | edc968e    |
-| 6   | `/capture` page server shell + `ExistingCardPicker` server component  | in_progress |            |
-| 7   | `/dismissed` list + `RestoreStrip` inline-confirm component           | pending     |            |
+| 6   | `/capture` page server shell + `ExistingCardPicker` server component  | done        | 71cd8a3    |
+| 7   | `/dismissed` list + `RestoreStrip` inline-confirm component           | in_progress |            |
 | 8   | `/home` Capture CTA + middleware gated-prefix extension               | pending     |            |
 | 9   | `METRICS.md` — three new rows (capture_started / completed / cap_hit) | done        | f4b3dc8    |
 | 10  | `CLAUDE.md` + `ARCHITECTURE.md` + `OVERVIEW.md` doc entries           | done        | 9443254    |
