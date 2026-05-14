@@ -2,11 +2,22 @@
 
 > **[TODO] CAPTCHA deferred** — hCaptcha was not configured during `/ak-new-project` Step 17b. Before public launch, mint a secret at https://dashboard.hcaptcha.com/ and apply via `PATCH /v1/projects/kxhxbbljgunpjfhivccb/config/auth` with `{"security_captcha_enabled": true, "security_captcha_provider": "hcaptcha", "security_captcha_secret": "<secret>"}`. Remove this line when done.
 
-> **[TODO] Preview-deploy email-auth deferred** — `uri_allow_list` is the minimal pair (`https://home-os-nu-two.vercel.app/**` + `http://localhost:3000/**`). Email-auth flows (password reset, magic link, signup confirm) will not work from Vercel PR preview deploys. When needed, append the team-hash wildcard (typically `https://*-<team-slug>-<team-hash>.vercel.app/**`) via the same Management API PATCH on `uri_allow_list`.
+> **[TODO] PWA-spike surfaces deferred for cleanup** — After `photo-comparison-ui` ships and its design decisions are baked in, delete: `apps/web/app/(app)/spike/`, `apps/web/public/spike/`, the `## Where Things Happen` entries for spike surfaces, and the spike paths from any `connect-src` / route allowlists. Remove this line when done.
 
 Project build history. One entry per merged PR, most-recent first. Written by `/ak-build` Phase 5.6 on the feature branch before merge, so the entry ships as part of its own PR.
 
 For forward-looking plan: `PLAN.md`. For deferred/long-term work: `PRODUCT-ROADMAP.md`.
+
+### pwa-spike (2026-05-13)
+
+- **Branch**: `feature/pwa-spike` (merging via [#12](https://github.com/meirmsn/home-os/pull/12))
+- **PR**: [#12](https://github.com/meirmsn/home-os/pull/12)
+- **Spec**: `specs/pwa-spike/spec.md`
+- **Summary**: Operator-only test surface under `apps/web/app/(app)/spike/` validating the three iOS-Safari capabilities that gate the downstream `photo-comparison-ui` PR — `/spike/camera` exercises both `<input type="file" capture>` and `getUserMedia` + canvas paths and uploads to the existing `card-photos` bucket under `{auth.uid()}/spike/{ISO}-{A|B}.jpg`; `/spike/comparison` runs custom pointer-event sync zoom across two `<img>` panels with FPS overlay and `opacity`-swap bounce mode at 1200/750/400 ms with live median + p95 + drift readouts. Three pure-fn helper modules (`bounce-timer`, `sync-zoom-transform`, `storage-path`) carry the load-bearing logic with 33 table-driven unit tests. Ships `.gstack/pwa-spike-result.md` with `RESULTS-PENDING: yes` — operator validates on real iPhone Safari against the Vercel preview, fills per-feature Ship/Defer/Ship-with-constraint, flips to `no`, merges. Cleanup contract recorded in BUILD-LOG head TODO: spike pages + samples + Where-Things-Happen entries deleted when `photo-comparison-ui` consumes the findings.
+- **Commits**: 11 atomic commits + 1 BUILD-LOG bookkeeping commit on top — 2 spec (Phase 0 skeleton + Phase 1 expand), 6 implement (T1 helpers → T2 landing → T3 camera → T4 comparison → T5 samples+result-doc → T6 BUILD-LOG TODO + lint cleanup), 2 pre-ship (Gate 4 + Gate 9 fixes + audited-at stamp), 1 slow-job re-classification + `TODOS.md § v0 § pre-ship § ci-slow-job-activation` follow-up entry.
+- **Quality gates**: 13 passed, 0 findings_pending, 4 n/a (docs-check, design-conformance, benchmark, build step under documented `fonts.googleapis.com` devcontainer firewall), 0 blocked. Gate 2c slow-job re-classified from `findings_pending` to `pass (pre-existing — out of scope)` since the spike diff doesn't touch `.github/workflows/`; tracked as a discrete follow-up. CI fast-job green; Vercel preview Ready at `home-os-git-feature-pwa-spike-homeos.vercel.app`.
+- **iOS spike result** (`.gstack/pwa-spike-result.md`, `RESULTS-PENDING: no`): all 7 gates passed on real device — Camera Path A (3024×4032, native camera UX) **Ship**; Path B (full-res but no native controls) **Defer**; Storage upload **Ship**; sync zoom **Ship** (FPS > 58); bounce 1200 / 750 / 400 ms all **Ship** (drift < 1 at every cadence). Net: `photo-comparison-ui` ships with the maximal Phase 1 scope (sync zoom + user-adjustable cadence picker with all three modes); the CEO-review fallback to side-by-side-only is NOT triggered. Two spike follow-ups for downstream PRs recorded in the result doc (`capture-flow`: make upload-success feedback explicit; `photo-comparison-ui`: keep a hidden diagnostic-mode toggle).
+- **Preview-deploy email-auth** unblocked during the walk: added `https://home-os-git-*-homeos.vercel.app/**` to Supabase `uri_allow_list` via the dashboard so magic-link redirects honor preview-deploy origins instead of falling back to production. Closes the `[TODO] Preview-deploy email-auth deferred` from this file's head (PR #10 era).
 
 ### auth-magic-link (2026-05-13)
 
