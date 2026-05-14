@@ -7,15 +7,15 @@ per task.
 | #   | Task                                                                  | Status      | Commit SHA |
 | --- | --------------------------------------------------------------------- | ----------- | ---------- |
 | 1   | Migration 006a + 006b (room_tag, week_start, dismissed enum, RPC)     | done        | 603591f    |
-| 2   | Regenerate `supabase.types.ts` for migration 006                      | in_progress |            |
-| 3   | `POST /api/card` route handler + `title-from-description` helper      | pending     |            |
+| 2   | Regenerate `supabase.types.ts` for migration 006                      | done        | 2f8a0af    |
+| 3   | `POST /api/card` route handler + `title-from-description` helper      | in_progress |            |
 | 4   | `POST /api/card/[id]/restore` route handler                           | pending     |            |
 | 5   | `CaptureForm` client component (Path A photo + cap-hit preservation)  | pending     |            |
 | 6   | `/capture` page server shell + `ExistingCardPicker` server component  | pending     |            |
 | 7   | `/dismissed` list + `RestoreStrip` inline-confirm component           | pending     |            |
 | 8   | `/home` Capture CTA + middleware gated-prefix extension               | pending     |            |
 | 9   | `METRICS.md` — three new rows (capture_started / completed / cap_hit) | done        | f4b3dc8    |
-| 10  | `CLAUDE.md` + `ARCHITECTURE.md` + `OVERVIEW.md` doc entries           | in_progress |            |
+| 10  | `CLAUDE.md` + `ARCHITECTURE.md` + `OVERVIEW.md` doc entries           | done        | 9443254    |
 | 11  | E2E `capture-flow.spec.ts` + extend `rls-isolation.spec.ts`           | pending     |            |
 
 ## Decisions
@@ -24,7 +24,7 @@ Judgment calls made during implementation that the spec didn't pre-resolve.
 
 - **Task order: land T9 (METRICS.md) + T10 (CLAUDE.md docs) BEFORE T3-T8 surfaces.** The
   spec's § Task order placed T9 + T10 at the end (positions 9 + 10), but the
-  pre-commit docs-freshness hook (`check-docs-freshness-project.sh`) blocks the
+  pre-commit docs-freshness hook (`check-docs-coverage-project.sh`) blocks the
   introduction of a new route/page surface unless `CLAUDE.md § Where Things
 Happen` and `ARCHITECTURE.md § Module map` are staged in the same commit,
   and blocks new `posthog.capture()` call sites without a matching `METRICS.md`
