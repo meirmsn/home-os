@@ -4,19 +4,19 @@ Tracker for `/ak-implement` on `feature/capture-flow`. Order matches
 `specs/capture-flow/spec.md § Task order` (11 tasks). Single atomic commit
 per task.
 
-| #   | Task                                                                  | Status      | Commit SHA |
-| --- | --------------------------------------------------------------------- | ----------- | ---------- |
-| 1   | Migration 006a + 006b (room_tag, week_start, dismissed enum, RPC)     | done        | 603591f    |
-| 2   | Regenerate `supabase.types.ts` for migration 006                      | done        | 2f8a0af    |
-| 3   | `POST /api/card` route handler + `title-from-description` helper      | done        | 763f4c5    |
-| 4   | `POST /api/card/[id]/restore` route handler                           | done        | e2bccc4    |
-| 5   | `CaptureForm` client component (Path A photo + cap-hit preservation)  | done        | edc968e    |
-| 6   | `/capture` page server shell + `ExistingCardPicker` server component  | done        | 71cd8a3    |
-| 7   | `/dismissed` list + `RestoreStrip` inline-confirm component           | done        | 6a4c223    |
-| 8   | `/home` Capture CTA + middleware gated-prefix extension               | done        | 1f2d1cc    |
-| 9   | `METRICS.md` — three new rows (capture_started / completed / cap_hit) | done        | f4b3dc8    |
-| 10  | `CLAUDE.md` + `ARCHITECTURE.md` + `OVERVIEW.md` doc entries           | done        | 9443254    |
-| 11  | E2E `capture-flow.spec.ts` + extend `rls-isolation.spec.ts`           | in_progress |            |
+| #   | Task                                                                  | Status | Commit SHA |
+| --- | --------------------------------------------------------------------- | ------ | ---------- |
+| 1   | Migration 006a + 006b (room_tag, week_start, dismissed enum, RPC)     | done   | 603591f    |
+| 2   | Regenerate `supabase.types.ts` for migration 006                      | done   | 2f8a0af    |
+| 3   | `POST /api/card` route handler + `title-from-description` helper      | done   | 763f4c5    |
+| 4   | `POST /api/card/[id]/restore` route handler                           | done   | e2bccc4    |
+| 5   | `CaptureForm` client component (Path A photo + cap-hit preservation)  | done   | edc968e    |
+| 6   | `/capture` page server shell + `ExistingCardPicker` server component  | done   | 71cd8a3    |
+| 7   | `/dismissed` list + `RestoreStrip` inline-confirm component           | done   | 6a4c223    |
+| 8   | `/home` Capture CTA + middleware gated-prefix extension               | done   | 1f2d1cc    |
+| 9   | `METRICS.md` — three new rows (capture_started / completed / cap_hit) | done   | f4b3dc8    |
+| 10  | `CLAUDE.md` + `ARCHITECTURE.md` + `OVERVIEW.md` doc entries           | done   | 9443254    |
+| 11  | E2E `capture-flow.spec.ts` + extend `rls-isolation.spec.ts`           | done   | dec6b2b    |
 
 ## Decisions
 
