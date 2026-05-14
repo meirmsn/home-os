@@ -391,3 +391,24 @@ Captured to `specs/capture-flow/hero/`:
 - `hero/dismissed-anon-bounce.png` — anonymous request to `/dismissed` → middleware redirect to `/login?next=%2Fdismissed`. Same gating pattern.
 
 **Not captured** (per Gate 9 `blocked` documented above): authenticated `/capture` form rendering, the `/dismissed` list with seeded rows, the cap-hit banner. CI slow-job (once Gate 2c is closed) is the automated enforcement surface; Vercel preview deploy will surface authenticated states for human review during PR review.
+
+## Audit 2: post-polish (2026-05-13)
+
+<!-- audited-at: f5a5c9841312e73b1b9fc6c3f37b7f37de1aec1e -->
+<!-- range: c136da8a7766ce5f37cd7d4fd908bd72c85acc8e..f5a5c9841312e73b1b9fc6c3f37b7f37de1aec1e -->
+
+findings: high=0 medium=0 low=2
+
+### Docs findings
+
+- [low] CLAUDE.md:30-33 — PWA-spike block (inherited via origin/main merge 5f58998) describes `/spike/camera` and `/spike/comparison` at page-file granularity, but the implementation factored Path A / Path B / panels / cadence controls into `apps/web/app/(app)/spike/_components/{CameraPathA,CameraPathB,ComparisonPanels,CadenceControls}.tsx`. Surface→doc map omits the new `_components/` subdirectory. Capped at low because (a) the operator-only spike pages are scheduled for deletion with `photo-comparison-ui` per `BUILD-LOG.md:3` head TODO, (b) `specs/pwa-spike/spec.md` is the authoritative internal-organization source, and (c) capture-flow does not own this surface — it inherited the description via the merge. Optional fix: add one bullet citing the four `_components/*.tsx` files; OR defer entirely until the cleanup PR removes the spike.
+- [low] Bypass trailer audit — two `Docs-Coverage-Bypass:` trailers harvested in range (reachable via the origin/main merge 5f58998 from the pwa-spike branch). Rationale on each: "Sentry.captureException(...) call sites are error-capture for the operator-only PWA spike — NOT analytics events; METRICS.md tracks analytics, not error capture; spike pages deleted with photo-comparison-ui per D8." VERIFIED — confirmed at 8 call sites (`CameraPathA.tsx:67/99/108`, `CameraPathB.tsx:87/155/164`, `comparison/page.tsx:94/128`); METRICS.md was never modified by the spike; cleanup contract is first-class in `BUILD-LOG.md:3`. No escalation.
+
+### Tests findings
+
+- (none)
+
+### Bypass trailer audit
+
+- pwa-spike branch commits reached via merge 5f58998 Docs-Coverage-Bypass: "Sentry.captureException(...) call sites in CameraPathA/B.tsx are error-capture for operator-only PWA spike — D10 forbids PostHog events from spike; METRICS.md tracks analytics, not error capture; spike pages deleted with photo-comparison-ui per D8" — VERIFIED
+- pwa-spike branch commits reached via merge 5f58998 Docs-Coverage-Bypass: "Sentry.captureException(...) call sites in comparison/page.tsx are error-capture (Storage list-failure / signed-URL fallback) — NOT analytics events; spike pages deleted with photo-comparison-ui per D8" — VERIFIED
