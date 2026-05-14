@@ -122,12 +122,15 @@ jobs:
     if: github.event_name == 'pull_request' && needs.changes.outputs.runtime == 'true'
     timeout-minutes: 30
     env:
-      # CI's slow-job uses the local Supabase stack — `supabase status -o env`
-      # later in the job overwrites these with the actual just-spun-up values,
-      # but seeding them up-front keeps any pre-supabase-start step (typecheck
-      # via the helpers) honest about which stack it points at.
-      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-      SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+      # NO job-level SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY:
+      # those would PIN the GH-Variables value (port 54321 — wrong for home-os's
+      # rebound 54421 stack) and shadow any `$GITHUB_ENV` write from a later
+      # step, because GitHub Actions resolves job-level `env:` AFTER each
+      # step's `$GITHUB_ENV` writes for `process.env.*` but BEFORE for the
+      # `${{ env.* }}` expression context. The slow-job sources the real
+      # values from `supabase status -o env` (via `$GITHUB_ENV`) and the
+      # steps that need them map at step level. See lalista CI for the
+      # canonical pattern.
       NEXT_PUBLIC_POSTHOG_KEY: ${{ vars.NEXT_PUBLIC_POSTHOG_KEY }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -147,8 +150,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright Chromium with deps
-        run: pnpm --filter @home-os/web exec playwright install --with-deps chromium
+      - name: Install Playwright browsers with deps (chromium + webkit)
+        # Both are needed: `desktop` project uses Chromium, `mobile` project
+        # inherits `devices['iPhone 15']` which defaults to WebKit. Installing
+        # only Chromium leaves every mobile test failing at browser launch with
+        # `Executable doesn't exist at .../webkit-XXXX/pw_run.sh` — see lalista
+        # CI for the same gotcha.
+        run: pnpm --filter @home-os/web exec playwright install --with-deps chromium webkit
 
       - uses: supabase/setup-cli@v1
         with:
@@ -181,19 +189,25 @@ jobs:
             start_supabase
           fi
           # Export the live local-stack URL + JWTs into the job env. `supabase
-          # status -o env` emits unprefixed names (API_URL, ANON_KEY, ...) —
-          # NOT the seeded SUPABASE_URL the comment author originally assumed
-          # would be overwritten. So we also explicitly bridge to the
-          # NEXT_PUBLIC_* names the app reads (apps/web/lib/supabase/{client,
-          # server}.ts + middleware.ts via `process.env.NEXT_PUBLIC_SUPABASE_*`).
-          # Without the bridge, `next build` bakes `undefined` into the bundle
-          # and `next start` throws "Your project's URL and Key are required to
-          # create a Supabase client!" on every request the Playwright specs
-          # trigger.
-          supabase status -o env >> "$GITHUB_ENV"
-          SB_ENV=$(supabase status -o env)
-          SB_URL=$(echo "$SB_ENV" | awk -F= '/^API_URL=/{gsub(/"/,"",$2); print $2}')
-          SB_KEY=$(echo "$SB_ENV" | awk -F= '/^ANON_KEY=/{gsub(/"/,"",$2); print $2}')
+          # status -o env` emits unprefixed names (API_URL, ANON_KEY,
+          # SERVICE_ROLE_KEY, INBUCKET_URL, MAILPIT_URL, ...) — NOT the
+          # SUPABASE_*-prefixed names the test helpers read. The strategy:
+          #  - strip the surrounding double quotes `supabase status -o env`
+          #    wraps every value in (otherwise GITHUB_ENV stores the literal
+          #    `"..."`, which then poisons every consumer as an invalid URL);
+          #  - push the unprefixed names to `$GITHUB_ENV` so later steps can
+          #    map them into the prefixed names at step level via
+          #    `${{ env.API_URL }}` / `${{ env.SERVICE_ROLE_KEY }}` (lalista
+          #    pattern);
+          #  - additionally bridge `API_URL` -> `NEXT_PUBLIC_SUPABASE_URL`
+          #    and `ANON_KEY` -> `NEXT_PUBLIC_SUPABASE_ANON_KEY` so
+          #    `next build` bakes the right values into the bundle and the
+          #    browser client doesn't crash with "Your project's URL and
+          #    Key are required to create a Supabase client!".
+          SB_ENV="$(supabase status -o env | sed -E 's/="(.*)"$/=\1/')"
+          echo "$SB_ENV" >> "$GITHUB_ENV"
+          SB_URL="$(echo "$SB_ENV" | sed -n 's/^API_URL=//p')"
+          SB_KEY="$(echo "$SB_ENV" | sed -n 's/^ANON_KEY=//p')"
           {
             echo "NEXT_PUBLIC_SUPABASE_URL=$SB_URL"
             echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$SB_KEY"
@@ -206,9 +220,30 @@ jobs:
         run: bash scripts/ci-rollback-explain.sh
 
       - name: Build web app for E2E
+        env:
+          # Step-level mapping from the local-stack values exported by the
+          # "Start local Supabase" step. Necessary at BUILD time so `next
+          # build` bakes the right Supabase URL + anon key into the client
+          # bundle (these are NEXT_PUBLIC_* on purpose; the values are
+          # public local-stack defaults).
+          NEXT_PUBLIC_SUPABASE_URL: ${{ env.API_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.ANON_KEY }}
         run: pnpm turbo run build --filter=@home-os/web
 
       - name: Start next + run Playwright E2E
+        env:
+          # Step-level mapping is the canonical way to bridge `supabase
+          # status -o env`'s unprefixed output (API_URL / ANON_KEY /
+          # SERVICE_ROLE_KEY) to the SUPABASE_*-prefixed names the test
+          # helpers read (apps/web/e2e/helpers/admin-client.ts). Job-level
+          # `env:` would shadow `$GITHUB_ENV` writes; step-level `env:`
+          # resolves AFTER `$GITHUB_ENV`, so `${{ env.API_URL }}` picks up
+          # the live value the previous step wrote.
+          NEXT_PUBLIC_SUPABASE_URL: ${{ env.API_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.ANON_KEY }}
+          SUPABASE_URL: ${{ env.API_URL }}
+          SUPABASE_ANON_KEY: ${{ env.ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ env.SERVICE_ROLE_KEY }}
         run: |
           set -e
           # Boot next in the background; wait for the port to open before
