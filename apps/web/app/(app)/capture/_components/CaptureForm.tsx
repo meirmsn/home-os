@@ -238,7 +238,7 @@ export function CaptureForm() {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           disabled={stage === 'submitting'}
-          className="block w-full rounded-md border border-[var(--color-border-input)] bg-[var(--color-surface-input)] px-3 py-2.5 text-sm text-[var(--color-text-primary-inverse)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
+          className="block min-h-11 w-full rounded-md border border-[var(--color-border-input)] bg-[var(--color-surface-input)] px-3 py-2.5 text-sm text-[var(--color-text-primary-inverse)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
           placeholder="Describe the issue in a sentence or two…"
         />
         {description.length > 1500 && (
@@ -270,7 +270,7 @@ export function CaptureForm() {
           capture="environment"
           onChange={onPhotoChange}
           disabled={stage === 'submitting'}
-          className="block w-full text-sm text-[var(--color-text-primary-inverse)] file:mr-3 file:rounded-md file:border-0 file:bg-[var(--color-surface-primary)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-text-on-primary)] hover:file:bg-[var(--color-surface-primary-hover)]"
+          className="block w-full text-sm text-[var(--color-text-primary-inverse)] file:mr-3 file:min-h-11 file:rounded-md file:border-0 file:bg-[var(--color-surface-primary)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-text-on-primary)] hover:file:bg-[var(--color-surface-primary-hover)]"
         />
         {photo && photoUrl && (
           <div className="flex items-center gap-3 pt-2">
@@ -296,7 +296,7 @@ export function CaptureForm() {
           value={systemTag}
           onChange={(e) => setSystemTag(e.target.value)}
           disabled={stage === 'submitting'}
-          className="block w-full rounded-md border border-[var(--color-border-input)] bg-[var(--color-surface-input)] px-3 py-2.5 text-sm text-[var(--color-text-primary-inverse)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
+          className="block min-h-11 w-full rounded-md border border-[var(--color-border-input)] bg-[var(--color-surface-input)] px-3 py-2.5 text-sm text-[var(--color-text-primary-inverse)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
         >
           <option value="" disabled>
             Pick a system…
@@ -329,7 +329,7 @@ export function CaptureForm() {
           value={roomTag}
           onChange={(e) => setRoomTag(e.target.value)}
           disabled={stage === 'submitting'}
-          className="block w-full rounded-md border border-[var(--color-border-input)] bg-[var(--color-surface-input)] px-3 py-2.5 text-sm text-[var(--color-text-primary-inverse)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
+          className="block min-h-11 w-full rounded-md border border-[var(--color-border-input)] bg-[var(--color-surface-input)] px-3 py-2.5 text-sm text-[var(--color-text-primary-inverse)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
           placeholder="Kitchen, Garage, Master bath…"
         />
         {validationFields?.room_tag && (
@@ -383,7 +383,7 @@ function ModeToggle({
         type="button"
         aria-pressed={mode === 'new'}
         onClick={() => onChange('new')}
-        className={`min-h-9 rounded px-3 py-1.5 ${mode === 'new' ? 'bg-[var(--color-surface-primary)] text-[var(--color-text-on-primary)]' : 'text-[var(--color-text-secondary-inverse)]'}`}
+        className={`min-h-11 rounded px-3 py-1.5 ${mode === 'new' ? 'bg-[var(--color-surface-primary)] text-[var(--color-text-on-primary)]' : 'text-[var(--color-text-secondary-inverse)]'}`}
       >
         New issue
       </button>
@@ -391,7 +391,7 @@ function ModeToggle({
         type="button"
         aria-pressed={mode === 'update'}
         onClick={() => onChange('update')}
-        className={`min-h-9 rounded px-3 py-1.5 ${mode === 'update' ? 'bg-[var(--color-surface-primary)] text-[var(--color-text-on-primary)]' : 'text-[var(--color-text-secondary-inverse)]'}`}
+        className={`min-h-11 rounded px-3 py-1.5 ${mode === 'update' ? 'bg-[var(--color-surface-primary)] text-[var(--color-text-on-primary)]' : 'text-[var(--color-text-secondary-inverse)]'}`}
       >
         Update existing
       </button>

@@ -93,7 +93,7 @@ export function RestoreStrip({
       <button
         type="button"
         onClick={() => setStage('confirm')}
-        className="rounded-md border border-[var(--color-border-input)] bg-transparent px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary-inverse)] hover:bg-[var(--color-surface-input)]"
+        className="inline-flex min-h-11 items-center rounded-md border border-[var(--color-border-input)] bg-transparent px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary-inverse)] hover:bg-[var(--color-surface-input)]"
       >
         Restore
       </button>
@@ -116,7 +116,7 @@ export function RestoreStrip({
           onClick={handleConfirm}
           disabled={stage === 'submitting'}
           aria-disabled={stage === 'submitting'}
-          className="rounded-md bg-[var(--color-surface-primary)] px-3 py-1.5 text-sm font-semibold text-[var(--color-text-on-primary)] hover:bg-[var(--color-surface-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex min-h-11 items-center rounded-md bg-[var(--color-surface-primary)] px-3 py-1.5 text-sm font-semibold text-[var(--color-text-on-primary)] hover:bg-[var(--color-surface-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {stage === 'submitting' ? 'Restoring…' : 'Restore'}
         </button>
@@ -127,7 +127,7 @@ export function RestoreStrip({
             setError(null);
           }}
           disabled={stage === 'submitting'}
-          className="rounded-md border border-[var(--color-border-input)] bg-transparent px-3 py-1.5 text-sm text-[var(--color-text-primary-inverse)] hover:bg-[var(--color-surface-raised)]"
+          className="inline-flex min-h-11 items-center rounded-md border border-[var(--color-border-input)] bg-transparent px-3 py-1.5 text-sm text-[var(--color-text-primary-inverse)] hover:bg-[var(--color-surface-raised)]"
         >
           Cancel
         </button>

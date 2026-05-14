@@ -160,10 +160,13 @@ describe('<CaptureForm />', () => {
     fillRequired();
     fireEvent.click(screen.getByRole('button', { name: 'Save card' }));
 
+    // Wait for the cap-hit banner text (definitive end-state) rather than
+    // the Submit button's transient "Save card" → "Saving…" → gone shape,
+    // which can race a waitFor that polls before stage flips back to idle.
     await waitFor(() =>
-      expect(screen.queryByRole('button', { name: 'Save card' })).toBeNull()
+      expect(screen.getByText(/20 issues this week/i)).toBeTruthy()
     );
-    expect(screen.getByText(/20 issues this week/i)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Save card' })).toBeNull();
     // Form state preserved.
     expect(
       (screen.getByLabelText(/what.s going on/i) as HTMLTextAreaElement).value
