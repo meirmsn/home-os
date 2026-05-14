@@ -82,15 +82,46 @@ export async function latestMagicLink(email: string): Promise<URL> {
     );
   }
   const payload = (await bodyRes.json()) as MailpitMessageBody;
-  const text = payload.Text ?? payload.HTML ?? '';
+  // Prefer plain-text body: the URL in HTML hrefs is HTML-entity-encoded
+  // (`&amp;` for `&`), so a bare regex match against HTML would yield a
+  // URL whose query-string ampersands are mangled. Supabase's default
+  // magic-link template emits both Text + HTML; only fall back to HTML
+  // (with entities decoded) if Text is missing.
+  const rawText = payload.Text?.trim();
+  const text =
+    rawText && rawText.length > 0
+      ? rawText
+      : decodeHtmlEntities(payload.HTML ?? '');
 
-  // Match the first http(s)://...//auth/callback URL. Supabase's default
-  // magic-link template renders the link as a bare URL on its own line.
-  const match = text.match(/https?:\/\/[^\s<>"']+\/auth\/callback[^\s<>"']*/);
+  // Match the first http(s)://.../auth/{v1/verify | callback} URL.
+  // Supabase emits `/auth/v1/verify?token=...&type=magiclink&redirect_to=...`
+  // for the PKCE flow magic-link confirmation URL — that endpoint then
+  // redirects to the app's `/auth/callback` route. Either shape is valid
+  // for `page.goto(magicLink.toString())`: the browser follows the
+  // redirect chain in both cases.
+  const match = text.match(
+    /https?:\/\/[^\s<>"']+\/auth\/(?:v1\/verify|callback)[^\s<>"']*/
+  );
   if (!match) {
+    // Body excerpt aids debugging when the template shape drifts again.
+    // 400 chars is enough to see the first URL or "no URL at all" without
+    // dumping the entire HTML payload to the CI log.
     throw new Error(
-      `latestMagicLink: no /auth/callback URL found in message for ${email}`
+      `latestMagicLink: no /auth/(v1/verify|callback) URL found in message for ${email}. ` +
+        `Body excerpt: ${text.slice(0, 400)}`
     );
   }
   return new URL(match[0]);
+}
+
+/** Decode the small set of HTML entities Supabase's magic-link template uses
+ *  in `<a href="...">`. Keeps the helper dependency-free; expand only if a
+ *  future template emits more entity types. */
+function decodeHtmlEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
 }
