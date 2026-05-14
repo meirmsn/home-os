@@ -180,10 +180,24 @@ jobs:
             supabase stop || true
             start_supabase
           fi
-          # Export the live local-stack URL + JWTs into the job env. After this,
-          # SUPABASE_URL points at http://127.0.0.1:54421 so admin-client.ts's
-          # isLocalSupabase check returns true and the Playwright specs run.
+          # Export the live local-stack URL + JWTs into the job env. `supabase
+          # status -o env` emits unprefixed names (API_URL, ANON_KEY, ...) —
+          # NOT the seeded SUPABASE_URL the comment author originally assumed
+          # would be overwritten. So we also explicitly bridge to the
+          # NEXT_PUBLIC_* names the app reads (apps/web/lib/supabase/{client,
+          # server}.ts + middleware.ts via `process.env.NEXT_PUBLIC_SUPABASE_*`).
+          # Without the bridge, `next build` bakes `undefined` into the bundle
+          # and `next start` throws "Your project's URL and Key are required to
+          # create a Supabase client!" on every request the Playwright specs
+          # trigger.
           supabase status -o env >> "$GITHUB_ENV"
+          SB_ENV=$(supabase status -o env)
+          SB_URL=$(echo "$SB_ENV" | awk -F= '/^API_URL=/{gsub(/"/,"",$2); print $2}')
+          SB_KEY=$(echo "$SB_ENV" | awk -F= '/^ANON_KEY=/{gsub(/"/,"",$2); print $2}')
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$SB_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$SB_KEY"
+          } >> "$GITHUB_ENV"
 
       - name: Schema type-drift check
         run: bash scripts/ci-type-drift.sh
