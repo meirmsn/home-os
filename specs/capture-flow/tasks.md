@@ -9,8 +9,8 @@ per task.
 | 1   | Migration 006a + 006b (room_tag, week_start, dismissed enum, RPC)     | done        | 603591f    |
 | 2   | Regenerate `supabase.types.ts` for migration 006                      | done        | 2f8a0af    |
 | 3   | `POST /api/card` route handler + `title-from-description` helper      | done        | 763f4c5    |
-| 4   | `POST /api/card/[id]/restore` route handler                           | in_progress |            |
-| 5   | `CaptureForm` client component (Path A photo + cap-hit preservation)  | pending     |            |
+| 4   | `POST /api/card/[id]/restore` route handler                           | done        | e2bccc4    |
+| 5   | `CaptureForm` client component (Path A photo + cap-hit preservation)  | in_progress |            |
 | 6   | `/capture` page server shell + `ExistingCardPicker` server component  | pending     |            |
 | 7   | `/dismissed` list + `RestoreStrip` inline-confirm component           | pending     |            |
 | 8   | `/home` Capture CTA + middleware gated-prefix extension               | pending     |            |
