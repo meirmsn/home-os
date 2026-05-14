@@ -17,11 +17,30 @@ import { createClient } from '@/lib/supabase/server';
 // see spec § Gotchas "Route handlers must opt out of static rendering".
 export const dynamic = 'force-dynamic';
 
+/** Build a same-origin redirect URL anchored on the request's Host header
+ *  rather than `request.url`'s host. Next.js 16 normalizes `request.url`
+ *  to whatever Next is configured for (defaults to localhost), even when
+ *  the client connects via 127.0.0.1 — so `new URL('/login', request.url)`
+ *  would emit `http://localhost:3000/login` while the form was submitted
+ *  from `http://127.0.0.1:3000/home`. The cross-origin redirect then fails
+ *  the page's CSP `form-action 'self'` check and the browser silently
+ *  aborts the navigation, leaving the user stuck on /home with no error.
+ *  Pulling host from the request header keeps the redirect on the same
+ *  origin the form was posted from. Mirror of /auth/callback's helper. */
+function sameOriginUrl(request: NextRequest, path: string): string {
+  const host =
+    request.headers.get('host') ?? new URL(request.url).host;
+  const proto =
+    request.headers.get('x-forwarded-proto') ??
+    new URL(request.url).protocol.replace(':', '');
+  return `${proto}://${host}${path}`;
+}
+
 /** POST /auth/signout — clears the session, 303-redirects to /login. */
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  return NextResponse.redirect(new URL('/login', request.url), {
+  return NextResponse.redirect(sameOriginUrl(request, '/login'), {
     status: 303,
   });
 }
