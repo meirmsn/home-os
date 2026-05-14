@@ -111,6 +111,51 @@ describe('middleware — D6 redirect rules', () => {
     );
   });
 
+  it('anonymous + /capture -> 307 redirect to /login?next=/capture', async () => {
+    getUser.mockResolvedValue({ data: { user: null } });
+    const response = await middleware(mockRequest('/capture'));
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/login?next=%2Fcapture'
+    );
+  });
+
+  it('anonymous + /capture?cardId=<uuid> preserves the query string on next=', async () => {
+    getUser.mockResolvedValue({ data: { user: null } });
+    const response = await middleware(
+      mockRequest('/capture', '?cardId=abc-123')
+    );
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/login?next=%2Fcapture%3FcardId%3Dabc-123'
+    );
+  });
+
+  it('anonymous + /dismissed -> 307 redirect to /login?next=/dismissed', async () => {
+    getUser.mockResolvedValue({ data: { user: null } });
+    const response = await middleware(mockRequest('/dismissed'));
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/login?next=%2Fdismissed'
+    );
+  });
+
+  it('authenticated + /capture -> NOT redirected (allowed through)', async () => {
+    getUser.mockResolvedValue({
+      data: { user: { id: 'u-1', email: 'a@b.test' } },
+    });
+    const response = await middleware(mockRequest('/capture'));
+    expect(response.headers.get('location')).toBe(null);
+  });
+
+  it('authenticated + /dismissed -> NOT redirected (allowed through)', async () => {
+    getUser.mockResolvedValue({
+      data: { user: { id: 'u-1', email: 'a@b.test' } },
+    });
+    const response = await middleware(mockRequest('/dismissed'));
+    expect(response.headers.get('location')).toBe(null);
+  });
+
   it('matcher config excludes _next and asset paths', () => {
     // Single matcher, structural shape: the regex must skip _next/static,
     // _next/image, favicon.ico, and any *.svg/png/jpg/jpeg/gif/webp/ico.
