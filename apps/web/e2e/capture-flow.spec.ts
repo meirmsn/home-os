@@ -215,7 +215,7 @@ test.describe('capture-flow round trip', () => {
     page,
   }) => {
     const admin = adminClient();
-    const { data: card } = await admin
+    const { data: card, error: insertError } = await admin
       .from('cards')
       .insert({
         user_id: userId,
@@ -226,6 +226,15 @@ test.describe('capture-flow round trip', () => {
       })
       .select('id')
       .single();
+    // Surface the actual postgres error if the insert failed (otherwise
+    // the next-line `card!.id` crashes with a generic null-deref that
+    // hides the real reason). Same gotcha CLAUDE.md § Gotchas calls out
+    // for every `.select()` consumer.
+    if (insertError) {
+      throw new Error(
+        `seed dismissed card failed: ${JSON.stringify(insertError)}`
+      );
+    }
     const cardId = card!.id as string;
 
     await page.goto('/dismissed');

@@ -269,5 +269,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-trace
-          path: apps/web/playwright-report
+          # `playwright-report/` is empty under `reporter: 'github'` (the
+          # github reporter doesn't write a report file). The actual
+          # debugging surface — videos, traces, error-context.md — lives
+          # under `test-results/`. Including both makes the artifact useful
+          # whether the reporter shape changes in the future.
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
           retention-days: 7
+          if-no-files-found: ignore
