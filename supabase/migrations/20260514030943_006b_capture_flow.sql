@@ -35,10 +35,13 @@ alter table public.cards
 -- handler can render the right "X of 20" surface to the user.
 --
 -- SECURITY DEFINER + pinned search_path matches the migration 005
--- create_public_user_profile convention. The route handler (spec
--- § API contracts § POST /api/card) enforces auth.uid() = p_user
--- BEFORE calling this function — defense in depth, since the
--- function itself trusts p_user (D3 + § Gotchas).
+-- create_public_user_profile convention. The function also enforces
+-- `p_user = auth.uid()` internally: with SECURITY DEFINER bypassing
+-- RLS, the only thing that prevents an authenticated user A from
+-- griefing user B's weekly counter via a direct PostgREST RPC call
+-- is this guard. The route handler (spec § API contracts § POST
+-- /api/card) is the second layer — it derives p_user from getUser(),
+-- never from the body. Both layers exist on purpose.
 create or replace function public.claim_card_slot(
   p_user uuid,
   p_title text,
@@ -56,6 +59,15 @@ declare
   v_count int;
   v_card_id uuid;
 begin
+  -- Auth boundary: SECURITY DEFINER bypasses RLS on the writes below,
+  -- so a foreign p_user via direct PostgREST RPC would otherwise let
+  -- an authenticated attacker fill a victim's weekly cap. Reject with
+  -- '42501' insufficient_privilege so callers see a clean Postgres
+  -- error class (PostgREST maps this to HTTP 403 by default).
+  if p_user is distinct from auth.uid() then
+    raise exception 'forbidden' using errcode = '42501';
+  end if;
+
   -- upsert + week-rollover in one statement. The CASE expression resets
   -- card_count to 0 when week_start has rolled past Monday.
   insert into usage_counters (user_id, card_count, week_start, updated_at)

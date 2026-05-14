@@ -490,51 +490,62 @@ test.describe('RLS isolation — multi-user', () => {
     expect(result.data?.length ?? -1).toBe(0);
   });
 
-  test('claim_card_slot via PostgREST refuses a foreign p_user (auth-context mismatch)', async () => {
-    // The route handler (POST /api/card) derives p_user from getUser() —
-    // never from the body. This test pins the boundary by calling the RPC
-    // directly via PostgREST as user A but passing userBId as p_user.
-    // The function is SECURITY DEFINER (D3), so it would succeed if invoked
-    // server-side with a foreign uid; the user-facing contract is that the
-    // RPC is never reachable with a foreign uid because the only caller
-    // (the route handler) refuses to forward a body-supplied user_id.
-    //
-    // Behaviour we ship: PostgREST exposes the RPC; with SECURITY DEFINER
-    // it will execute under postgres role and may insert a row for userB.
-    // We assert it does NOT silently pollute userA's counters — i.e. if
-    // it succeeds the resulting row belongs to userB, not userA. The
-    // route handler's defense-in-depth is what users actually exercise.
+  test('claim_card_slot via PostgREST refuses a foreign p_user with 42501', async () => {
+    // claim_card_slot is SECURITY DEFINER (D3) — without an internal auth
+    // check, an authenticated user A could grief user B by calling the
+    // RPC directly via PostgREST with `p_user: userBId`, filling B's
+    // weekly counter and polluting B's cards. The function enforces
+    // `p_user = auth.uid()` and raises '42501' (insufficient_privilege)
+    // on mismatch; PostgREST maps this to HTTP 403 by default. The route
+    // handler (POST /api/card) is the second layer of the same defense.
+    // This test pins the boundary at the database layer.
     const a = await authedClient(userAEmail);
     const admin = adminClient();
-    const beforeCount = await admin
-      .from('usage_counters')
-      .select('card_count')
-      .eq('user_id', userAId)
-      .maybeSingle();
-    const beforeA = beforeCount.data?.card_count ?? 0;
+    const beforeA =
+      (
+        await admin
+          .from('usage_counters')
+          .select('card_count')
+          .eq('user_id', userAId)
+          .maybeSingle()
+      ).data?.card_count ?? 0;
+    const beforeB =
+      (
+        await admin
+          .from('usage_counters')
+          .select('card_count')
+          .eq('user_id', userBId)
+          .maybeSingle()
+      ).data?.card_count ?? 0;
 
     const { error: rpcError } = await a.rpc('claim_card_slot', {
       p_user: userBId,
       p_title: 'A-on-B RPC tamper',
-      p_description: 'should not land as A',
+      p_description: 'should be rejected at the function-level auth check',
       p_system_tag: 'plumbing',
       p_room_tag: 'tamper',
     });
 
-    // Whether the RPC errored or not, A's counter must not have moved.
-    // (The function may have inserted a row for B; that's tolerated by
-    // SECURITY DEFINER + the route handler being the real boundary.)
-    const afterCount = await admin
-      .from('usage_counters')
-      .select('card_count')
-      .eq('user_id', userAId)
-      .maybeSingle();
-    const afterA = afterCount.data?.card_count ?? 0;
+    // The RPC must error and neither user's counter may move.
+    expect(rpcError).not.toBeNull();
+    expect(rpcError?.code).toBe('42501');
+    const afterA =
+      (
+        await admin
+          .from('usage_counters')
+          .select('card_count')
+          .eq('user_id', userAId)
+          .maybeSingle()
+      ).data?.card_count ?? 0;
+    const afterB =
+      (
+        await admin
+          .from('usage_counters')
+          .select('card_count')
+          .eq('user_id', userBId)
+          .maybeSingle()
+      ).data?.card_count ?? 0;
     expect(afterA).toBe(beforeA);
-    // rpcError is informational — document the shipped behaviour rather
-    // than asserting a specific code, so a future tightening of the RPC
-    // boundary (e.g. an explicit auth.uid() check inside the function)
-    // doesn't break this spec.
-    void rpcError;
+    expect(afterB).toBe(beforeB);
   });
 });
