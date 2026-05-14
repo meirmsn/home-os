@@ -8,3 +8,9 @@
 #
 # Pattern:
 #   path/to/file.ts  # reason this file doesn't need a paired doc update
+
+apps/web/app/(app)/spike/page.tsx  # operator-only PWA spike landing; no production link + no user-facing flow + scheduled for deletion with photo-comparison-ui per pwa-spike spec D1 + D8. Covering spec: specs/pwa-spike/spec.md
+apps/web/app/(app)/spike/camera/page.tsx  # operator-only PWA spike camera; no production link + scheduled for deletion with photo-comparison-ui per pwa-spike spec D1 + D8. Covering spec: specs/pwa-spike/spec.md
+apps/web/app/(app)/spike/comparison/page.tsx  # operator-only PWA spike comparison; no production link + scheduled for deletion with photo-comparison-ui per pwa-spike spec D1 + D8. Covering spec: specs/pwa-spike/spec.md
+apps/web/public/spike/sample-left.jpg  # bundled placeholder JPEG for operator-only spike comparison default mode per pwa-spike spec D6; deleted with the spike pages. Covering spec: specs/pwa-spike/spec.md
+apps/web/public/spike/sample-right.jpg  # bundled placeholder JPEG for operator-only spike comparison default mode per pwa-spike spec D6; deleted with the spike pages. Covering spec: specs/pwa-spike/spec.md
