@@ -35,9 +35,8 @@ type CookieSetter = {
 // triage-route-handler PR #4 adds `/cards` (card detail surface).
 const GATED_PREFIXES = ['/home', '/capture', '/dismissed', '/cards'];
 
-/**
- *
- */
+/** Is the URL path one of the auth-gated prefixes (exact match or
+ *  startsWith with a trailing `/`)? */
 function isGated(pathname: string): boolean {
   return GATED_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
