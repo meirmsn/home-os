@@ -19,7 +19,42 @@ Source of truth for product strategy:
 
 Long-form context for the v0 infra entries on `PLAN.md § Planned` whose tracker rows are too compact for the rationale + candidate-cause analysis. One section per `PLAN.md` row that lives here.
 
-### `devcontainer-supabase-fix` (PLAN.md row #1)
+### `landing-redirect` (PLAN.md row #1)
+
+**Problem.** The production root URL (`https://home-os-nu-two.vercel.app/`) still renders the day-zero placeholder — a single `<p>Home OS — coming soon.</p>` line in `apps/web/app/page.tsx`. The placeholder's own comment ("Replaced when the first feature ships") points at exactly this moment, but the capture-flow PR (#15) shipped its feature surfaces without touching `/`. The result: a new visitor lands on the prod URL, sees "coming soon," and has no discoverable path to the magic-link form at `/login` short of typing the URL by hand. Caught immediately post-deploy by the operator's first prod-URL visit on 2026-05-15.
+
+**Why this is v0-priority** (row #1 on `PLAN.md § Planned`, ahead of every Phase 1 feature row): the capture flow is **shipped but undiscoverable**. Every minute the root URL renders "coming soon" is a minute a referral / share / spontaneous visit gets bounced with no funnel. Cost to fix: ~10 LOC + 1 middleware test extension. Benefit: the existing PR #15 feature surface stops being functionally invisible.
+
+This is the canonical case for ordering: a tiny gap-fix that unblocks the visibility of every feature behind it should land before the next big feature, not after.
+
+**Decision shape** — two sub-options were considered before settling on the chosen one:
+
+1. **Replace placeholder with a marketing landing page** (Sign In CTA pointing at `/login`, brand copy on the dark-charcoal ground). Surfaces a discoverable entry without changing routing. Costs: copy / brand decisions, an extra surface to maintain, no clean answer for "what does an authenticated user see at `/`". **Rejected**: Phase 1 is alpha — there's no marketing message to land. The brand-state intent ("anchor dark-ground on day one") is already carried by `/login` itself, which renders the same tokens.
+2. **Auth-aware middleware redirect** (anonymous → `/login`; authenticated → `/home`). Treats `/` as a thin routing surface. Symmetric with the rest of the app's auth posture — `apps/web/middleware.ts` already bounces `/home`, `/capture`, and `/dismissed` for anonymous users via `getUser()` + `GATED_PREFIXES`; this row adds an inverse rule for the root. **Chosen**: zero copy decisions, matches established auth-flow conventions, lets the alpha funnel point at `/login` (the only real entry surface today). When marketing copy exists post-Phase-1, the redirect can be reversed by deleting one branch in the middleware — cheap to undo.
+
+**Fix shape:**
+
+- Extend `apps/web/middleware.ts` with two rules at the top of the request handler:
+  - `path === '/'` + anonymous → 303 to `/login` (no `?next=...` — `/login` already lands at `/home` post-auth per D4 in `auth-magic-link/spec.md`)
+  - `path === '/'` + authenticated → 303 to `/home`
+- Replace `apps/web/app/page.tsx` body with a minimal `<a href="/login">Sign in</a>` noscript-fallback wrapper. The middleware fires before the page renders for any normal browser flow, so the page.tsx content is only seen by clients that don't follow redirects (curl `-I`, headless scrapers without auto-follow, search-engine crawlers indexing the bare `/` URL). Keeping a one-line anchor preserves SEO + accessibility without leaving the "coming soon" line in place.
+- Extend `apps/web/middleware.test.ts` with two new cases (anon-at-root → /login; auth-at-root → /home) mirroring the existing GATED_PREFIXES test structure.
+- Add a Playwright case in `apps/web/e2e/auth-edge-cases.spec.ts` asserting `goto('/')` ends on `/login` for the anonymous fixture and on `/home` for the authenticated fixture.
+- Update `CLAUDE.md § Where Things Happen § Edge middleware`: append "AND root `/` redirect (anon → `/login`, auth → `/home`)" to the existing middleware description.
+- Update the `apps/web/app/page.tsx` row in `CLAUDE.md § Where Things Happen` to note its new role (noscript-fallback only).
+- Verify post-deploy: `curl -sI https://home-os-nu-two.vercel.app/` returns `303` + `Location: /login`. Browser-driven check: visiting `/` as anon lands on `/login`; signing in lands on `/home`; revisiting `/` while signed in bounces back to `/home`.
+
+**Cross-refs:**
+
+- `PLAN.md § Planned row #1 (landing-redirect)` — the concrete row
+- `apps/web/middleware.ts` + `apps/web/middleware.test.ts` — the surface that gets the change
+- `apps/web/app/page.tsx` — the placeholder being replaced (current line 1-19, the "Replaced when the first feature ships" comment is the design intent this row delivers on)
+- PR #15 (capture-flow) — the shipped-but-undiscoverable feature this row makes findable
+- Future devshop generalization candidate: `/ak-pre-ship` could grow a gate that flags `app/page.tsx` containing only "coming soon" / placeholder copy on PRs that ship the first user-visible feature. Not in scope here.
+
+---
+
+### `devcontainer-supabase-fix` (PLAN.md row #2)
 
 **Problem.** The workspace devcontainer can't reach the Supabase local stack on `localhost:54421` (connection-refused). The symptom reproduces on every PR (PR #9, #10, #12, #15 all hit it), and the workaround — defer `/ak-pre-ship` Gate 9 `/qa` to a Vercel-preview manual walkthrough — costs each PR a real hero shot set. PR #15 (capture-flow) shipped with three login-page captures as "hero shots" for that exact reason: the pre-ship agent could only capture anon-bounce variants because authenticated captures need Supabase reachable.
 
