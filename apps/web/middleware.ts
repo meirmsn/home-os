@@ -5,9 +5,13 @@
 //       2. Enforce D6 redirect rules:
 //          - anonymous + path startsWith /home -> /login?next=<path>
 //          - authenticated + path === /login   -> /home
-//          Public marketing /, /auth/* callback URLs, and asset paths
-//          stay untouched. Public /login stays untouched for anonymous
-//          users (otherwise they could never sign in).
+//          - anonymous + path === /            -> /login   (landing-redirect rule 3)
+//          - authenticated + path === /        -> /home    (landing-redirect rule 4)
+//          /auth/* callback URLs and asset paths stay untouched. Public
+//          /login stays untouched for anonymous users (otherwise they
+//          could never sign in). The bare / surface now redirects in both
+//          auth states; only non-following clients (curl -I, crawlers)
+//          see page.tsx's noscript-fallback anchor.
 // Why:  One enforcement surface, declarative redirects, no per-route
 //       guards. Middleware reads cookies only — defense-in-depth lives
 //       on the (app) layout (spec § Gotchas: tampered cookie can pass
@@ -84,6 +88,19 @@ export async function middleware(request: NextRequest) {
 
   // Rule 2: authenticated request to /login -> /home
   if (user && pathname === '/login') {
+    return NextResponse.redirect(new URL('/home', request.url));
+  }
+
+  // Rule 3: anonymous request to / -> /login (landing-redirect D1, D3).
+  // No ?next= — / isn't a destination the user was trying to reach, and
+  // adding ?next=/ would create a /login -> auth -> safeNext('/') -> /login
+  // loop (spec § Gotchas).
+  if (!user && pathname === '/') {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  // Rule 4: authenticated request to / -> /home (landing-redirect D1, D4).
+  if (user && pathname === '/') {
     return NextResponse.redirect(new URL('/home', request.url));
   }
 

@@ -1,7 +1,8 @@
-// What: Unit tests for the edge middleware redirect rules (D6, D10).
-//       Asserts the four redirect branches + the leave-alone paths +
-//       the asset-matcher config + the stale-cookie throw -> anonymous
-//       fallback (spec § Gotchas).
+// What: Unit tests for the edge middleware redirect rules (D6, D10,
+//       landing-redirect D1+D3+D4+D6). Asserts the four core redirect
+//       branches (anon /home, auth /login, anon /, auth /) + the
+//       leave-alone paths + the asset-matcher config + the stale-cookie
+//       throw -> anonymous fallback at both /home and / (spec § Gotchas).
 // Why:  Middleware is the single declarative enforcement surface for
 //       auth gating. A regression that let an anon request through to
 //       /home (or trapped an authed user on /login) would surface only
@@ -64,10 +65,31 @@ describe('middleware — D6 redirect rules', () => {
     );
   });
 
-  it('anonymous + / (public landing) -> NOT redirected', async () => {
+  it('anonymous + / -> 307 redirect to /login (landing-redirect rule 3)', async () => {
     getUser.mockResolvedValue({ data: { user: null } });
     const response = await middleware(mockRequest('/'));
-    expect(response.headers.get('location')).toBe(null);
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/login'
+    );
+  });
+
+  it('authenticated + / -> 307 redirect to /home (landing-redirect rule 4)', async () => {
+    getUser.mockResolvedValue({
+      data: { user: { id: 'u-1', email: 'a@b.test' } },
+    });
+    const response = await middleware(mockRequest('/'));
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe('http://localhost:3000/home');
+  });
+
+  it('treats a stale-cookie getUser throw at / as anonymous (-> /login)', async () => {
+    getUser.mockRejectedValue(new Error('stale cookie boot'));
+    const response = await middleware(mockRequest('/'));
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/login'
+    );
   });
 
   it('anonymous + /login -> NOT redirected (anon must reach /login)', async () => {

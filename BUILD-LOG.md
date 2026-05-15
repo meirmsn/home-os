@@ -8,6 +8,17 @@ Project build history. One entry per merged PR, most-recent first. Written by `/
 
 For forward-looking plan: `PLAN.md`. For deferred/long-term work: `PRODUCT-ROADMAP.md`.
 
+### landing-redirect (2026-05-15)
+
+- **Branch**: `feature/landing-redirect` (merging via [#18](https://github.com/meirmsn/home-os/pull/18))
+- **PR**: [#18](https://github.com/meirmsn/home-os/pull/18)
+- **Spec**: `specs/landing-redirect/spec.md`
+- **Summary**: Closes the "shipped but undiscoverable" gap from PR #15 — `/` becomes an auth-aware routing surface. Anonymous + `/` → 307 `/login` (no `?next=` per spec D3 — avoids the auth-callback loop). Authenticated + `/` → 307 `/home`. Both branches piggyback on the existing `getUser()` session refresh in `apps/web/middleware.ts`; zero extra round-trips. `apps/web/app/page.tsx` collapses from the "Home OS — coming soon" placeholder to a minimal noscript-fallback `<main>` + `<a href="/login">Sign in</a>` retaining the dark-ground tokens — only `curl -I` / crawlers / non-following clients ever see it.
+- **Routes touched**: `apps/web/middleware.ts` (rules 3 + 4 added after the existing `getUser()` pass), `apps/web/app/page.tsx` (body replaced). No new routes, no API contracts, no schema, no metrics.
+- **Tests**: `apps/web/middleware.test.ts` gained 3 new cases (anon `/` → 307 `/login`, authed `/` → 307 `/home`, stale-cookie-at-`/` → anonymous fallback) + flipped the prior "anon at `/` NOT redirected" case to its inverse — 16 total. `apps/web/e2e/auth-edge-cases.spec.ts` gained two Playwright cases covering both fixtures at `/`.
+- **Commits**: 1 PLAN row add + 1 Phase 0 spec skeleton + 1 Phase 1 spec expansion (`/ak-spec` flipped PLAN row Planned → Active) + 5 atomic implement (A middleware → B middleware tests → C page.tsx → D E2E → E CLAUDE.md) + 1 pre-ship artifact commit (`review.md` + hero shots) + 1 auto-merge of `main` to pick up `devcontainer-supabase-fix` retirement + this bookkeeping commit.
+- **Quality gates**: 9 passed, 0 findings, 2 `n/a` (Gate 8 `/design-review` — noscript fallback isn't a normal-user surface; Gate 10 `/benchmark` — no perf-sensitive change), 1 `blocked` (Gate 9 `/qa` authenticated arm — devcontainer Supabase seed users missing per the retired `devcontainer-supabase-fix` row; anonymous arm verbs 1–2 captured into `qa-walk/`).
+
 ### capture-flow (2026-05-13)
 
 - **Branch**: `feature/capture-flow` (merging via [#15](https://github.com/meirmsn/home-os/pull/15))
