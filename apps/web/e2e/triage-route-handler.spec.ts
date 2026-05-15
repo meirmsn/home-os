@@ -299,7 +299,7 @@ test.describe('triage-route-handler round trip', () => {
   });
 
   test('refresh-race: POST while already triaging returns 202', async ({
-    request,
+    page,
   }) => {
     const admin = adminClient();
     // Seed a triaging-state card directly.
@@ -316,7 +316,13 @@ test.describe('triage-route-handler round trip', () => {
       .single();
     const cardId = inserted?.id as string;
 
-    const response = await request.post('/api/triage', {
+    // Visit any authenticated page first so page.request shares the
+    // session cookies the beforeEach injected into the browser context.
+    // The default `request` fixture is a separate APIRequestContext that
+    // does NOT see those cookies; hitting /api/triage from it 401s
+    // before the state check runs.
+    await page.goto(`/cards/${cardId}`);
+    const response = await page.request.post('/api/triage', {
       data: { card_id: cardId },
     });
     expect(response.status()).toBe(202);
