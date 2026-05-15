@@ -211,6 +211,81 @@ test.describe('capture-flow round trip', () => {
     expect(cards.data?.length ?? 0).toBe(0);
   });
 
+  test('happy path without photo: capture without an image, card lands but no card_photos row', async ({
+    page,
+  }) => {
+    await page.goto('/capture');
+    await page
+      .getByLabel(/what.s going on/i)
+      .fill('Drafty window in the office.');
+    await page.getByLabel(/system/i).selectOption('windows');
+    await page.getByLabel(/room/i).fill('Office');
+    // Deliberately skip setInputFiles — photo is optional per spec D2.
+    await page.getByRole('button', { name: 'Save card' }).click();
+    await page.waitForURL('**/home');
+
+    const admin = adminClient();
+    const cards = await admin
+      .from('cards')
+      .select('id, state, system_tag, room_tag')
+      .eq('user_id', userId);
+    expect(cards.error).toBeNull();
+    expect(cards.data?.length).toBe(1);
+    expect(cards.data?.[0]?.state).toBe('capturing');
+    expect(cards.data?.[0]?.system_tag).toBe('windows');
+
+    // No card_photos row when the form submits without a file.
+    const photos = await admin
+      .from('card_photos')
+      .select('id')
+      .eq('user_id', userId);
+    expect(photos.error).toBeNull();
+    expect(photos.data?.length).toBe(0);
+  });
+
+  test('update-existing path: /capture?cardId=<id> renders the deferred notice, not the new-card form', async ({
+    page,
+  }) => {
+    const admin = adminClient();
+    const { data: card, error: insertError } = await admin
+      .from('cards')
+      .insert({
+        user_id: userId,
+        title: 'Existing card',
+        state: 'capturing',
+        system_tag: 'hvac',
+        room_tag: 'Den',
+      })
+      .select('id')
+      .single();
+    if (insertError) {
+      throw new Error(
+        `seed existing card failed: ${JSON.stringify(insertError)}`
+      );
+    }
+    const cardId = card!.id as string;
+
+    await page.goto(`/capture?cardId=${cardId}`);
+
+    // Deferred-update notice surfaces (spec D4).
+    await expect(
+      page.getByRole('heading', { name: /update an existing card/i })
+    ).toBeVisible();
+    await expect(
+      page.getByText(/updates? .*ships? in the next release/i)
+    ).toBeVisible();
+
+    // The new-card form's primary heading is suppressed on this branch.
+    await expect(
+      page.getByRole('heading', { name: /capture an issue/i })
+    ).toHaveCount(0);
+
+    // The "create a new card" link goes back to bare /capture (the active branch).
+    const newLink = page.getByRole('link', { name: /create a new card/i });
+    await expect(newLink).toBeVisible();
+    await expect(newLink).toHaveAttribute('href', '/capture');
+  });
+
   test('revival from dismissed: row appears on /dismissed, Restore flips state', async ({
     page,
   }) => {
