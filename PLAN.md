@@ -34,7 +34,7 @@ read when generating the spec.
 | 10  | `usage-counters-and-byok`       | `usage_counters` weekly tracking (5 sessions/wk, 20 cards/wk, Monday UTC reset), Settings/Profile usage block + progress bar, BYOK key entry (State A first-time + State B returning), key validation (401/402 distinct errors)        | `triage-route-handler`                        | eng-review § Business Logic (Usage limits + BYOK) + design-review § Settings/Profile + § Interaction States (BYOK Key Validation) |
 | 11  | `triage-eval-dataset`           | 75 synthetic issues across all 9 system categories, Claude-generated + human-labeled, eval runner script diffing `/api/triage` output against labels — must run clean before any prompt change ships                                   | `triage-route-handler`, `triage-conversation` | eng-review § Pre-Ship Requirements #2 + § Build Order step 15                                                                     |
 
-**Phase 1 ship gate**: Planned #1–#11 all green +
+**Phase 1 ship gate**: Active row green + Planned #1–#11 all green +
 `.gstack/pwa-spike-result.md` documented + eval runner clean + multi-user RLS
 test green = ready for first-user invites.
 
