@@ -10,9 +10,7 @@ Forward-looking plan at the feature/PR grain.
 
 ## Active
 
-| Feature                | Branch                         | Spec                                 | Notes                                                                                                                                                                                                                                      |
-| ---------------------- | ------------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `triage-route-handler` | `feature/triage-route-handler` | `specs/triage-route-handler/spec.md` | `POST /api/triage` initial read with web search, server-side ANTHROPIC_API_KEY, `TRIAGE_SYSTEM_PROMPT` env var (code fallback), usage check deferred to row #2, location handling deferred to row #2, new `/(app)/cards/[id]` detail page. |
+_No work in progress._
 
 ## Planned
 
