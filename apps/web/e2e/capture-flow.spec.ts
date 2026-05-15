@@ -218,7 +218,7 @@ test.describe('capture-flow round trip', () => {
     await page
       .getByLabel(/what.s going on/i)
       .fill('Drafty window in the office.');
-    await page.getByLabel(/system/i).selectOption('windows');
+    await page.getByLabel(/system/i).selectOption('exterior');
     await page.getByLabel(/room/i).fill('Office');
     // Deliberately skip setInputFiles — photo is optional per spec D2.
     await page.getByRole('button', { name: 'Save card' }).click();
@@ -232,7 +232,7 @@ test.describe('capture-flow round trip', () => {
     expect(cards.error).toBeNull();
     expect(cards.data?.length).toBe(1);
     expect(cards.data?.[0]?.state).toBe('capturing');
-    expect(cards.data?.[0]?.system_tag).toBe('windows');
+    expect(cards.data?.[0]?.system_tag).toBe('exterior');
 
     // No card_photos row when the form submits without a file.
     const photos = await admin
