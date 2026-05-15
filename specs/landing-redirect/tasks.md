@@ -36,7 +36,7 @@ Source spec: `specs/landing-redirect/spec.md` — Decisions D1–D7 + § Task or
 **Blocks**: none
 **Done when**: two new Playwright cases inside the existing `test.describe('auth edge cases', …)` block — anon `/` → `/login` (URL + form assert); authed `/` → `/home` (reuses password+cookie-injection helper, asserts `/home` heading). Both inherit file-level `test.skip(!isLocalSupabase, …)` gate. Typecheck clean.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: E — Update CLAUDE.md § Where Things Happen
 
