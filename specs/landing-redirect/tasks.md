@@ -9,7 +9,7 @@ Source spec: `specs/landing-redirect/spec.md` — Decisions D1–D7 + § Task or
 **Blocks**: B, D
 **Done when**: `apps/web/middleware.ts` carries rules 3 (anon `/` → 307 `/login`) + 4 (auth `/` → 307 `/home`) immediately after rule 2 per D2, with `// What:` header refreshed. `pnpm --filter web typecheck` clean.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: B — Extend middleware.test.ts
 
@@ -18,7 +18,7 @@ Source spec: `specs/landing-redirect/spec.md` — Decisions D1–D7 + § Task or
 **Blocks**: none
 **Done when**: existing anon-`/`-not-redirected case (lines 67–71) replaced with the 307→`/login` inverse per D6; authed-`/`-→-`/home` case added; stale-cookie-throw-at-`/` case added (mirrors line 105). `pnpm turbo run test:unit` clean.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: C — Replace page.tsx with noscript-fallback anchor
 
