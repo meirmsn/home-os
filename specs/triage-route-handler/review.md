@@ -336,3 +336,11 @@ findings: high=0 medium=0 low=1
 ### Bypass trailer audit
 
 - (none)
+
+## Phase 5.9 — Visual evidence refresh
+
+<!-- phase-5-9-at: 574d7c6e44d9b0eaa6b0c0d1a6b3a3d1c8e8c9f9 -->
+
+**Outcome**: no-op (auth-seed harness deferred at pre-ship).
+
+No `specs/triage-route-handler/hero/` directory exists. The `screenshots/` dir contains landing/login captures from prior features only — no triage-feature shots. Pre-ship Gate 4 (responsive + theme) and Gate 13 (hero shots) deferred capture because (a) the `/cards/[id]` route is auth-gated, and (b) the programmatic seed harness (`@supabase/realtime-js` ws() under Node 20) blocks deterministic creation of a `triaging`/`diagnosed` card in the local devcontainer. The 16-case `page.test.tsx` is the canonical render-state coverage surface; live visuals are deferred to post-deploy operator capture against the Vercel preview.
