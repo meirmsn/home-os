@@ -317,3 +317,22 @@ None
 - `dismissals_llm_reviewed`: 0 (all auto-dismissed via either TENTATIVE shim, environmental/tooling rationale, or pre-existing-not-regression posture)
 
 Biggest finding: 4 environmental gaps (Google Fonts firewall, Playwright browser cache version + ffmpeg, programmatic Supabase seed via Node 20 ws() interop, mock-Anthropic E2E seam not bootstrapped). All four are tooling / harness setup, not code defects. Per parent /ak-build's explicit guidance, these route to follow-up infra work, not blocking pre-ship advancement.
+
+## Audit 1: post-polish (2026-05-15)
+
+<!-- audited-at: f4e46b3203c8cdc8c528f00c889eb1c8f7e623a2 -->
+<!-- range: 7fe28a9..HEAD -->
+
+findings: high=0 medium=0 low=1
+
+### Docs findings
+
+- [low] CLAUDE.md:Gotchas — Playwright `request` vs `page.request` cookie-sharing gotcha (fixed by `f360fdc` in `apps/web/e2e/triage-route-handler.spec.ts § refresh-race`) is captured only as an inline test comment, not in CLAUDE.md § Gotchas. Future auth-E2E specs that POST to gated routes after `beforeEach` cookie injection will trip the same trap (default `request` fixture is a separate APIRequestContext that does not share browser cookies). Add a one-line § Gotchas entry naming symptom + root cause + fix (use `page.request` after `page.goto(...)`).
+
+### Tests findings
+
+- (none)
+
+### Bypass trailer audit
+
+- (none)
