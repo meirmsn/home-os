@@ -43,10 +43,12 @@ Source spec: `specs/landing-redirect/spec.md` — Decisions D1–D7 + § Task or
 **Hat**: PM
 **Depends on**: A, C
 **Blocks**: none
-**Done when**: edge-middleware row description appends "AND root `/` redirect (anon → `/login`, auth → `/home`)" + test-count bumps to "12 cases" (existing 9 + 2 new + 1 flipped — see Decisions); new row added for `apps/web/app/page.tsx` describing noscript-fallback role. `bash kit/scripts/commit-hooks/check-docs-freshness-project.sh` clean.
+**Done when**: edge-middleware row description rewritten to include the new rules + test-count bumps to "16 cases" (see Decisions for the count correction); new row added for `apps/web/app/page.tsx` describing noscript-fallback role; existing `layout.tsx + page.tsx` combined row split. Pre-commit clean.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Decisions
 
-(Append a one-liner here when a judgment call is made during implementation that wasn't pre-resolved in spec D1–D7.)
+- **Task E test-count**: spec D7 said "9 → 11 cases" but CLAUDE.md's stale "9 cases" was already wrong (capture-flow PR #15 extended `middleware.test.ts` to 13 cases without bumping the doc). After this PR the file holds 16 cases (13 existing + 2 added + 1 flipped). Bumped CLAUDE.md from "9" straight to "16" to match reality, not the arithmetic in D7.
+- **Task E middleware-row edit**: spec D7 said "append to the existing description" but the existing description called out `/` as "(public landing) stays untouched" — that's now actively wrong. Rewrote the redirect-rules clause to include the new rules AND removed the `/` from the "stays untouched" list. Same net intent as D7; spec language was written before the contradiction surfaced.
+- **Task E page.tsx row placement**: spec D7 said add a new row; I placed it directly after the `apps/web/app/layout.tsx` row (the file's nearest sibling in the app-router tree) and split the existing combined `layout.tsx + page.tsx` row to give `page.tsx` its own line. Cleaner than appending at the section's tail where it'd be far from `layout.tsx`.
