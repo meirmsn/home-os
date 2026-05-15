@@ -9,6 +9,7 @@
 // Does NOT: Add any card / chip / interactive primitive (spec § Screens
 //           /(app)/home). Sign-out lives in the parent layout's header.
 
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
@@ -38,6 +39,20 @@ export default async function HomePage() {
       <p className="text-sm text-[var(--color-text-secondary-inverse)]">
         Signed in as <strong>{user.email}</strong>. More coming soon.
       </p>
+      <div className="flex gap-3 pt-2">
+        <Link
+          href="/capture"
+          className="inline-flex min-h-11 items-center rounded-md bg-[var(--color-surface-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-text-on-primary)] hover:bg-[var(--color-surface-primary-hover)]"
+        >
+          + Capture
+        </Link>
+        <Link
+          href="/dismissed"
+          className="inline-flex min-h-11 items-center rounded-md border border-[var(--color-border-input)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--color-text-primary-inverse)] hover:bg-[var(--color-surface-input)]"
+        >
+          Dismissed
+        </Link>
+      </div>
     </section>
   );
 }

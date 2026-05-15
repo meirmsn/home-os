@@ -25,10 +25,15 @@ import { GET } from './route';
  *
  */
 function mockRequest(url: string): NextRequest {
-  // The route only reads `request.url`. A plain object with that field
-  // satisfies the NextRequest contract used here without dragging in the
-  // real NextRequest constructor (which needs an edge-runtime polyfill).
-  return { url } as unknown as NextRequest;
+  // The route reads `request.url` plus `request.headers.get('host' |
+  // 'x-forwarded-proto')` (the latter for the same-origin redirect helper
+  // that defends against Next.js 16's localhost/127.0.0.1 hostname swap).
+  // A plain object with `url` + a Headers stub satisfies the NextRequest
+  // contract used here without dragging in the real NextRequest constructor
+  // (which needs an edge-runtime polyfill).
+  const parsed = new URL(url);
+  const headers = new Headers({ host: parsed.host });
+  return { url, headers } as unknown as NextRequest;
 }
 
 describe('/auth/callback GET', () => {

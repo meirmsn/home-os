@@ -46,6 +46,11 @@ describe('(app)/home', () => {
     );
     expect(screen.getByText(/meir@example\.test/)).toBeTruthy();
     expect(screen.getByText(/signed in as/i)).toBeTruthy();
+    // capture-flow PR #3: +Capture CTA + Dismissed link.
+    const captureLink = screen.getByRole('link', { name: '+ Capture' });
+    expect(captureLink.getAttribute('href')).toBe('/capture');
+    const dismissedLink = screen.getByRole('link', { name: 'Dismissed' });
+    expect(dismissedLink.getAttribute('href')).toBe('/dismissed');
   });
 
   it('redirects to /login when the defense-in-depth getUser returns null', async () => {

@@ -26,7 +26,9 @@ type CookieSetter = {
   options: CookieOptions;
 };
 
-const GATED_PREFIXES = ['/home'];
+// `(app)` route group is NOT a URL segment — gate by explicit URL prefixes
+// (auth PR D6 gotcha). capture-flow PR #3 adds `/capture` + `/dismissed`.
+const GATED_PREFIXES = ['/home', '/capture', '/dismissed'];
 
 /**
  *

@@ -36,6 +36,29 @@ function safeNext(raw: string | null): string {
   return raw;
 }
 
+/** Build a redirect URL anchored on the request's actual Host header rather
+ *  than `request.url`'s host. Next.js 16's `request.url` normalizes the
+ *  hostname to whatever Next is configured for (defaults to `localhost`),
+ *  even when the request came in on `127.0.0.1` — so
+ *  `new URL('/home', request.url)` would emit `http://localhost:3000/home`
+ *  while @supabase/ssr's setAll set its cookies on `127.0.0.1`. The browser
+ *  would not cross-send those cookies after the redirect and middleware
+ *  would bounce the user back to `/login?next=/home`. Pulling host from the
+ *  request header keeps cookies and the redirect origin aligned.
+ *
+ *  Security: `safeNext` already locks the path to a same-origin relative
+ *  URL. An attacker spoofing the Host header would only redirect back to
+ *  themselves; they can't escalate this into a cross-origin redirect.
+ */
+function sameOriginUrl(request: NextRequest, path: string): string {
+  const host =
+    request.headers.get('host') ?? new URL(request.url).host;
+  const proto =
+    request.headers.get('x-forwarded-proto') ??
+    new URL(request.url).protocol.replace(':', '');
+  return `${proto}://${host}${path}`;
+}
+
 /** GET /auth/callback?code=<pkce-code>&next=<path> */
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
@@ -46,7 +69,7 @@ export async function GET(request: NextRequest) {
   // URL with a missing `code` is malformed; surface it as callback_failed.
   if (!code) {
     return NextResponse.redirect(
-      new URL('/login?error=callback_failed', request.url),
+      sameOriginUrl(request, '/login?error=callback_failed'),
       { status: 303 }
     );
   }
@@ -56,10 +79,10 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     return NextResponse.redirect(
-      new URL('/login?error=callback_failed', request.url),
+      sameOriginUrl(request, '/login?error=callback_failed'),
       { status: 303 }
     );
   }
 
-  return NextResponse.redirect(new URL(next, request.url), { status: 303 });
+  return NextResponse.redirect(sameOriginUrl(request, next), { status: 303 });
 }

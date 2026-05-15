@@ -461,4 +461,91 @@ test.describe('RLS isolation — multi-user', () => {
       });
     expect(up.error).not.toBeNull();
   });
+
+  // ----- capture-flow PR #3 — migration 006 surface ----------------------
+  // (cards.room_tag, usage_counters.week_start, claim_card_slot RPC)
+
+  test('A cannot read B.cards.room_tag (column-narrowed select)', async () => {
+    const admin = adminClient();
+    await admin
+      .from('cards')
+      .update({ room_tag: 'B-room-secret' })
+      .eq('id', cardBId);
+    const a = await authedClient(userAEmail);
+    const result = await a
+      .from('cards')
+      .select('id, room_tag')
+      .eq('id', cardBId);
+    expect(result.error).toBeNull();
+    expect(result.data?.length ?? -1).toBe(0);
+  });
+
+  test('A cannot read B.usage_counters.week_start (column-narrowed select)', async () => {
+    const a = await authedClient(userAEmail);
+    const result = await a
+      .from('usage_counters')
+      .select('user_id, week_start')
+      .eq('user_id', userBId);
+    expect(result.error).toBeNull();
+    expect(result.data?.length ?? -1).toBe(0);
+  });
+
+  test('claim_card_slot via PostgREST refuses a foreign p_user with 42501', async () => {
+    // claim_card_slot is SECURITY DEFINER (D3) — without an internal auth
+    // check, an authenticated user A could grief user B by calling the
+    // RPC directly via PostgREST with `p_user: userBId`, filling B's
+    // weekly counter and polluting B's cards. The function enforces
+    // `p_user = auth.uid()` and raises '42501' (insufficient_privilege)
+    // on mismatch; PostgREST maps this to HTTP 403 by default. The route
+    // handler (POST /api/card) is the second layer of the same defense.
+    // This test pins the boundary at the database layer.
+    const a = await authedClient(userAEmail);
+    const admin = adminClient();
+    const beforeA =
+      (
+        await admin
+          .from('usage_counters')
+          .select('card_count')
+          .eq('user_id', userAId)
+          .maybeSingle()
+      ).data?.card_count ?? 0;
+    const beforeB =
+      (
+        await admin
+          .from('usage_counters')
+          .select('card_count')
+          .eq('user_id', userBId)
+          .maybeSingle()
+      ).data?.card_count ?? 0;
+
+    const { error: rpcError } = await a.rpc('claim_card_slot', {
+      p_user: userBId,
+      p_title: 'A-on-B RPC tamper',
+      p_description: 'should be rejected at the function-level auth check',
+      p_system_tag: 'plumbing',
+      p_room_tag: 'tamper',
+    });
+
+    // The RPC must error and neither user's counter may move.
+    expect(rpcError).not.toBeNull();
+    expect(rpcError?.code).toBe('42501');
+    const afterA =
+      (
+        await admin
+          .from('usage_counters')
+          .select('card_count')
+          .eq('user_id', userAId)
+          .maybeSingle()
+      ).data?.card_count ?? 0;
+    const afterB =
+      (
+        await admin
+          .from('usage_counters')
+          .select('card_count')
+          .eq('user_id', userBId)
+          .maybeSingle()
+      ).data?.card_count ?? 0;
+    expect(afterA).toBe(beforeA);
+    expect(afterB).toBe(beforeB);
+  });
 });
