@@ -68,16 +68,13 @@ export type ParseError = {
 
 export type ParseResult = { ok: true; value: RecordInitialRead } | ParseError;
 
-/**
- *
- */
+/** Narrow `unknown` to a plain object (records-only, not arrays/null). */
 function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
-/**
- *
- */
+/** Narrow `unknown` to a non-empty string. Empty-string rejection is the
+ *  common case for every text field in `record_initial_read`. */
 function isNonEmptyString(v: unknown): v is string {
   return typeof v === 'string' && v.length > 0;
 }
