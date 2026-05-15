@@ -17,13 +17,13 @@ Source of truth for product strategy:
 
 ## v0 — Infrastructure / Tooling (current cycle)
 
-Long-form context for the v0 infra entries on `PLAN.md § Planned` whose tracker rows are too compact for the rationale + candidate-cause analysis. One section per `PLAN.md` row that lives here.
+Long-form context for the v0 infra entries on `PLAN.md § Active` whose tracker rows are too compact for the rationale + candidate-cause analysis. One section per `PLAN.md` row that lives here.
 
-### `landing-redirect` (PLAN.md row #1)
+### `landing-redirect` (PLAN.md Active row)
 
 **Problem.** The production root URL (`https://home-os-nu-two.vercel.app/`) still renders the day-zero placeholder — a single `<p>Home OS — coming soon.</p>` line in `apps/web/app/page.tsx`. The placeholder's own comment ("Replaced when the first feature ships") points at exactly this moment, but the capture-flow PR (#15) shipped its feature surfaces without touching `/`. The result: a new visitor lands on the prod URL, sees "coming soon," and has no discoverable path to the magic-link form at `/login` short of typing the URL by hand. Caught immediately post-deploy by the operator's first prod-URL visit on 2026-05-15.
 
-**Why this is v0-priority** (row #1 on `PLAN.md § Planned`, ahead of every Phase 1 feature row): the capture flow is **shipped but undiscoverable**. Every minute the root URL renders "coming soon" is a minute a referral / share / spontaneous visit gets bounced with no funnel. Cost to fix: ~10 LOC + 1 middleware test extension. Benefit: the existing PR #15 feature surface stops being functionally invisible.
+**Why this is v0-priority** (Active on `PLAN.md`, ahead of every Phase 1 feature row): the capture flow is **shipped but undiscoverable**. Every minute the root URL renders "coming soon" is a minute a referral / share / spontaneous visit gets bounced with no funnel. Cost to fix: ~10 LOC + 1 middleware test extension. Benefit: the existing PR #15 feature surface stops being functionally invisible.
 
 This is the canonical case for ordering: a tiny gap-fix that unblocks the visibility of every feature behind it should land before the next big feature, not after.
 
@@ -46,39 +46,11 @@ This is the canonical case for ordering: a tiny gap-fix that unblocks the visibi
 
 **Cross-refs:**
 
-- `PLAN.md § Planned row #1 (landing-redirect)` — the concrete row
+- `PLAN.md § Active (landing-redirect)` — the concrete row
 - `apps/web/middleware.ts` + `apps/web/middleware.test.ts` — the surface that gets the change
 - `apps/web/app/page.tsx` — the placeholder being replaced (current line 1-19, the "Replaced when the first feature ships" comment is the design intent this row delivers on)
 - PR #15 (capture-flow) — the shipped-but-undiscoverable feature this row makes findable
 - Future devshop generalization candidate: `/ak-pre-ship` could grow a gate that flags `app/page.tsx` containing only "coming soon" / placeholder copy on PRs that ship the first user-visible feature. Not in scope here.
-
----
-
-### `devcontainer-supabase-fix` (PLAN.md row #2)
-
-**Problem.** The workspace devcontainer can't reach the Supabase local stack on `localhost:54421` (connection-refused). The symptom reproduces on every PR (PR #9, #10, #12, #15 all hit it), and the workaround — defer `/ak-pre-ship` Gate 9 `/qa` to a Vercel-preview manual walkthrough — costs each PR a real hero shot set. PR #15 (capture-flow) shipped with three login-page captures as "hero shots" for that exact reason: the pre-ship agent could only capture anon-bounce variants because authenticated captures need Supabase reachable.
-
-**Why this is v0-priority** (the row is #1 on `PLAN.md § Planned`): without this, every subsequent PR ships with the same `Gate 9 blocked` carry-over + degraded hero shot evidence. The signal-quality of the `/ak-pre-ship` audit comment decays — when "blocked" is the default outcome, it stops carrying information. Fixing this unblocks every E2E-touching PR's pre-ship quality.
-
-**Root-cause candidates** (the new-session investigation walks these in order):
-
-1. **Firewall allowlist drift on rebound ports.** `/ak-new-project` rebinds Supabase ports `+100` to avoid lalista collision (per CLAUDE.md § Local Supabase ports — `54421/54422/54423/54424/54427`). The firewall script at `.devcontainer/init-firewall.sh:213-237` still allows the upstream-default ports `54321/54322`. Workspace egress to `localhost:54421` is iptables-blocked. This is the most likely cause and has its own `TODOS.md § firewall-rebound-ports` entry from PR #9 era.
-2. **`supabase-runner` not invoking `supabase start` on devcontainer boot.** If the runner container's entrypoint never runs `supabase start`, nothing's listening on the ports regardless of firewall state.
-3. **socat forwards misconfigured for rebound ports.** `.devcontainer/compose.yml` has socat-based forwards from workspace → supabase-runner; if those still target upstream defaults instead of the `+100` rebind, packets never reach Kong.
-
-**Fix shape:**
-
-- Investigate the three candidates in order; the first one that closes the symptom is the fix.
-- Update `.devcontainer/init-firewall.sh` allowlist + `.devcontainer/compose.yml` socat forwards + `.devcontainer/supabase-runner/Dockerfile` as needed.
-- Re-run `sudo /usr/local/bin/init-firewall.sh` to re-apply, or `Reopen in Container` for full re-build.
-- Verify: from the workspace, `curl -fsS http://localhost:54421/` should return 401/404 (Kong is up). `pnpm db:reset` should succeed. Replaying `/ak-pre-ship` Gate 9 `/qa` on this same branch should now show authenticated hero captures instead of anon-bounce.
-
-**Cross-refs:**
-
-- `PLAN.md § Planned row #1 (devcontainer-supabase-fix)` — the concrete row
-- `TODOS.md § firewall-rebound-ports` — the specific firewall-allowlist issue (candidate 1)
-- `TODOS.md § devcontainer-supabase-reachability` — the umbrella tracker covering all three candidates
-- PR #15 capture-flow hero shots — the degraded evidence this fix removes
 
 ---
 
