@@ -239,3 +239,30 @@ Per `kit/docs/guide/conventions.md`:
 ### Dismissals
 
 None
+
+## Audit 2: post-polish (2026-05-15)
+
+<!-- audited-at: f113882ec313e24f56d8f1cda78fdf1d6c8c8dde -->
+<!-- range: 29e7395..f113882 -->
+
+findings: high=0 medium=0 low=1
+
+### Docs findings
+
+- [low] BUILD-LOG.md:18 — `**Commits**` bullet headline says "7" but the enumeration on the same line sums to 9, and the actual non-merge count on `origin/main..HEAD` is 10. Self-inconsistent — change `Commits: 7` → `Commits: 9` (or drop the headline number and let the enumeration speak).
+
+### Tests findings
+
+- (none) — diff in range touches zero `.ts` / `.tsx` / `.spec.ts` files; no new behavior to test-cover. Behavior coverage remains audited in Audit 1.
+
+### Bypass trailer audit
+
+- (none)
+
+Notes:
+
+- Range covers 4 commits (`29e7395..f113882`): `18d4291` (review.md + 2 hero PNGs — audit infrastructure), `5b619c1` (pulled from main via merge — `devcontainer-supabase-fix` tracker retirement, landed on main in PR #17), `62898ea` (the merge resolution), `f113882` (BUILD-LOG entry + PLAN row removal).
+- Diff is pure docs/bookkeeping — zero `apps/web/`, zero `packages/`, zero `supabase/` touched. Source + test coverage delta is therefore zero on top of Audit 1.
+- Cross-doc coherence: `PRODUCT-ROADMAP.md § landing-redirect` was correctly updated from "PLAN.md row #1 (landing-redirect)" → "PLAN.md Active (landing-redirect)" everywhere it appears. `devcontainer-supabase-fix` removal in `PRODUCT-ROADMAP.md` + matching removal of two `TODOS.md` entries (`firewall-rebound-ports` + `devcontainer-supabase-reachability`) — synchronized, no orphan cross-refs.
+- `PLAN.md` row was moved to "No work in progress" pre-merge (PR #18 still open). Convention says "Active row disappears when the feature ships"; flipping at Phase 5.6 (this commit) is the standard `/ak-build` shape and the BUILD-LOG entry already records `#18` as merge target — not a finding.
+- The one low-severity nit (BUILD-LOG `Commits: 7`) is non-blocking; record-only.
