@@ -31,8 +31,9 @@ type CookieSetter = {
 };
 
 // `(app)` route group is NOT a URL segment — gate by explicit URL prefixes
-// (auth PR D6 gotcha). capture-flow PR #3 adds `/capture` + `/dismissed`.
-const GATED_PREFIXES = ['/home', '/capture', '/dismissed'];
+// (auth PR D6 gotcha). capture-flow PR #3 adds `/capture` + `/dismissed`;
+// triage-route-handler PR #4 adds `/cards` (card detail surface).
+const GATED_PREFIXES = ['/home', '/capture', '/dismissed', '/cards'];
 
 /**
  *
