@@ -96,6 +96,7 @@ export type Database = {
           initial_description: string | null;
           monitoring_cadence_days: number | null;
           next_check_at: string | null;
+          room_tag: string | null;
           severity: Database['public']['Enums']['severity'] | null;
           state: Database['public']['Enums']['card_state'];
           system_tag: Database['public']['Enums']['system_tag'] | null;
@@ -117,6 +118,7 @@ export type Database = {
           initial_description?: string | null;
           monitoring_cadence_days?: number | null;
           next_check_at?: string | null;
+          room_tag?: string | null;
           severity?: Database['public']['Enums']['severity'] | null;
           state?: Database['public']['Enums']['card_state'];
           system_tag?: Database['public']['Enums']['system_tag'] | null;
@@ -138,6 +140,7 @@ export type Database = {
           initial_description?: string | null;
           monitoring_cadence_days?: number | null;
           next_check_at?: string | null;
+          room_tag?: string | null;
           severity?: Database['public']['Enums']['severity'] | null;
           state?: Database['public']['Enums']['card_state'];
           system_tag?: Database['public']['Enums']['system_tag'] | null;
@@ -207,18 +210,21 @@ export type Database = {
           triage_session_count: number;
           updated_at: string;
           user_id: string;
+          week_start: string;
         };
         Insert: {
           card_count?: number;
           triage_session_count?: number;
           updated_at?: string;
           user_id: string;
+          week_start?: string;
         };
         Update: {
           card_count?: number;
           triage_session_count?: number;
           updated_at?: string;
           user_id?: string;
+          week_start?: string;
         };
         Relationships: [
           {
@@ -256,7 +262,19 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      claim_card_slot: {
+        Args: {
+          p_description: string;
+          p_room_tag: string;
+          p_system_tag: Database['public']['Enums']['system_tag'];
+          p_title: string;
+          p_user: string;
+        };
+        Returns: {
+          card_count_after: number;
+          card_id: string;
+        }[];
+      };
     };
     Enums: {
       card_state:
@@ -264,7 +282,8 @@ export type Database = {
         | 'triaging'
         | 'diagnosed'
         | 'monitoring'
-        | 'closed';
+        | 'closed'
+        | 'dismissed';
       contractor_tag:
         | 'diy'
         | 'handyman'
@@ -427,6 +446,7 @@ export const Constants = {
         'diagnosed',
         'monitoring',
         'closed',
+        'dismissed',
       ],
       contractor_tag: [
         'diy',

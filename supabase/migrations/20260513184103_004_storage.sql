@@ -46,12 +46,23 @@ create policy card_photos_delete_own on storage.objects
     and (storage.foldername(name))[1] = auth.uid()::text
   );
 
+-- Rollback notes (kept outside the ROLLBACK block so the round-trip
+-- script in scripts/ci-rollback-explain.sh doesn't try to apply them as
+-- SQL):
+--   1. Dropping the bucket would normally be `delete from storage.buckets
+--      where id = 'card-photos';` — but Supabase's storage extension
+--      installs a `storage.protect_delete()` trigger that rejects direct
+--      DELETE on storage tables (use the Storage API instead). Bucket
+--      removal is therefore a manual operator step, not an automated
+--      rollback; the forward migration is idempotent via `on conflict do
+--      nothing`, so leaving the bucket in place across rollback rounds is
+--      safe.
+--   2. Removing the bucket is destructive — it tears down every object
+--      inside it. An operator doing a hard re-roll must accept the loss
+--      (or first export the objects).
+--
 -- ROLLBACK:
 -- drop policy if exists card_photos_delete_own on storage.objects;
 -- drop policy if exists card_photos_update_own on storage.objects;
 -- drop policy if exists card_photos_insert_own on storage.objects;
 -- drop policy if exists card_photos_select_own on storage.objects;
--- delete from storage.buckets where id = 'card-photos';
--- Note: rolling back the bucket also removes any objects it contains. In a
--- non-empty bucket, the operator must first empty it (or accept the loss);
--- the migration is destructive on rollback.

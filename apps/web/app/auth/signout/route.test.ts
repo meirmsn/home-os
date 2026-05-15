@@ -25,7 +25,13 @@ import { POST, GET } from './route';
  *
  */
 function mockRequest(url: string): NextRequest {
-  return { url } as unknown as NextRequest;
+  // Stub `headers.get('host'|'x-forwarded-proto')` for the same-origin
+  // redirect helper that defends against Next.js 16's localhost/127.0.0.1
+  // hostname swap (which trips CSP form-action and breaks form submits
+  // from non-localhost origins). Mirrors the callback route's test helper.
+  const parsed = new URL(url);
+  const headers = new Headers({ host: parsed.host });
+  return { url, headers } as unknown as NextRequest;
 }
 
 describe('/auth/signout', () => {

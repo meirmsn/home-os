@@ -59,11 +59,18 @@ create type triage_role as enum (
   'assistant'
 );
 
+-- CASCADE is required because by the time scripts/ci-rollback-explain.sh
+-- exercises this migration's rollback, the dependent table columns from
+-- 002_tables.sql (cards.state, triage_conversations.role, ...) exist and
+-- block a non-cascading DROP TYPE. CASCADE drops the columns too; the
+-- script's next iteration (002) drops + re-creates those tables fresh,
+-- so the chain self-heals.
+--
 -- ROLLBACK:
--- drop type if exists triage_role;
--- drop type if exists photo_slot;
--- drop type if exists touchpoint_type;
--- drop type if exists contractor_tag;
--- drop type if exists severity;
--- drop type if exists system_tag;
--- drop type if exists card_state;
+-- drop type if exists triage_role cascade;
+-- drop type if exists photo_slot cascade;
+-- drop type if exists touchpoint_type cascade;
+-- drop type if exists contractor_tag cascade;
+-- drop type if exists severity cascade;
+-- drop type if exists system_tag cascade;
+-- drop type if exists card_state cascade;
