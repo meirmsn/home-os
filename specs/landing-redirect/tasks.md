@@ -27,7 +27,7 @@ Source spec: `specs/landing-redirect/spec.md` — Decisions D1–D7 + § Task or
 **Blocks**: D, E
 **Done when**: `apps/web/app/page.tsx` body replaced per D5 — `<main>` + `<h1>home-os</h1>` + `<a href="/login">Sign in</a>` with brand tokens preserved; header `// What:` / `// Why:` / `// Does NOT:` refreshed to noscript-fallback role. `pnpm --filter web typecheck` clean.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: D — Extend auth-edge-cases.spec.ts (E2E)
 
