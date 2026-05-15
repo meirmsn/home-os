@@ -10,9 +10,7 @@ Forward-looking plan at the feature/PR grain.
 
 ## Active
 
-| Branch                     | Spec                             | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| -------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `feature/landing-redirect` | `specs/landing-redirect/spec.md` | Replace the `/` "Home OS — coming soon" placeholder (`apps/web/app/page.tsx`) with auth-aware routing so the production URL actually onboards new users. Anonymous → 303 to `/login`; authenticated → 303 to `/home`. Implemented as a `middleware.ts` extension (the existing `getUser()` pass already runs on every non-asset request, so the redirect costs zero extra round-trips). Replace `page.tsx` with a minimal noscript-fallback `<a href="/login">` so search crawlers + curl get a usable response. The capture flow shipped in PR #15 has no discoverable entry from the public URL today — this row closes that gap. |
+_No work in progress._
 
 ## Planned
 
