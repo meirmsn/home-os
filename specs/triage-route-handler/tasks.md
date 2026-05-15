@@ -152,4 +152,6 @@ Decomposed from `spec.md § Task order`. Hard dependencies between rows; impleme
 
 ## Decisions
 
-(Populated as judgment calls land during implementation.)
+- **Task 3 — SDK version**: `@anthropic-ai/sdk@^0.96.0` (latest stable as of 2026-05-15). pnpm resolved `0.96.0`.
+- **Task 3 — Model literal**: `claude-sonnet-4-6` is a first-class member of the SDK's `Model` union (`/resources/messages/messages.d.ts` line 795). No dated suffix needed; using the bare literal matches spec D1.
+- **Task 7 — web_search tool type**: Two versions ship in `@anthropic-ai/sdk@0.96.0`: `WebSearchTool20250305` (`type: 'web_search_20250305'`) and `WebSearchTool20260209` (`type: 'web_search_20260209'`). Picked the newer (`web_search_20260209`) per spec § Gotchas #1 ("the SDK version pinned in `package.json` is the source of truth"). Both share `name: 'web_search'`.
