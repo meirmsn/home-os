@@ -98,6 +98,7 @@ export type Database = {
           next_check_at: string | null;
           room_tag: string | null;
           severity: Database['public']['Enums']['severity'] | null;
+          severity_confirmed: boolean;
           state: Database['public']['Enums']['card_state'];
           system_tag: Database['public']['Enums']['system_tag'] | null;
           title: string | null;
@@ -120,6 +121,7 @@ export type Database = {
           next_check_at?: string | null;
           room_tag?: string | null;
           severity?: Database['public']['Enums']['severity'] | null;
+          severity_confirmed?: boolean;
           state?: Database['public']['Enums']['card_state'];
           system_tag?: Database['public']['Enums']['system_tag'] | null;
           title?: string | null;
@@ -142,6 +144,7 @@ export type Database = {
           next_check_at?: string | null;
           room_tag?: string | null;
           severity?: Database['public']['Enums']['severity'] | null;
+          severity_confirmed?: boolean;
           state?: Database['public']['Enums']['card_state'];
           system_tag?: Database['public']['Enums']['system_tag'] | null;
           title?: string | null;
@@ -165,8 +168,10 @@ export type Database = {
           content: string;
           created_at: string;
           id: string;
+          is_location_ask: boolean;
           role: Database['public']['Enums']['triage_role'];
           round: number;
+          tool_name: string | null;
           user_id: string;
         };
         Insert: {
@@ -174,8 +179,10 @@ export type Database = {
           content: string;
           created_at?: string;
           id?: string;
+          is_location_ask?: boolean;
           role: Database['public']['Enums']['triage_role'];
           round: number;
+          tool_name?: string | null;
           user_id: string;
         };
         Update: {
@@ -183,8 +190,10 @@ export type Database = {
           content?: string;
           created_at?: string;
           id?: string;
+          is_location_ask?: boolean;
           role?: Database['public']['Enums']['triage_role'];
           round?: number;
+          tool_name?: string | null;
           user_id?: string;
         };
         Relationships: [
@@ -262,6 +271,20 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      answer_triage_round: {
+        Args: {
+          p_assistant_content: string;
+          p_card: string;
+          p_is_location_ask: boolean;
+          p_tool_name: string;
+          p_user: string;
+          p_user_answer: string;
+          p_user_round: number;
+        };
+        Returns: {
+          assistant_row_id: string;
+        }[];
+      };
       claim_card_slot: {
         Args: {
           p_description: string;
@@ -288,6 +311,24 @@ export type Database = {
         Returns: {
           card_id: string;
           state: Database['public']['Enums']['card_state'];
+        }[];
+      };
+      confirm_triage: {
+        Args: {
+          p_assistant_content: string;
+          p_card: string;
+          p_contractor_tag: Database['public']['Enums']['contractor_tag'];
+          p_diagnosis: string;
+          p_monitoring_cadence_days: number;
+          p_severity: Database['public']['Enums']['severity'];
+          p_skip: boolean;
+          p_system_tag: Database['public']['Enums']['system_tag'];
+          p_user: string;
+          p_user_answer: string;
+          p_user_round: number;
+        };
+        Returns: {
+          card_id: string;
         }[];
       };
       start_triage: {
