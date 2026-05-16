@@ -341,6 +341,12 @@ findings: high=0 medium=0 low=1
 
 <!-- phase-5-9-at: 574d7c6e44d9b0eaa6b0c0d1a6b3a3d1c8e8c9f9 -->
 
-**Outcome**: no-op (auth-seed harness deferred at pre-ship).
+**Outcome**: captured (6 shots committed at `901407c`).
 
-No `specs/triage-route-handler/hero/` directory exists. The `screenshots/` dir contains landing/login captures from prior features only — no triage-feature shots. Pre-ship Gate 4 (responsive + theme) and Gate 13 (hero shots) deferred capture because (a) the `/cards/[id]` route is auth-gated, and (b) the programmatic seed harness (`@supabase/realtime-js` ws() under Node 20) blocks deterministic creation of a `triaging`/`diagnosed` card in the local devcontainer. The 16-case `page.test.tsx` is the canonical render-state coverage surface; live visuals are deferred to post-deploy operator capture against the Vercel preview.
+`specs/triage-route-handler/hero/` now contains 6 PNGs covering the three primary `/cards/[id]` states at mobile (375) + desktop (1440):
+
+- `cards-capturing-375.png` / `cards-capturing-1440.png` — state=`capturing`, "Read this for me" CTA visible
+- `cards-triaging-375.png` / `cards-triaging-1440.png` — state=`triaging`, "Reading your capture…" loading state
+- `cards-diagnosed-375.png` / `cards-diagnosed-1440.png` — state=`diagnosed`, SOON severity chip + summary + WHAT I NEED TO KNOW + SOURCES
+
+Pre-ship Gate 4 and Gate 13 had originally deferred this citing "Node 20 + `@supabase/realtime-js` ws() interop blocks programmatic seed". The rationale was misdiagnosed — the actual blocker was the devcontainer firewall's hardcoded allowance only covering Supabase ports 54321/54322 while home-os uses rebound +100 ports (54421/54422/54424). After re-applying the same iptables hole-punch documented at `/devshop/kit/ROADMAP.md:1014`, the seed + capture path runs clean using `node --experimental-websocket` to provide the WebSocket polyfill realtime-js needs at client-construction time. Both root causes are now filed in `/devshop/kit/TODOS.md` (visual-evidence deferral verification + devshop firewall port-mismatch — also covered in the ROADMAP). The 16-case `page.test.tsx` continues to be the canonical render-state coverage surface; these shots are evidence for the reviewer, not a substitute for unit coverage.
