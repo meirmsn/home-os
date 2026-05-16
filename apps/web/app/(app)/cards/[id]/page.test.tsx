@@ -23,6 +23,8 @@ const {
 } = vi.hoisted(() => ({
   cardSelect: vi.fn(),
   photoSelect: vi.fn(),
+  // New shape: page now fetches the FULL thread (no maybeSingle)
+  // via from('triage_conversations').select(...).eq('card_id', id).order(...).
   convoSelect: vi.fn(),
   signedUrl: vi.fn(),
   getUser: vi.fn(),
@@ -77,13 +79,7 @@ vi.mock('@/lib/supabase/server', () => ({
       if (table === 'triage_conversations') {
         return {
           select: () => ({
-            eq: () => ({
-              eq: () => ({
-                order: () => ({
-                  limit: () => ({ maybeSingle: convoSelect }),
-                }),
-              }),
-            }),
+            eq: () => ({ order: convoSelect }),
           }),
         };
       }
@@ -99,6 +95,51 @@ vi.mock('./_components/StartTriage', () => ({
   StartTriage: ({ cardId }: { cardId: string }) => (
     <button data-testid={`start-triage-${cardId}`}>Read this for me</button>
   ),
+}));
+
+// AnswerThread is a client component — stub with a marker so the page
+// tests assert presence without exercising its internals (covered by
+// AnswerThread.test.tsx).
+vi.mock('./_components/AnswerThread', () => ({
+  AnswerThread: ({
+    cardId,
+    activeQuestion,
+    qaUserCount,
+  }: {
+    cardId: string;
+    activeQuestion: string;
+    qaUserCount: number;
+  }) => (
+    <div
+      data-testid={`answer-thread-${cardId}`}
+      data-active-question={activeQuestion}
+      data-qa-user-count={qaUserCount}
+    />
+  ),
+}));
+
+vi.mock('./_components/DiagnosedThread', () => ({
+  DiagnosedThread: ({
+    severity,
+    diagnosis,
+    monitoringCadenceDays,
+  }: {
+    severity: string;
+    diagnosis: string | null;
+    monitoringCadenceDays: number | null;
+  }) => (
+    <div
+      data-testid="diagnosed-thread"
+      data-severity={severity}
+      data-cadence={monitoringCadenceDays ?? 'null'}
+    >
+      {diagnosis}
+    </div>
+  ),
+}));
+
+vi.mock('./_components/QaThread', () => ({
+  QaThread: () => <div data-testid="qa-thread-stub" />,
 }));
 
 import CardDetailPage from './page';
@@ -126,11 +167,34 @@ function cardRow(state: CardState, extra: Record<string, unknown> = {}) {
       closed_at: state === 'closed' ? '2026-05-14T00:00:00Z' : null,
       diagnosis: state === 'diagnosed' ? 'A diagnosis.' : null,
       severity: state === 'diagnosed' ? 'soon' : null,
+      severity_confirmed: false,
+      contractor_tag: state === 'diagnosed' ? 'plumber' : null,
+      monitoring_cadence_days: null,
       ...extra,
     },
     error: null,
   };
 }
+
+const INITIAL_READ_ROW = {
+  content: JSON.stringify({
+    summary: 'A diagnosis.',
+    severity_provisional: 'soon',
+    what_im_confident_about: 'confidence',
+    what_i_need_to_know: ['q1?', 'q2?', 'q3?'],
+    sources: [
+      { url: 'https://example.com/a', title: 'A page' },
+      { url: 'https://example.com/b', title: 'Another page' },
+    ],
+    system_tag_proposed: 'plumbing',
+    contractor_tag_proposed: 'plumber',
+  }),
+  created_at: '2026-05-15T10:00:00Z',
+  round: 1,
+  role: 'assistant',
+  is_location_ask: false,
+  tool_name: 'record_initial_read',
+};
 
 beforeEach(() => {
   cardSelect.mockReset();
@@ -144,9 +208,9 @@ beforeEach(() => {
   sentryCaptureMessage.mockClear();
   // Default authed user.
   getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
-  // Defaults: no photo, no convo row.
+  // Defaults: no photo, empty thread.
   photoSelect.mockResolvedValue({ data: null, error: null });
-  convoSelect.mockResolvedValue({ data: null, error: null });
+  convoSelect.mockResolvedValue({ data: [], error: null });
   signedUrl.mockResolvedValue({
     data: { signedUrl: 'https://signed.example/p.jpg' },
     error: null,
@@ -243,25 +307,9 @@ describe('/(app)/cards/[id] — body matrix', () => {
     expect(screen.queryByTestId(`start-triage-${CARD_ID}`)).toBeNull();
   });
 
-  it('diagnosed: renders severity chip + diagnosis + what-i-need-to-know + sources', async () => {
+  it('diagnosed (provisional, qaUserCount=0): renders severity chip + diagnosis + what-i-need-to-know + sources + <AnswerThread />', async () => {
     cardSelect.mockResolvedValue(cardRow('diagnosed'));
-    convoSelect.mockResolvedValue({
-      data: {
-        content: JSON.stringify({
-          summary: 'A diagnosis.',
-          severity_provisional: 'soon',
-          what_im_confident_about: 'confidence',
-          what_i_need_to_know: ['q1?', 'q2?', 'q3?'],
-          sources: [
-            { url: 'https://example.com/a', title: 'A page' },
-            { url: 'https://example.com/b', title: 'Another page' },
-          ],
-          system_tag_proposed: 'plumbing',
-          contractor_tag_proposed: 'plumber',
-        }),
-      },
-      error: null,
-    });
+    convoSelect.mockResolvedValue({ data: [INITIAL_READ_ROW], error: null });
     await renderPage();
     expect(screen.getByTestId('diagnosed-body')).toBeTruthy();
     const chip = screen.getByTestId('severity-chip');
@@ -275,6 +323,69 @@ describe('/(app)/cards/[id] — body matrix', () => {
     const link = sources.querySelector('a');
     expect(link?.getAttribute('target')).toBe('_blank');
     expect(link?.getAttribute('rel')).toContain('noopener');
+    // <AnswerThread /> mounted with the first what_i_need_to_know question as the active prompt.
+    const at = screen.getByTestId(`answer-thread-${CARD_ID}`);
+    expect(at.getAttribute('data-active-question')).toBe('q1?');
+    expect(at.getAttribute('data-qa-user-count')).toBe('0');
+    // QaThread should NOT render (no Q&A rounds yet).
+    expect(screen.queryByTestId('qa-thread-stub')).toBeNull();
+    // DiagnosedThread should NOT render (severity not confirmed).
+    expect(screen.queryByTestId('diagnosed-thread')).toBeNull();
+  });
+
+  it('diagnosed (provisional, qaUserCount=1): renders <QaThread /> + <AnswerThread /> + hides "what I need to know"', async () => {
+    cardSelect.mockResolvedValue(cardRow('diagnosed'));
+    convoSelect.mockResolvedValue({
+      data: [
+        INITIAL_READ_ROW,
+        {
+          content: 'two weeks',
+          created_at: '2026-05-15T10:01:00Z',
+          round: 2,
+          role: 'user',
+          is_location_ask: false,
+          tool_name: null,
+        },
+        {
+          content: JSON.stringify({
+            question: 'Has it grown?',
+            is_location_ask: false,
+          }),
+          created_at: '2026-05-15T10:01:01Z',
+          round: 2,
+          role: 'assistant',
+          is_location_ask: false,
+          tool_name: 'ask_next_question',
+        },
+      ],
+      error: null,
+    });
+    await renderPage();
+    expect(screen.getByTestId('qa-thread-stub')).toBeTruthy();
+    const at = screen.getByTestId(`answer-thread-${CARD_ID}`);
+    expect(at.getAttribute('data-active-question')).toBe('Has it grown?');
+    expect(at.getAttribute('data-qa-user-count')).toBe('1');
+    // Initial-read preview's "what I need to know" list should NOT
+    // render at this sub-state (it's stale; the AI is mid-conversation).
+    expect(screen.queryByTestId('what-i-need-to-know')).toBeNull();
+  });
+
+  it('diagnosed (confirmed): renders <DiagnosedThread />; <AnswerThread /> not present', async () => {
+    cardSelect.mockResolvedValue(
+      cardRow('diagnosed', {
+        severity_confirmed: true,
+        monitoring_cadence_days: 14,
+      })
+    );
+    convoSelect.mockResolvedValue({ data: [INITIAL_READ_ROW], error: null });
+    await renderPage();
+    const dt = screen.getByTestId('diagnosed-thread');
+    expect(dt.getAttribute('data-severity')).toBe('soon');
+    expect(dt.getAttribute('data-cadence')).toBe('14');
+    // <AnswerThread /> should NOT be present.
+    expect(screen.queryByTestId(`answer-thread-${CARD_ID}`)).toBeNull();
+    // The PR #19 provisional preview block should NOT render either.
+    expect(screen.queryByTestId('diagnosed-body')).toBeNull();
   });
 
   it('monitoring: renders the row-#6 deferred stub', async () => {

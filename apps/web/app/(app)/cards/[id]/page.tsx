@@ -19,7 +19,11 @@ import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import * as Sentry from '@sentry/nextjs';
 import { createClient } from '@/lib/supabase/server';
+import { computeQaRoundState } from '@/app/api/triage/_lib/round-state';
 import { StartTriage } from './_components/StartTriage';
+import { AnswerThread } from './_components/AnswerThread';
+import { DiagnosedThread } from './_components/DiagnosedThread';
+import { QaThread } from './_components/QaThread';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +45,18 @@ type CardRow = {
   closed_at: string | null;
   diagnosis: string | null;
   severity: 'cosmetic' | 'monitor' | 'soon' | 'urgent' | null;
+  severity_confirmed: boolean;
+  contractor_tag: string | null;
+  monitoring_cadence_days: number | null;
+};
+
+type ThreadRow = {
+  created_at: string;
+  round: number;
+  role: 'user' | 'assistant';
+  is_location_ask: boolean;
+  tool_name: string | null;
+  content: string;
 };
 
 type AssistantContent = {
@@ -138,7 +154,7 @@ export default async function CardDetailPage({
   const { data: cardRow, error: cardError } = await supabase
     .from('cards')
     .select(
-      'id, state, initial_description, system_tag, room_tag, created_at, closed_at, diagnosis, severity'
+      'id, state, initial_description, system_tag, room_tag, created_at, closed_at, diagnosis, severity, severity_confirmed, contractor_tag, monitoring_cadence_days'
     )
     .eq('id', id)
     .maybeSingle();
@@ -197,21 +213,70 @@ export default async function CardDetailPage({
     photoUrl = signed?.signedUrl ?? null;
   }
 
-  // For diagnosed cards, pull the most-recent assistant row to extract
-  // the "what I need to know" + sources for the preview.
+  // For diagnosed cards, pull the FULL thread so the page can render
+  // <QaThread /> + <AnswerThread /> + <DiagnosedThread /> from server-
+  // fetched data. The initial-read preview reads the round-1 assistant
+  // row's content for backward-compat with PR #19's preview block.
+  let threadRows: ThreadRow[] = [];
   let assistantContent: AssistantContent | undefined;
   if (card.state === 'diagnosed') {
-    const { data: convoRow } = await supabase
+    const { data: convoRows } = await supabase
       .from('triage_conversations')
-      .select('content')
+      .select('content, created_at, round, role, is_location_ask, tool_name')
       .eq('card_id', id)
-      .eq('role', 'assistant')
-      .order('round', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (convoRow?.content) {
-      assistantContent = parseAssistantContent(convoRow.content);
+      .order('created_at', { ascending: true });
+    threadRows = (convoRows ?? []) as ThreadRow[];
+    // Initial-read preview source: the round-1 assistant row.
+    const initialReadRow = threadRows.find(
+      (r) =>
+        r.role === 'assistant' &&
+        r.round === 1 &&
+        (r.tool_name === 'record_initial_read' || r.tool_name === null)
+    );
+    if (initialReadRow?.content) {
+      assistantContent = parseAssistantContent(initialReadRow.content);
     }
+  }
+
+  // Derived Q&A round state (qaUserCount + priorWasLocationAsk +
+  // priorAssistantToolName). Drives the diagnosed-state body switch.
+  const qaState = computeQaRoundState(threadRows);
+
+  // Find the most-recent ask_next_question assistant row to render
+  // as the active question above <AnswerThread />.
+  type ParsedAsk = {
+    question?: string;
+    is_location_ask?: boolean;
+  };
+  let activeQuestion = '';
+  let activeQuestionIsLocationAsk = false;
+  if (qaState.priorAssistantToolName === 'ask_next_question') {
+    const lastAsk = [...threadRows]
+      .reverse()
+      .find(
+        (r) => r.role === 'assistant' && r.tool_name === 'ask_next_question'
+      );
+    if (lastAsk?.content) {
+      try {
+        const parsed = JSON.parse(lastAsk.content) as ParsedAsk;
+        if (typeof parsed.question === 'string') {
+          activeQuestion = parsed.question;
+        }
+        if (typeof parsed.is_location_ask === 'boolean') {
+          activeQuestionIsLocationAsk = parsed.is_location_ask;
+        }
+      } catch {
+        // Best-effort — server-side parse failure renders an empty
+        // question; the user sees the textarea + Send anyway.
+      }
+    }
+  } else if (
+    qaState.priorAssistantToolName === 'record_initial_read' &&
+    assistantContent?.what_i_need_to_know?.[0]
+  ) {
+    // Just-after-initial-read state: no ask_next_question row yet, so
+    // the first "what I need to know" question seeds the active prompt.
+    activeQuestion = assistantContent.what_i_need_to_know[0];
   }
 
   return (
@@ -290,60 +355,93 @@ export default async function CardDetailPage({
         </section>
       )}
 
-      {card.state === 'diagnosed' && (
-        <section
-          aria-label="Initial read"
-          className="space-y-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] p-5"
-          data-testid="diagnosed-body"
-        >
-          {card.severity && <SeverityChip severity={card.severity} />}
-          {card.diagnosis && (
-            <p className="whitespace-pre-line text-sm text-[var(--color-text-primary-inverse)]">
-              {card.diagnosis}
-            </p>
-          )}
-          {assistantContent?.what_i_need_to_know &&
-            assistantContent.what_i_need_to_know.length > 0 && (
-              <div className="space-y-2">
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary-inverse)]">
-                  What I need to know
-                </h2>
-                <ul
-                  className="list-inside list-disc space-y-1 text-sm text-[var(--color-text-primary-inverse)]"
-                  data-testid="what-i-need-to-know"
-                >
-                  {assistantContent.what_i_need_to_know.map((q, i) => (
-                    <li key={i}>{q}</li>
-                  ))}
-                </ul>
-              </div>
+      {card.state === 'diagnosed' && card.severity_confirmed === true && (
+        <DiagnosedThread
+          severity={card.severity ?? 'monitor'}
+          diagnosis={card.diagnosis}
+          monitoringCadenceDays={card.monitoring_cadence_days}
+          rows={threadRows}
+        />
+      )}
+
+      {card.state === 'diagnosed' && card.severity_confirmed === false && (
+        <>
+          <section
+            aria-label="Initial read"
+            className="space-y-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] p-5"
+            data-testid="diagnosed-body"
+          >
+            {card.severity && <SeverityChip severity={card.severity} />}
+            {card.diagnosis && (
+              <p className="whitespace-pre-line text-sm text-[var(--color-text-primary-inverse)]">
+                {card.diagnosis}
+              </p>
             )}
-          {assistantContent?.sources && assistantContent.sources.length > 0 && (
-            <div className="space-y-2">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary-inverse)]">
-                Sources
-              </h2>
-              <ol
-                className="space-y-1 text-xs text-[var(--color-text-secondary-inverse)]"
-                data-testid="sources"
-              >
-                {assistantContent.sources.map((s, i) => (
-                  <li key={i}>
-                    [{i + 1}]{' '}
-                    <a
-                      href={s.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[var(--color-text-primary-inverse)] underline-offset-2 hover:underline"
-                    >
-                      {s.title}
-                    </a>
-                  </li>
-                ))}
-              </ol>
-            </div>
+            {/* Show the "what I need to know" preview ONLY at qaUserCount=0
+                (the AI hasn't started a Q&A yet). Once the user replies
+                to the first question, the compact <QaThread /> renders
+                instead. */}
+            {qaState.qaUserCount === 0 &&
+              assistantContent?.what_i_need_to_know &&
+              assistantContent.what_i_need_to_know.length > 0 && (
+                <div className="space-y-2">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary-inverse)]">
+                    What I need to know
+                  </h2>
+                  <ul
+                    className="list-inside list-disc space-y-1 text-sm text-[var(--color-text-primary-inverse)]"
+                    data-testid="what-i-need-to-know"
+                  >
+                    {assistantContent.what_i_need_to_know.map((q, i) => (
+                      <li key={i}>{q}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            {assistantContent?.sources &&
+              assistantContent.sources.length > 0 && (
+                <div className="space-y-2">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary-inverse)]">
+                    Sources
+                  </h2>
+                  <ol
+                    className="space-y-1 text-xs text-[var(--color-text-secondary-inverse)]"
+                    data-testid="sources"
+                  >
+                    {assistantContent.sources.map((s, i) => (
+                      <li key={i}>
+                        [{i + 1}]{' '}
+                        <a
+                          href={s.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[var(--color-text-primary-inverse)] underline-offset-2 hover:underline"
+                        >
+                          {s.title}
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+          </section>
+
+          {/* Compact "Conversation so far" thread appears only after at
+              least one Q&A round has been answered (qaUserCount > 0 OR
+              priorWasLocationAsk — the location-ask round doesn't count
+              toward the budget but still has visible prior turns). */}
+          {(qaState.qaUserCount > 0 || qaState.priorWasLocationAsk) && (
+            <QaThread rows={threadRows} />
           )}
-        </section>
+
+          <AnswerThread
+            cardId={card.id}
+            activeQuestion={activeQuestion}
+            activeQuestionIsLocationAsk={activeQuestionIsLocationAsk}
+            qaUserCount={qaState.qaUserCount}
+            contractorTag={card.contractor_tag}
+          />
+        </>
       )}
 
       {card.state === 'monitoring' && (
