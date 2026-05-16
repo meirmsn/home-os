@@ -43,9 +43,9 @@ type ParsedAssistantContent = {
   severity_confirmed?: Severity;
 };
 
-/**
- *
- */
+/** Best-effort JSON.parse of an assistant row's `content` payload.
+ *  Returns the parsed object or `null` on any failure — callers fall
+ *  back to the "Conversation row could not be parsed" UI. */
 function safeParse(content: string): ParsedAssistantContent | null {
   try {
     const parsed = JSON.parse(content);

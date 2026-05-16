@@ -178,7 +178,6 @@ function validateBody(body: unknown):
  *  is converted into a Q&A message. The current user reply is appended
  *  as the final user turn (or a skip prompt). */
 function buildQaMessages(
-  threadRows: ThreadRow[],
   threadContents: Map<
     number,
     { user: string | null; assistant: string | null }
@@ -211,10 +210,6 @@ function buildQaMessages(
       messages.push({ role: 'assistant', content: pair.assistant });
     }
   }
-
-  // Reference threadRows to keep the parameter live for future use
-  // (e.g. attaching is_location_ask hints to assistant turns).
-  void threadRows;
 
   // Current user turn.
   if ('skip' in body) {
@@ -342,7 +337,7 @@ export async function POST(request: NextRequest) {
   const baseURL = (process.env.ANTHROPIC_BASE_URL ?? '').trim() || undefined;
   const system = resolveQaSystemPrompt();
   const aggregated = aggregateThreadByRound(threadRows);
-  const messages = buildQaMessages(threadRows, aggregated, card, parsedBody);
+  const messages = buildQaMessages(aggregated, card, parsedBody);
 
   let response: Awaited<ReturnType<typeof callQaTurn>>;
   try {
