@@ -10,23 +10,47 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
-const { cardSelect, photoSelect, convoSelect, signedUrl, notFoundMock } =
-  vi.hoisted(() => ({
-    cardSelect: vi.fn(),
-    photoSelect: vi.fn(),
-    convoSelect: vi.fn(),
-    signedUrl: vi.fn(),
-    notFoundMock: vi.fn(() => {
-      throw new Error('NEXT_NOT_FOUND');
-    }),
-  }));
+const {
+  cardSelect,
+  photoSelect,
+  convoSelect,
+  signedUrl,
+  getUser,
+  notFoundMock,
+  redirectMock,
+  sentryCaptureException,
+  sentryCaptureMessage,
+} = vi.hoisted(() => ({
+  cardSelect: vi.fn(),
+  photoSelect: vi.fn(),
+  convoSelect: vi.fn(),
+  signedUrl: vi.fn(),
+  getUser: vi.fn(),
+  notFoundMock: vi.fn(() => {
+    throw new Error('NEXT_NOT_FOUND');
+  }),
+  redirectMock: vi.fn((dest: string) => {
+    throw new Error(`NEXT_REDIRECT:${dest}`);
+  }),
+  sentryCaptureException: vi.fn(),
+  sentryCaptureMessage: vi.fn(),
+}));
 
 vi.mock('next/navigation', () => ({
   notFound: notFoundMock,
+  redirect: redirectMock,
+}));
+
+vi.mock('@sentry/nextjs', () => ({
+  captureException: sentryCaptureException,
+  captureMessage: sentryCaptureMessage,
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
+    auth: {
+      getUser,
+    },
     from: (table: string) => {
       if (table === 'cards') {
         return {
@@ -113,7 +137,13 @@ beforeEach(() => {
   photoSelect.mockReset();
   convoSelect.mockReset();
   signedUrl.mockReset();
+  getUser.mockReset();
   notFoundMock.mockClear();
+  redirectMock.mockClear();
+  sentryCaptureException.mockClear();
+  sentryCaptureMessage.mockClear();
+  // Default authed user.
+  getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
   // Defaults: no photo, no convo row.
   photoSelect.mockResolvedValue({ data: null, error: null });
   convoSelect.mockResolvedValue({ data: null, error: null });
@@ -133,16 +163,49 @@ async function renderPage() {
   render(element);
 }
 
-describe('/(app)/cards/[id] — 404', () => {
-  it('calls notFound() when the card row is missing', async () => {
+describe('/(app)/cards/[id] — auth + 404', () => {
+  it('redirects to /login?next=/cards/<id> when no session is present', async () => {
+    getUser.mockResolvedValue({ data: { user: null }, error: null });
+    await expect(renderPage()).rejects.toThrow(
+      `NEXT_REDIRECT:/login?next=/cards/${CARD_ID}`
+    );
+    expect(redirectMock).toHaveBeenCalledWith(`/login?next=/cards/${CARD_ID}`);
+    // Don't issue the cards SELECT once we know there's no session.
+    expect(cardSelect).not.toHaveBeenCalled();
+  });
+
+  it('calls notFound() and captures a Sentry message when the card row is missing', async () => {
     cardSelect.mockResolvedValue({ data: null, error: null });
     await expect(renderPage()).rejects.toThrow('NEXT_NOT_FOUND');
     expect(notFoundMock).toHaveBeenCalled();
+    expect(sentryCaptureMessage).toHaveBeenCalledTimes(1);
+    const call = sentryCaptureMessage.mock.calls[0]!;
+    const options = call[1];
+    expect(options).toMatchObject({
+      level: 'warning',
+      tags: { surface: 'cards/[id]', stage: 'card_missing' },
+      extra: { card_id: CARD_ID, user_id: 'user-1' },
+    });
   });
 
-  it('calls notFound() when the card row select errors', async () => {
-    cardSelect.mockResolvedValue({ data: null, error: { message: 'rls' } });
+  it('calls notFound() and captures a Sentry exception when the card row select errors', async () => {
+    cardSelect.mockResolvedValue({
+      data: null,
+      error: { message: 'rls', code: '42P01', details: 'no_table' },
+    });
     await expect(renderPage()).rejects.toThrow('NEXT_NOT_FOUND');
+    expect(sentryCaptureException).toHaveBeenCalledTimes(1);
+    const call = sentryCaptureException.mock.calls[0]!;
+    const options = call[1];
+    expect(options).toMatchObject({
+      tags: { surface: 'cards/[id]', stage: 'card_select' },
+      extra: expect.objectContaining({
+        card_id: CARD_ID,
+        user_id: 'user-1',
+        error_message: 'rls',
+        error_code: '42P01',
+      }),
+    });
   });
 });
 
