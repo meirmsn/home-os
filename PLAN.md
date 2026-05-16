@@ -10,9 +10,7 @@ Forward-looking plan at the feature/PR grain.
 
 ## Active
 
-| Feature               | Branch                        | Spec                                | Scope                                                                                                                                                                                                                            |
-| --------------------- | ----------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `triage-conversation` | `feature/triage-conversation` | `specs/triage-conversation/spec.md` | Multi-round Q&A (max 3 diagnostic rounds), free location ask outside the 3-round limit, AI-proposed monitoring cadence stored on card, provisional → confirmed transition, "How we diagnosed this" persistent collapsible thread |
+_No work in progress._
 
 ## Planned
 
