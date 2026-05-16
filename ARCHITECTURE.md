@@ -74,13 +74,15 @@ PWA on Next.js (App Router), backed by Supabase (auth + Postgres + Realtime + ed
 4. Server component renders HTML; client components hydrate and (when needed) instantiate the browser client from `apps/web/lib/supabase/client.ts`.
 5. Realtime / Postgres-changes subscriptions open over WSS using the same anon JWT.
 
-**2. Triage flow (Phase 1, planned)**
+**2. Triage flow (Phase 1, initial-read shipped)**
 
-1. User captures a photo + description in `apps/web/app/(capture)/...`.
-2. Client uploads photo to Supabase Storage (on-device fallback in Phase 1), then calls the `/api/triage` route handler.
-3. Route handler forwards to the Supabase edge function `triage` (deployed via `deploy-functions.yml`).
-4. Edge function calls Anthropic with `ANTHROPIC_API_KEY` (auto-injected from the project's edge runtime), returns a structured response validated by a Zod schema in `packages/core/src/schemas/`.
-5. Card lifecycle row updates land in Postgres; Realtime pushes the state change to the dashboard.
+1. User captures a photo + description in `apps/web/app/(app)/capture/`.
+2. The `POST /api/card` route handler atomically claims a weekly slot via `claim_card_slot`, uploads photo bytes to the `card-photos` Storage bucket, and inserts the `cards` + `card_photos` rows in `state='capturing'`.
+3. CaptureForm redirects the browser to `/(app)/cards/[id]` — server-rendered card detail page. `<StartTriage />` renders the "Read this for me" button.
+4. User clicks the button; the client POSTs to `/api/triage` (`apps/web/app/api/triage/route.ts`).
+5. Route handler atomically transitions `capturing → triaging` via the `start_triage` SECURITY DEFINER RPC, downloads the user's photo bytes under user-context Storage RLS, calls Anthropic Sonnet 4.6 with the `record_initial_read` custom tool + `web_search` server tool (`_lib/anthropic.ts`), validates the tool-use payload at runtime (`_lib/parse-tool-output.ts`), and atomically persists `cards.diagnosis / severity / system_tag / contractor_tag` + a `triage_conversations` row (round=1, role='assistant') via `complete_triage`, landing the card in `state='diagnosed'`.
+6. On any error after `start_triage`, the route best-effort reverts state to `capturing`; on Anthropic 429 → 429 `triage_rate_limited` with `retry_after_s`; on 5xx / network / timeout → 503 `triage_unavailable`.
+7. Multi-round Q&A (rounds 2 + 3) ships in row #2 (`triage-conversation`) — the persisted assistant payload IS the audit trail consumed by the Q&A surface (spec § Gotchas #6).
 
 **3. Deploy migration flow**
 
@@ -110,15 +112,15 @@ Blast-radius detail and rotation cadence: see `/ak-new-project § Security Postu
 
 ## Module map
 
-| Directory            | Purpose                                                                                                                                                             | README                                         |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `apps/web/`          | Next.js PWA — App Router pages, middleware, lib helpers, E2E suite (route handlers include `/api/card` POST + `/api/card/[id]/restore` POST per capture-flow PR #3) | (added when content warrants)                  |
-| `packages/core/`     | Typed Supabase factory + prod-URL guard + shared models + Zod schemas                                                                                               | (added when content warrants)                  |
-| `packages/ui/`       | Design tokens (TS) + primitive components                                                                                                                           | (added when content warrants)                  |
-| `supabase/`          | Migrations + edge functions (populated at `supabase init` — Step 15)                                                                                                | `supabase/functions/README.md` (opt-in per fn) |
-| `.devcontainer/`     | Dev container + supabase-runner sibling + firewall                                                                                                                  | `.devcontainer/README.md`                      |
-| `.github/workflows/` | CI (fast/slow), deploy-migrations, deploy-functions, keepalive                                                                                                      | n/a                                            |
-| `.gstack/`           | Plan-mode artifacts (ceo / design / eng review docs)                                                                                                                | n/a                                            |
+| Directory            | Purpose                                                                                                                                                                                                                                                                       | README                                         |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `apps/web/`          | Next.js PWA — App Router pages, middleware, lib helpers, E2E suite (route handlers include `/api/card` POST + `/api/card/[id]/restore` POST per capture-flow PR #3 + `/api/triage` POST per triage-route-handler PR #4; `/(app)/cards/[id]` server-rendered card detail page) | (added when content warrants)                  |
+| `packages/core/`     | Typed Supabase factory + prod-URL guard + shared models + Zod schemas                                                                                                                                                                                                         | (added when content warrants)                  |
+| `packages/ui/`       | Design tokens (TS) + primitive components                                                                                                                                                                                                                                     | (added when content warrants)                  |
+| `supabase/`          | Migrations + edge functions (populated at `supabase init` — Step 15)                                                                                                                                                                                                          | `supabase/functions/README.md` (opt-in per fn) |
+| `.devcontainer/`     | Dev container + supabase-runner sibling + firewall                                                                                                                                                                                                                            | `.devcontainer/README.md`                      |
+| `.github/workflows/` | CI (fast/slow), deploy-migrations, deploy-functions, keepalive                                                                                                                                                                                                                | n/a                                            |
+| `.gstack/`           | Plan-mode artifacts (ceo / design / eng review docs)                                                                                                                                                                                                                          | n/a                                            |
 
 ## Where to look next
 
