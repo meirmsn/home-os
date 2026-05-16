@@ -117,7 +117,7 @@ describe('<CaptureForm />', () => {
     expect(submit.disabled).toBe(false);
   });
 
-  it('on 201: fires capture_completed with the right payload and routes to /home', async () => {
+  it('on 201: fires capture_completed and routes to /cards/[id]', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       status: 201,
       json: async () => ({
@@ -130,7 +130,7 @@ describe('<CaptureForm />', () => {
     render(<CaptureForm />);
     fillRequired();
     fireEvent.click(screen.getByRole('button', { name: 'Save card' }));
-    await waitFor(() => expect(routerPush).toHaveBeenCalledWith('/home'));
+    await waitFor(() => expect(routerPush).toHaveBeenCalledWith('/cards/c-1'));
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/card',
       expect.objectContaining({ method: 'POST' })

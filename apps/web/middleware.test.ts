@@ -178,6 +178,44 @@ describe('middleware — D6 redirect rules', () => {
     expect(response.headers.get('location')).toBe(null);
   });
 
+  it('anonymous + /cards -> 307 redirect to /login?next=/cards', async () => {
+    getUser.mockResolvedValue({ data: { user: null } });
+    const response = await middleware(mockRequest('/cards'));
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/login?next=%2Fcards'
+    );
+  });
+
+  it('anonymous + /cards/<uuid> -> 307 redirect with the uuid path preserved', async () => {
+    getUser.mockResolvedValue({ data: { user: null } });
+    const response = await middleware(
+      mockRequest('/cards/11111111-2222-3333-4444-555555555555')
+    );
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/login?next=%2Fcards%2F11111111-2222-3333-4444-555555555555'
+    );
+  });
+
+  it('authenticated + /cards -> NOT redirected (allowed through)', async () => {
+    getUser.mockResolvedValue({
+      data: { user: { id: 'u-1', email: 'a@b.test' } },
+    });
+    const response = await middleware(mockRequest('/cards'));
+    expect(response.headers.get('location')).toBe(null);
+  });
+
+  it('authenticated + /cards/<uuid> -> NOT redirected (allowed through)', async () => {
+    getUser.mockResolvedValue({
+      data: { user: { id: 'u-1', email: 'a@b.test' } },
+    });
+    const response = await middleware(
+      mockRequest('/cards/11111111-2222-3333-4444-555555555555')
+    );
+    expect(response.headers.get('location')).toBe(null);
+  });
+
   it('matcher config excludes _next and asset paths', () => {
     // Single matcher, structural shape: the regex must skip _next/static,
     // _next/image, favicon.ico, and any *.svg/png/jpg/jpeg/gif/webp/ico.

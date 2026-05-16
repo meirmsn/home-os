@@ -6,7 +6,8 @@
 // Why:  Unit tests cover branches with mocks; this spec proves the
 //       wire format end-to-end — cookies, RLS, the SECURITY DEFINER
 //       claim_card_slot RPC, Storage upload paths, and the redirect
-//       to /home.
+//       to /cards/<id> (spec D5; triage-route-handler PR #4 changed
+//       this from /home).
 // Does NOT: Run against CI fast-job without a local stack. Mirrors the
 //           magic-link + rls-isolation skip pattern so the slow-job
 //           lane is the enforcement surface.
@@ -134,7 +135,7 @@ test.describe('capture-flow round trip', () => {
     userId = '';
   });
 
-  test('happy path: capture a card with photo from /home → land back on /home', async ({
+  test('happy path: capture a card with photo from /home → land on /cards/[id]', async ({
     page,
   }) => {
     await page.goto('/home');
@@ -155,7 +156,8 @@ test.describe('capture-flow round trip', () => {
     });
 
     await page.getByRole('button', { name: 'Save card' }).click();
-    await page.waitForURL('**/home');
+    // Spec D5 — capture-form 201 routes to /cards/<id>, not /home.
+    await page.waitForURL(/\/cards\/[0-9a-f-]{36}$/);
 
     // Admin verifications.
     const admin = adminClient();
@@ -222,7 +224,8 @@ test.describe('capture-flow round trip', () => {
     await page.getByLabel(/room/i).fill('Office');
     // Deliberately skip setInputFiles — photo is optional per spec D2.
     await page.getByRole('button', { name: 'Save card' }).click();
-    await page.waitForURL('**/home');
+    // Spec D5 — capture-form 201 routes to /cards/<id>, not /home.
+    await page.waitForURL(/\/cards\/[0-9a-f-]{36}$/);
 
     const admin = adminClient();
     const cards = await admin

@@ -144,7 +144,10 @@ export function CaptureForm() {
     }
 
     if (response.status === 201) {
-      const json = (await response.json()) as { photo_uploaded: boolean };
+      const json = (await response.json()) as {
+        card_id: string;
+        photo_uploaded: boolean;
+      };
       posthog.capture('capture_completed', {
         has_photo: !!photo,
         system_tag: systemTag,
@@ -160,7 +163,10 @@ export function CaptureForm() {
           { tags: { surface: 'CaptureForm', stage: 'photo_partial' } }
         );
       }
-      router.push('/home');
+      // Spec D5: capture redirect lands on /cards/[id] (the new card
+      // detail page) instead of /home — that's where the user kicks off
+      // triage. Falls back to /home if the response somehow omits card_id.
+      router.push(json.card_id ? `/cards/${json.card_id}` : '/home');
       router.refresh();
       return;
     }

@@ -275,6 +275,28 @@ export type Database = {
           card_id: string;
         }[];
       };
+      complete_triage: {
+        Args: {
+          p_assistant_content: string;
+          p_card: string;
+          p_contractor_tag: Database['public']['Enums']['contractor_tag'];
+          p_diagnosis: string;
+          p_severity_provisional: Database['public']['Enums']['severity'];
+          p_system_tag: Database['public']['Enums']['system_tag'];
+          p_user: string;
+        };
+        Returns: {
+          card_id: string;
+          state: Database['public']['Enums']['card_state'];
+        }[];
+      };
+      start_triage: {
+        Args: { p_card: string; p_user: string };
+        Returns: {
+          card_id: string;
+          state: Database['public']['Enums']['card_state'];
+        }[];
+      };
     };
     Enums: {
       card_state:

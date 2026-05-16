@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.96.0",
     "@home-os/core": "workspace:*",
     "@home-os/ui": "workspace:*",
     "@sentry/nextjs": "^10.53.1",
