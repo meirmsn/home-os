@@ -15,8 +15,9 @@
 //           conditions table). Doesn't show the contractor_tag — row
 //           #3 owns the decide-state surface.
 
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
+import * as Sentry from '@sentry/nextjs';
 import { createClient } from '@/lib/supabase/server';
 import { StartTriage } from './_components/StartTriage';
 
@@ -121,6 +122,19 @@ export default async function CardDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
+  // Explicit auth check in the page — the (app) layout also runs getUser()
+  // and redirects to /login, but layout + page server components render in
+  // parallel. If this page's SELECT loses the RLS context (returning empty),
+  // we'd throw notFound() before the layout's redirect throws — producing
+  // a confusing 404 instead of a /login bounce. Anchoring the auth check
+  // here too removes the race.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect(`/login?next=/cards/${encodeURIComponent(id)}`);
+  }
+
   const { data: cardRow, error: cardError } = await supabase
     .from('cards')
     .select(
@@ -129,9 +143,35 @@ export default async function CardDetailPage({
     .eq('id', id)
     .maybeSingle();
 
-  if (cardError || !cardRow) {
-    // 404 (notFound) regardless of error vs ownership — D7's posture
-    // is "never leak whether the card exists".
+  if (cardError) {
+    // PostgREST returned an error — column drift, RLS misconfig, or stale
+    // schema cache. Capture with full context before falling through to
+    // 404 so the next occurrence is debuggable.
+    Sentry.captureException(new Error('cards SELECT errored on detail page'), {
+      tags: { surface: 'cards/[id]', stage: 'card_select' },
+      extra: {
+        card_id: id,
+        user_id: user.id,
+        error_message: cardError.message,
+        error_code: cardError.code,
+        error_details: cardError.details,
+      },
+    });
+    notFound();
+  }
+
+  if (!cardRow) {
+    // Row missing under the user's RLS context. Either the card genuinely
+    // doesn't exist, it belongs to another user, or the user's auth
+    // context didn't propagate into the SELECT (the suspected cause of the
+    // post-capture 404 reported in production). Capture so we can tell
+    // these cases apart on the next hit — D7's posture still applies:
+    // never leak existence to the *user*, just to our telemetry.
+    Sentry.captureMessage('cards SELECT returned no row on detail page', {
+      level: 'warning',
+      tags: { surface: 'cards/[id]', stage: 'card_missing' },
+      extra: { card_id: id, user_id: user.id },
+    });
     notFound();
   }
 
