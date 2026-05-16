@@ -3,7 +3,13 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches-ignore: [main]
+    branches: [main]
+  # Why `branches: [main]` (NOT `branches-ignore: [main]`): on a PR branch,
+  # `pull_request` already fires for every push, so an open-ended push trigger
+  # double-fires (one workflow run per event) and wastes minutes on a
+  # redundant `fast` run. `branches: [main]` keeps post-merge CI on trunk
+  # only; pre-merge CI rides the pull_request event exclusively. Matches the
+  # devshop template's posture — home-os had drifted to `branches-ignore`.
 
 jobs:
   fast:
