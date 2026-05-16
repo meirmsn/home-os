@@ -189,7 +189,6 @@ $$;
 -- drop function if exists public.answer_triage_round(uuid, uuid, text, text, text, boolean, int);
 -- alter table public.triage_conversations drop constraint if exists triage_round_in_range;
 -- alter table public.triage_conversations add constraint triage_round_in_range check (round between 1 and 3);
--- update public.triage_conversations set tool_name = null where tool_name = 'record_initial_read' and round = 1;
 -- alter table public.triage_conversations drop column if exists tool_name;
 -- alter table public.triage_conversations drop column if exists is_location_ask;
 -- alter table public.cards drop column if exists severity_confirmed;
