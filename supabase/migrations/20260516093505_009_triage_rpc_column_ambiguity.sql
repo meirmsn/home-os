@@ -113,16 +113,20 @@ begin
 end;
 $$;
 
--- ROLLBACK:
+-- Rollback note:
 -- The CI rollback validator (scripts/ci-rollback-explain.sh) strips the
--- leading `-- ` from every line below and applies the result as SQL —
--- so this block must be valid Postgres. Re-applying migration 007's
--- ambiguous-reference body would re-introduce the 42702 production
--- failure; that's a no-op rollback in practice (the bug-fix is forward-
--- only). What we ship below is the same qualified-column body as the
--- forward migration, wrapped to satisfy the round-trip parser. Operator
--- intent: real recovery from a bad deploy of 009 is "redeploy 009", not
+-- leading `-- ` from every line BELOW the `-- ROLLBACK:` marker and
+-- applies the result as SQL — so only valid Postgres may appear after
+-- the marker. This explanatory prose must therefore live ABOVE it.
+--
+-- Re-applying migration 007's ambiguous-reference body would re-introduce
+-- the 42702 production failure; the bug-fix is forward-only. What we
+-- ship under the marker is the same qualified-column body as the forward
+-- migration, wrapped to satisfy the round-trip parser. Operator intent:
+-- real recovery from a bad deploy of 009 is "redeploy 009", not
 -- "rollback 009".
+
+-- ROLLBACK:
 -- create or replace function public.start_triage(p_user uuid, p_card uuid)
 -- returns table (card_id uuid, state public.card_state)
 -- language plpgsql security definer set search_path = public, pg_catalog as $rb_start$
