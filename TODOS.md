@@ -24,6 +24,16 @@ Organized by version to mirror `PRODUCT-ROADMAP.md`:
   - **How**: when `capture-flow`'s spec is written, the upload-success affordance is explicit in the spec — either a toast on capture-flow's primary surface, or a "✓ Uploaded" chip rendered next to the freshly-added card on the dashboard. Design review's § CAPTURE async-queued state already covers this; this entry is a pointer so the design pass doesn't accidentally drop it.
   - **Where**: spec for the `capture-flow` PR (next in `PLAN.md § Planned`). Source: `.gstack/pwa-spike-result.md § Spike follow-ups for capture-flow`.
 
+- **auth-callback-observability** — `apps/web/app/auth/callback/route.ts:80` silently swallows the `exchangeCodeForSession` error and redirects to `/login?error=callback_failed` with no detail. No `Sentry.captureException` call; no error class in the redirect; no way to tell PKCE-cookie-loss from one-shot-code-reuse from network failure. Surfaced 2026-05-15 when first-prod-deploy of the auth flow failed for an invitee on iOS Safari Private Browsing and Sentry had nothing to show. The Private Browsing case is "won't fix" (see CLAUDE.md § Gotchas) but future failures in other configurations need to be observable.
+  - **Why**: Without instrumentation, every magic-link failure is an unresolvable mystery — "the link didn't work" with zero detail. The auth surface is load-bearing for invitee onboarding; opaque failures will eat invites without anyone noticing.
+  - **How**: in `apps/web/app/auth/callback/route.ts`, in the `if (error)` branch (line ~80), call `Sentry.captureException(error, { tags: { route: 'GET /auth/callback', stage: 'exchange_code' } })` before the redirect. Then extend the redirect to `/login?error=callback_failed&reason=<class>` where `<class>` is a coarse-grained classifier ("expired", "consumed", "pkce_cookie_missing", "network", "unknown"). Update `/login`'s page to render reason-specific copy when present (private-browsing hint for `pkce_cookie_missing`, "send a new one" for `expired`/`consumed`). Add tests for each reason. ~30-line PR.
+  - **Where**: `apps/web/app/auth/callback/route.ts`, `apps/web/app/login/page.tsx`, `apps/web/app/login/_components/LoginForm.tsx`. Discovered 2026-05-15 during `/ak-go-live` on PR #19.
+
+- **login-form-429-copy-honesty** — `apps/web/app/login/_components/LoginForm.tsx`'s 429 branch renders "You're sending links too fast. Wait a minute and try again." But the actual rate-limit window for Supabase inbuilt-SMTP free tier is ~2 emails/hour project-wide, not 1 minute. The copy lies to users.
+  - **Why**: A friend hit this 30min after another invitee's attempts and assumed they'd hit a per-user rate limit they could wait a minute on; really the project-wide bucket was exhausted and the wait was up to an hour. Misleading copy degrades trust + wastes invitee patience.
+  - **How**: rewrite the 429 copy to be vague-but-honest ("Try again in a bit — we're rate-limited") or specific-and-actionable if you have visibility into when the bucket refills. Pair with the rate-limit-bump or Resend SMTP wire (see CLAUDE.md § Gotchas) so the cap stops biting at all.
+  - **Where**: `apps/web/app/login/_components/LoginForm.tsx`. Same PR as `auth-callback-observability` makes sense — both are LoginForm-adjacent copy/observability work.
+
 <!--
 Each entry:
 
