@@ -36,7 +36,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T5
 **Done when**: `DEFAULT_QA_SYSTEM_PROMPT` instructs the model on the expansion fields; total length still ≤ PROMPT_MAX_CHARS (3500); paired tests still green.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: T5 — Wire `/api/triage/answer` to confirm_triage's new params
 
