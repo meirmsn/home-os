@@ -54,7 +54,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T10, T11, T13, T15
 **Done when**: Route + `_lib/parse-decide-body.ts` validator exist; tests cover all 6 envelopes (200/400/401/404/409/500).
 **Risk**: medium
-**Status**: todo
+**Status**: done
 
 ## Task: T7 — `PATCH /api/cards/[id]/estimate` route + helpers + tests
 
