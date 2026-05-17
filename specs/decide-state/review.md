@@ -505,3 +505,27 @@ Captured (promoted from Gate 8's post-fix captures — see § Browse-daemon cons
 ### Dismissals
 
 - Re-captured-by-Gate-13 vs promoted-from-Gate-8 — same SHA, same surfaces, no UI drift between gate runs (no code changes touched DecideView/PlannedView between Gate 8 and HEAD). Reusing existing captures saves another ~10 min of browse-daemon stalls without changing what the reviewer sees in the PR body.
+
+## Audit 2: post-polish (2026-05-17)
+
+<!-- audited-at: db663b60474346e082b9942343f4db13663a5d7d -->
+<!-- range: ccf06635f9c92ec1cce5ae2eb2460129905a23d8..db663b60474346e082b9942343f4db13663a5d7d -->
+
+findings: high=0 medium=0 low=5
+
+Range summary: 9 commits since Audit 1 (Gates 8 / 9 / 10 / 12 / 13 in-band fixes + Phase 5.6 build-log + Phase 5.7 CI rollback fix). Substantive code changes: (1) `parse-decide-body.ts` server-side cadence clamp `[7, 365]` (ISSUE-001), (2) `<PlannedView />` `thread` prop + "How we diagnosed this" disclosure (ISSUE-002), (3) migration 011 rollback `state::text` cast for iterative rollback+reapply, (4) ChoosePath test polish (setTimeout→waitFor), (5) dark-theme token migration across 5 UI components (`color-text-primary` → `color-text-primary-inverse`, `color-bg` → `color-background`, `color-border` → `color-border-default`, `color-surface` → `color-background-raised`, `color-urgent` → `color-act-soon`). The five token renames are pure-CSS (no behavior, no test additions required).
+
+### Docs findings
+
+- [low] `CLAUDE.md:101` — Decide-state route path-map entry doesn't mention server-side cadence clamp `[CADENCE_MIN_DAYS, CADENCE_MAX_DAYS] = [7, 365]` added in `parse-decide-body.ts` post-Audit 1 (ISSUE-001 fix). MonitorCadencePicker entry on line 107 mentions only the client clamp. Adequacy nit — the server-side trust-boundary defense is invisible in the surface→doc map. Recommend appending "Cadence clamped server-side to [7, 365] (matches `<MonitorCadencePicker />` client clamp; defends scripted POSTs)."
+- [low] `CLAUDE.md:110` — PlannedView entry still describes the component as a "stub" with "PR #2 will expand" — but PR #27's polish added a `thread: PlannedViewInputRow[]` prop and "How we diagnosed this" disclosure (ISSUE-002 fix). The `Card detail body extension` entry on line 112 hints at the thread, but the PlannedView entry itself is stale. Recommend appending a clause: "Renders a closed-by-default `<details>` 'How we diagnosed this' disclosure when `thread.length > 0` (carry-forward from `<DecideView />` per spec § Screens row (d))."
+- [low] `supabase/migrations/20260517031335_011_decide_state.sql:366` — rollback block's `state::text in ('decide', 'planned')` cast (vs. enum cast) is the recipe for iterative-rollback-reapply forward-compatibility under `ci-rollback-explain.sh`. Inline SQL comment captures the WHY (lines 367–372); a CLAUDE.md § Gotchas entry codifying the pattern for the next enum-widening author would be belt+suspenders, not load-bearing. Accept inline-comment posture as sufficient OR add a "Rollback queries on rename-recreated enums must cast to text on the WHERE side" gotcha.
+
+### Tests findings
+
+- [low] `apps/web/app/api/card/[id]/decide/route.test.ts` — new server-side cadence clamp `[7, 365]` is exercised at the parser unit-test level (`parse-decide-body.test.ts` gained 3 cases — below-min reject, above-max reject, inclusive bounds accept) but not at the route layer. The parser→route 400 propagation IS covered by the existing "returns 400 when path=monitor but cadence missing" case (line 210) using the same envelope, so the gap is non-load-bearing. Optional: add a 1-case route assertion for `monitoring_cadence_days: 6` → 400 + `body.field === 'monitoring_cadence_days'`. Accept the unit-test posture as sufficient.
+- [low] `apps/web/e2e/decide-state.spec.ts` — does not assert the new "How we diagnosed this" disclosure renders in `<PlannedView />` after path commit. `PlannedView.test.tsx` covers the unit-level disclosure render contract (2 cases — empty thread omits, non-empty thread renders w/ user-visible label assertion). E2E gap is the page.tsx → PlannedView `thread={threadRows}` prop wiring round-trip post-`router.refresh()` — TypeScript proves this, so non-load-bearing. Optional: extend the happy-path E2E to assert `page.getByTestId('planned-how-we-diagnosed')` after Choose DIY → planned.
+
+### Bypass trailer audit
+
+- (none) — no `Docs-Coverage-Bypass:` or `Tests-Coverage-Bypass:` trailers in range.
