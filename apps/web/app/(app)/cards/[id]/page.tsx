@@ -554,6 +554,11 @@ export default async function CardDetailPage({
               contractorOverride={contractorOverride}
               monitoringCadenceDays={card.monitoring_cadence_days}
               thread={threadRows}
+              // T6 wires the real values from the new SELECT column +
+              // inline derivation. Placeholder defaults here keep the
+              // build green during the T5 → T6 implementation gap.
+              plannedReminderDate={null}
+              isReminderDue={false}
             />
           );
         })()}
