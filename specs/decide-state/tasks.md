@@ -72,7 +72,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T9, T12, T13
 **Done when**: Component renders DIY/contractor collapsed + expanded views with override-or-app data + "edited" badge; 8+ test cases.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: T9 — `<EstimateEditor />` client component + test
 
