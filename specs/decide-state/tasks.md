@@ -18,7 +18,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T5, T7
 **Done when**: `parseDiyExpansion` + `parseContractorExpansion` exist (factored into shared `_lib/estimate-shapes.ts` per spec micro-opt); `parseConfirmAssessment` calls them; ~25 new test cases cover the locked-shape envelope.
 **Risk**: medium
-**Status**: todo
+**Status**: done
 
 ## Task: T3 — Extend `_lib/anthropic-qa.ts` confirm_assessment tool schema
 

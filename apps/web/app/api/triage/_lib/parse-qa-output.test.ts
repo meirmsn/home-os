@@ -20,6 +20,39 @@ const VALID_ASK = {
   reasoning_so_far: 'Mineral staining suggests a slow drip over weeks.',
 };
 
+const VALID_DIY_EXPANSION = {
+  skill_level: 'intermediate' as const,
+  time_hours_min: 1,
+  time_hours_max: 2,
+  materials: [{ name: 'P-trap kit', cost_min: 12, cost_max: 18 }],
+  tools: [{ name: 'Channel-lock pliers', cost_min: 0, cost_max: 25 }],
+  total_min: 12,
+  total_max: 43,
+  gotchas:
+    'PVC connections crack if you over-tighten — finger-tight plus a quarter-turn.',
+  abort_condition:
+    'If the slip-nut threads strip, stop and replace the tailpiece.',
+  steps: [
+    'Place a bucket under the trap.',
+    'Loosen both slip nuts.',
+    'Replace the P-trap and tighten.',
+    'Run water and check for drips.',
+  ],
+};
+
+const VALID_CONTRACTOR_EXPANSION = {
+  contractor_type: 'plumber' as const,
+  cost_range_min: 150,
+  cost_range_max: 400,
+  questions_for_contractor: [
+    'Will you replace the tailpiece too?',
+    'Is the work warrantied?',
+  ],
+  red_flags: ['Refuses to provide a written quote.'],
+  good_completion:
+    'No drip under load, joint visibly clean, old material removed.',
+};
+
 const VALID_CONFIRM = {
   final_diagnosis: 'Slow water leak from the P-trap. Manageable with a wrench.',
   severity_confirmed: 'soon',
@@ -30,6 +63,8 @@ const VALID_CONFIRM = {
   sources: [
     { url: 'https://example.com/p-trap', title: 'P-trap repair guide' },
   ],
+  diy_expansion: VALID_DIY_EXPANSION,
+  contractor_expansion: VALID_CONTRACTOR_EXPANSION,
 };
 
 /**
@@ -351,5 +386,89 @@ describe('parseQaTurn — confirm_assessment violations', () => {
     });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.field).toBe('<root>');
+  });
+});
+
+describe('parseQaTurn — confirm_assessment expansion-field violations', () => {
+  it('missing diy_expansion → ParseError with diy_expansion.<root> field', () => {
+    const rest = { ...VALID_CONFIRM } as Partial<typeof VALID_CONFIRM>;
+    delete rest.diy_expansion;
+    const result = parseQaTurn(confirmResponse(rest));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.field).toBe('diy_expansion.<root>');
+  });
+
+  it('missing contractor_expansion → ParseError with contractor_expansion.<root> field', () => {
+    const rest = { ...VALID_CONFIRM } as Partial<typeof VALID_CONFIRM>;
+    delete rest.contractor_expansion;
+    const result = parseQaTurn(confirmResponse(rest));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.field).toBe('contractor_expansion.<root>');
+  });
+
+  it('diy_expansion with bad skill_level → field path bubbles up', () => {
+    const result = parseQaTurn(
+      confirmResponse({
+        ...VALID_CONFIRM,
+        diy_expansion: { ...VALID_DIY_EXPANSION, skill_level: 'wizard' },
+      })
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.field).toBe('diy_expansion.skill_level');
+  });
+
+  it('diy_expansion with empty steps array → field path bubbles up', () => {
+    const result = parseQaTurn(
+      confirmResponse({
+        ...VALID_CONFIRM,
+        diy_expansion: { ...VALID_DIY_EXPANSION, steps: [] },
+      })
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.field).toBe('diy_expansion.steps');
+  });
+
+  it('contractor_expansion with bad contractor_type → field path bubbles up', () => {
+    const result = parseQaTurn(
+      confirmResponse({
+        ...VALID_CONFIRM,
+        contractor_expansion: {
+          ...VALID_CONTRACTOR_EXPANSION,
+          contractor_type: 'wizard',
+        },
+      })
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok)
+      expect(result.field).toBe('contractor_expansion.contractor_type');
+  });
+
+  it('contractor_expansion with cost_range_max < min → field path bubbles up', () => {
+    const result = parseQaTurn(
+      confirmResponse({
+        ...VALID_CONFIRM,
+        contractor_expansion: {
+          ...VALID_CONTRACTOR_EXPANSION,
+          cost_range_min: 500,
+          cost_range_max: 100,
+        },
+      })
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok)
+      expect(result.field).toBe('contractor_expansion.cost_range_max');
+  });
+
+  it('valid confirm response carries both expansions verbatim in parsed value', () => {
+    const result = parseQaTurn(confirmResponse(VALID_CONFIRM));
+    expect(result.ok).toBe(true);
+    if (result.ok && result.tool === 'confirm_assessment') {
+      expect(result.value.diy_expansion.skill_level).toBe('intermediate');
+      expect(result.value.contractor_expansion.contractor_type).toBe('plumber');
+      expect(result.value.diy_expansion.materials).toHaveLength(1);
+      expect(
+        result.value.contractor_expansion.questions_for_contractor
+      ).toHaveLength(2);
+    }
   });
 });
