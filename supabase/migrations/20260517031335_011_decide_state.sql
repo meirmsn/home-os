@@ -366,8 +366,14 @@ $$;
 -- drop function if exists public.complete_triage(uuid, uuid, text, public.severity, public.system_tag, public.contractor_tag, text);
 -- drop function if exists public.start_triage(uuid, uuid);
 -- -- Fold the new states back down before the rename-recreate.
+-- -- Cast to text on the WHERE side so the comparison doesn't validate
+-- -- 'decide'/'planned' against the current enum membership — ci-rollback-
+-- -- explain.sh iterates 001→011 doing rollback+reapply on each, and prior
+-- -- iterations leave card_state in the 6-value form (no 'decide'/'planned').
+-- -- The state::text comparison is a no-op there; in the post-011 scenario
+-- -- where rows DO have 'decide'/'planned', text comparison still matches.
 -- update public.cards set state = 'diagnosed'::public.card_state
---   where state in ('decide'::public.card_state, 'planned'::public.card_state);
+--   where state::text in ('decide', 'planned');
 -- alter table public.cards drop constraint if exists cards_chosen_path_check;
 -- alter table public.cards
 --   drop column if exists cost_estimate_hire_override,
