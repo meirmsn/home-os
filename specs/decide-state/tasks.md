@@ -126,7 +126,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T15
 **Done when**: Page renders `<DecideView />` on state=decide, `<PlannedView />` on state=planned; CardState + CardRow types widened; 4+ new test cases.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: T15 — `apps/web/e2e/decide-state.spec.ts`
 

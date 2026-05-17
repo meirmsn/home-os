@@ -20,10 +20,18 @@ import Link from 'next/link';
 import * as Sentry from '@sentry/nextjs';
 import { createClient } from '@/lib/supabase/server';
 import { computeQaRoundState } from '@/app/api/triage/_lib/round-state';
+import {
+  parseContractorExpansion,
+  parseDiyExpansion,
+  type ContractorExpansion,
+  type DiyExpansion,
+} from '@/app/api/triage/_lib/estimate-shapes';
 import { StartTriage } from './_components/StartTriage';
 import { AnswerThread } from './_components/AnswerThread';
 import { DiagnosedThread } from './_components/DiagnosedThread';
 import { QaThread } from './_components/QaThread';
+import { DecideView } from './_components/DecideView';
+import { PlannedView } from './_components/PlannedView';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +39,8 @@ type CardState =
   | 'capturing'
   | 'triaging'
   | 'diagnosed'
+  | 'decide'
+  | 'planned'
   | 'monitoring'
   | 'closed'
   | 'dismissed';
@@ -48,6 +58,11 @@ type CardRow = {
   severity_confirmed: boolean;
   contractor_tag: string | null;
   monitoring_cadence_days: number | null;
+  chosen_path: 'diy' | 'contractor' | 'monitor' | null;
+  cost_estimate_diy: unknown;
+  cost_estimate_diy_override: unknown;
+  cost_estimate_hire: unknown;
+  cost_estimate_hire_override: unknown;
 };
 
 type ThreadRow = {
@@ -154,7 +169,7 @@ export default async function CardDetailPage({
   const { data: cardRow, error: cardError } = await supabase
     .from('cards')
     .select(
-      'id, state, initial_description, system_tag, room_tag, created_at, closed_at, diagnosis, severity, severity_confirmed, contractor_tag, monitoring_cadence_days'
+      'id, state, initial_description, system_tag, room_tag, created_at, closed_at, diagnosis, severity, severity_confirmed, contractor_tag, monitoring_cadence_days, chosen_path, cost_estimate_diy, cost_estimate_diy_override, cost_estimate_hire, cost_estimate_hire_override'
     )
     .eq('id', id)
     .maybeSingle();
@@ -213,13 +228,17 @@ export default async function CardDetailPage({
     photoUrl = signed?.signedUrl ?? null;
   }
 
-  // For diagnosed cards, pull the FULL thread so the page can render
-  // <QaThread /> + <AnswerThread /> + <DiagnosedThread /> from server-
-  // fetched data. The initial-read preview reads the round-1 assistant
-  // row's content for backward-compat with PR #19's preview block.
+  // For diagnosed/decide/planned cards, pull the FULL thread so the
+  // page can render <QaThread /> + <AnswerThread /> + <DiagnosedThread />
+  // + <DecideView />'s "How we diagnosed this" collapsible from
+  // server-fetched data.
   let threadRows: ThreadRow[] = [];
   let assistantContent: AssistantContent | undefined;
-  if (card.state === 'diagnosed') {
+  if (
+    card.state === 'diagnosed' ||
+    card.state === 'decide' ||
+    card.state === 'planned'
+  ) {
     const { data: convoRows } = await supabase
       .from('triage_conversations')
       .select('content, created_at, round, role, is_location_ask, tool_name')
@@ -443,6 +462,100 @@ export default async function CardDetailPage({
           />
         </>
       )}
+
+      {card.state === 'decide' &&
+        (() => {
+          // Parse the four jsonb columns into typed expansions via the
+          // shared estimate-shapes helpers. parse failures map to null
+          // — the DECIDE view falls back to "Estimate unavailable" UI
+          // rather than failing the page render.
+          const diyParsed = card.cost_estimate_diy
+            ? parseDiyExpansion(card.cost_estimate_diy)
+            : null;
+          const diyOverrideParsed = card.cost_estimate_diy_override
+            ? parseDiyExpansion(card.cost_estimate_diy_override)
+            : null;
+          const contractorParsed = card.cost_estimate_hire
+            ? parseContractorExpansion(card.cost_estimate_hire)
+            : null;
+          const contractorOverrideParsed = card.cost_estimate_hire_override
+            ? parseContractorExpansion(card.cost_estimate_hire_override)
+            : null;
+
+          const diyEstimate: DiyExpansion | null =
+            diyParsed && diyParsed.ok ? diyParsed.value : null;
+          const diyOverride: DiyExpansion | null =
+            diyOverrideParsed && diyOverrideParsed.ok
+              ? diyOverrideParsed.value
+              : null;
+          const contractorEstimate: ContractorExpansion | null =
+            contractorParsed && contractorParsed.ok
+              ? contractorParsed.value
+              : null;
+          const contractorOverride: ContractorExpansion | null =
+            contractorOverrideParsed && contractorOverrideParsed.ok
+              ? contractorOverrideParsed.value
+              : null;
+
+          return (
+            <DecideView
+              cardId={card.id}
+              diagnosis={card.diagnosis}
+              severity={card.severity}
+              diyEstimate={diyEstimate}
+              diyOverride={diyOverride}
+              contractorEstimate={contractorEstimate}
+              contractorOverride={contractorOverride}
+              monitoringCadenceDays={card.monitoring_cadence_days}
+              thread={threadRows}
+            />
+          );
+        })()}
+
+      {card.state === 'planned' &&
+        (() => {
+          const diyParsed = card.cost_estimate_diy
+            ? parseDiyExpansion(card.cost_estimate_diy)
+            : null;
+          const diyOverrideParsed = card.cost_estimate_diy_override
+            ? parseDiyExpansion(card.cost_estimate_diy_override)
+            : null;
+          const contractorParsed = card.cost_estimate_hire
+            ? parseContractorExpansion(card.cost_estimate_hire)
+            : null;
+          const contractorOverrideParsed = card.cost_estimate_hire_override
+            ? parseContractorExpansion(card.cost_estimate_hire_override)
+            : null;
+
+          const diyEstimate: DiyExpansion | null =
+            diyParsed && diyParsed.ok ? diyParsed.value : null;
+          const diyOverride: DiyExpansion | null =
+            diyOverrideParsed && diyOverrideParsed.ok
+              ? diyOverrideParsed.value
+              : null;
+          const contractorEstimate: ContractorExpansion | null =
+            contractorParsed && contractorParsed.ok
+              ? contractorParsed.value
+              : null;
+          const contractorOverride: ContractorExpansion | null =
+            contractorOverrideParsed && contractorOverrideParsed.ok
+              ? contractorOverrideParsed.value
+              : null;
+
+          return (
+            <PlannedView
+              cardId={card.id}
+              severity={card.severity}
+              diagnosis={card.diagnosis}
+              chosenPath={card.chosen_path}
+              diyEstimate={diyEstimate}
+              diyOverride={diyOverride}
+              contractorEstimate={contractorEstimate}
+              contractorOverride={contractorOverride}
+              monitoringCadenceDays={card.monitoring_cadence_days}
+            />
+          );
+        })()}
 
       {card.state === 'monitoring' && (
         <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] p-5 text-sm text-[var(--color-text-secondary-inverse)]">
