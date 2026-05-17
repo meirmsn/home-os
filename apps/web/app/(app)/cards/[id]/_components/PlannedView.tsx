@@ -16,10 +16,15 @@ import type {
   DiyExpansion,
 } from '@/app/api/triage/_lib/estimate-shapes';
 import { ChoosePath } from './ChoosePath';
+import { ConversationRow, type ConversationRowData } from './ConversationRow';
 import { PathCard } from './PathCard';
 import { severityChipClasses, type Severity } from './_severity-chip';
 
 type ChosenPath = 'diy' | 'contractor' | 'monitor';
+
+export type PlannedViewInputRow = ConversationRowData & {
+  created_at: string;
+};
 
 export type PlannedViewProps = {
   cardId: string;
@@ -31,6 +36,11 @@ export type PlannedViewProps = {
   contractorEstimate: ContractorExpansion | null;
   contractorOverride: ContractorExpansion | null;
   monitoringCadenceDays: number | null;
+  /** Full triage_conversations thread for the collapsible "How we
+   *  diagnosed this" carry-forward (spec § Screens — planned state row
+   *  (d)). May be empty when a card was confirmed by an earlier flow
+   *  that didn't persist the thread. */
+  thread: PlannedViewInputRow[];
 };
 
 /**
@@ -117,6 +127,19 @@ export function PlannedView(props: PlannedViewProps) {
         prevChosenPath={props.chosenPath}
         proposedCadence={props.monitoringCadenceDays}
       />
+
+      {props.thread.length > 0 && (
+        <details className="mt-2" data-testid="planned-how-we-diagnosed">
+          <summary className="text-[var(--color-text-secondary)] cursor-pointer text-sm">
+            How we diagnosed this
+          </summary>
+          <div className="mt-3 space-y-3">
+            {props.thread.map((row, i) => (
+              <ConversationRow key={i} row={row} />
+            ))}
+          </div>
+        </details>
+      )}
     </section>
   );
 }

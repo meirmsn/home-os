@@ -553,6 +553,7 @@ export default async function CardDetailPage({
               contractorEstimate={contractorEstimate}
               contractorOverride={contractorOverride}
               monitoringCadenceDays={card.monitoring_cadence_days}
+              thread={threadRows}
             />
           );
         })()}

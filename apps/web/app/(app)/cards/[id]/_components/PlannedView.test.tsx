@@ -59,6 +59,7 @@ describe('<PlannedView />', () => {
         contractorEstimate={contractorEstimate()}
         contractorOverride={null}
         monitoringCadenceDays={null}
+        thread={[]}
       />
     );
     expect(screen.getByTestId('planned-banner').textContent).toBe(
@@ -80,6 +81,7 @@ describe('<PlannedView />', () => {
         contractorEstimate={contractorEstimate()}
         contractorOverride={null}
         monitoringCadenceDays={null}
+        thread={[]}
       />
     );
     expect(screen.getByTestId('planned-banner').textContent).toBe(
@@ -101,6 +103,7 @@ describe('<PlannedView />', () => {
         contractorEstimate={contractorEstimate()}
         contractorOverride={null}
         monitoringCadenceDays={60}
+        thread={[]}
       />
     );
     expect(screen.getByTestId('planned-banner').textContent).toBe(
@@ -123,6 +126,7 @@ describe('<PlannedView />', () => {
         contractorEstimate={contractorEstimate()}
         contractorOverride={null}
         monitoringCadenceDays={null}
+        thread={[]}
       />
     );
     const diyBtn = screen.getByTestId('choose-diy') as HTMLButtonElement;
@@ -143,9 +147,66 @@ describe('<PlannedView />', () => {
         contractorEstimate={contractorEstimate()}
         contractorOverride={null}
         monitoringCadenceDays={null}
+        thread={[]}
       />
     );
     expect(screen.getByText('Decision pending.')).toBeTruthy();
     expect(screen.queryByTestId('planned-banner')).toBeNull();
+  });
+
+  // Regression: ISSUE-002 — spec § Screens line 190 calls for "(d)
+  // Collapsed 'How we diagnosed this' carries forward" in the planned
+  // body. Earlier implementation rendered only DecideView's disclosure;
+  // PlannedView dropped it. Found by /qa on 2026-05-17.
+  it('renders the "How we diagnosed this" disclosure when thread rows exist', () => {
+    const threadRow = {
+      role: 'assistant' as const,
+      round: 1,
+      content: JSON.stringify({
+        summary: 'Initial read summary.',
+        severity_provisional: 'soon',
+        contractor_tag_provisional: 'plumber',
+        monitoring_cadence_days_provisional: 14,
+        what_i_need_to_know: ['How long has this been leaking?'],
+        sources: [],
+      }),
+      is_location_ask: false,
+      tool_name: 'record_initial_read',
+      created_at: '2026-05-17T00:00:00.000Z',
+    };
+    render(
+      <PlannedView
+        cardId={CARD_ID}
+        severity="soon"
+        diagnosis="Slow P-trap leak."
+        chosenPath="diy"
+        diyEstimate={diyEstimate()}
+        diyOverride={null}
+        contractorEstimate={contractorEstimate()}
+        contractorOverride={null}
+        monitoringCadenceDays={null}
+        thread={[threadRow]}
+      />
+    );
+    expect(screen.getByTestId('planned-how-we-diagnosed')).toBeTruthy();
+    expect(screen.getByText('How we diagnosed this')).toBeTruthy();
+  });
+
+  it('omits the "How we diagnosed this" disclosure when thread is empty', () => {
+    render(
+      <PlannedView
+        cardId={CARD_ID}
+        severity="soon"
+        diagnosis="Slow P-trap leak."
+        chosenPath="diy"
+        diyEstimate={diyEstimate()}
+        diyOverride={null}
+        contractorEstimate={contractorEstimate()}
+        contractorOverride={null}
+        monitoringCadenceDays={null}
+        thread={[]}
+      />
+    );
+    expect(screen.queryByTestId('planned-how-we-diagnosed')).toBeNull();
   });
 });
