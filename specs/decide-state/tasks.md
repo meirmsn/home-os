@@ -45,7 +45,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T15
 **Done when**: Route forwards `parsed.value.diy_expansion` + `parsed.value.contractor_expansion` to `confirm_triage` RPC as `p_diy_expansion` + `p_contractor_expansion`; route test extended for the new path.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: T6 — `POST /api/cards/[id]/decide` route + helpers + tests
 
