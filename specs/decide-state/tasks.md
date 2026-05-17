@@ -144,7 +144,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: none
 **Done when**: CLAUDE.md § Where Things Happen has new rows + Gotchas entries; METRICS.md has the 6 new event rows; tasks.md updated.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Decisions
 
