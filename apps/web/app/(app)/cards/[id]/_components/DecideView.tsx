@@ -24,8 +24,7 @@ import { ConversationRow, type ConversationRowData } from './ConversationRow';
 import { DecideViewOpenedCapture } from './DecideViewOpenedCapture';
 import { EstimateEditor } from './EstimateEditor';
 import { PathCard } from './PathCard';
-
-type Severity = 'cosmetic' | 'monitor' | 'soon' | 'urgent';
+import { severityChipClasses, type Severity } from './_severity-chip';
 
 export type DecideViewInputRow = ConversationRowData & {
   created_at: string;
@@ -46,45 +45,9 @@ export type DecideViewProps = {
   thread: DecideViewInputRow[];
 };
 
-/**
- *
- */
-function severityChipClass(severity: Severity): {
-  bg: string;
-  text: string;
-  label: string;
-} {
-  switch (severity) {
-    case 'cosmetic':
-      return {
-        bg: 'bg-[var(--color-note)]/20',
-        text: 'text-[var(--color-note)]',
-        label: 'cosmetic',
-      };
-    case 'monitor':
-      return {
-        bg: 'bg-[var(--color-monitor)]/20',
-        text: 'text-[var(--color-monitor)]',
-        label: 'monitor',
-      };
-    case 'soon':
-      return {
-        bg: 'bg-[var(--color-soon)]/20',
-        text: 'text-[var(--color-soon)]',
-        label: 'soon',
-      };
-    case 'urgent':
-      return {
-        bg: 'bg-[var(--color-urgent)]/20',
-        text: 'text-[var(--color-urgent)]',
-        label: 'urgent',
-      };
-  }
-}
-
 /** DECIDE state body composition. */
 export function DecideView(props: DecideViewProps) {
-  const chip = props.severity ? severityChipClass(props.severity) : null;
+  const chip = props.severity ? severityChipClasses(props.severity) : null;
   return (
     <section data-testid="decide-view" className="space-y-5">
       <DecideViewOpenedCapture cardId={props.cardId} />

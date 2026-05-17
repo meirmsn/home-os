@@ -17,8 +17,8 @@ import type {
 } from '@/app/api/triage/_lib/estimate-shapes';
 import { ChoosePath } from './ChoosePath';
 import { PathCard } from './PathCard';
+import { severityChipClasses, type Severity } from './_severity-chip';
 
-type Severity = 'cosmetic' | 'monitor' | 'soon' | 'urgent';
 type ChosenPath = 'diy' | 'contractor' | 'monitor';
 
 export type PlannedViewProps = {
@@ -32,42 +32,6 @@ export type PlannedViewProps = {
   contractorOverride: ContractorExpansion | null;
   monitoringCadenceDays: number | null;
 };
-
-/**
- *
- */
-function severityChipClass(severity: Severity): {
-  bg: string;
-  text: string;
-  label: string;
-} {
-  switch (severity) {
-    case 'cosmetic':
-      return {
-        bg: 'bg-[var(--color-note)]/20',
-        text: 'text-[var(--color-note)]',
-        label: 'cosmetic',
-      };
-    case 'monitor':
-      return {
-        bg: 'bg-[var(--color-monitor)]/20',
-        text: 'text-[var(--color-monitor)]',
-        label: 'monitor',
-      };
-    case 'soon':
-      return {
-        bg: 'bg-[var(--color-soon)]/20',
-        text: 'text-[var(--color-soon)]',
-        label: 'soon',
-      };
-    case 'urgent':
-      return {
-        bg: 'bg-[var(--color-urgent)]/20',
-        text: 'text-[var(--color-urgent)]',
-        label: 'urgent',
-      };
-  }
-}
 
 /**
  *
@@ -95,7 +59,7 @@ export function PlannedView(props: PlannedViewProps) {
     );
   }
 
-  const chip = props.severity ? severityChipClass(props.severity) : null;
+  const chip = props.severity ? severityChipClasses(props.severity) : null;
   const label = chosenLabel(props.chosenPath);
 
   return (

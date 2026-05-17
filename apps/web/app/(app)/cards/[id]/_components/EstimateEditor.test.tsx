@@ -3,7 +3,13 @@
 //       event firing, and error surfacing.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import type {
   ContractorExpansion,
   DiyExpansion,
@@ -121,7 +127,7 @@ describe('<EstimateEditor variant="diy" />', () => {
       .item(3) as HTMLInputElement; // 4th = total_max
     fireEvent.change(totalMaxInput, { target: { value: '99' } });
     fireEvent.click(screen.getByTestId('save-diy'));
-    await new Promise((r) => setTimeout(r, 0));
+    await waitFor(() => expect(routerRefresh).toHaveBeenCalled());
 
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/card/${CARD_ID}/estimate`,
@@ -134,7 +140,6 @@ describe('<EstimateEditor variant="diy" />', () => {
       card_id: CARD_ID,
       path: 'diy',
     });
-    expect(routerRefresh).toHaveBeenCalled();
   });
 
   it('Reset → PATCH with estimate=null + fires decide_estimate_reset + refreshes', async () => {
@@ -151,7 +156,7 @@ describe('<EstimateEditor variant="diy" />', () => {
       />
     );
     fireEvent.click(screen.getByTestId('reset-diy'));
-    await new Promise((r) => setTimeout(r, 0));
+    await waitFor(() => expect(routerRefresh).toHaveBeenCalled());
 
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/card/${CARD_ID}/estimate`,
@@ -163,7 +168,6 @@ describe('<EstimateEditor variant="diy" />', () => {
       card_id: CARD_ID,
       path: 'diy',
     });
-    expect(routerRefresh).toHaveBeenCalled();
   });
 
   it('Cancel → closes form without PATCH', () => {
@@ -196,10 +200,10 @@ describe('<EstimateEditor variant="diy" />', () => {
     );
     fireEvent.click(screen.getByText('Edit estimate'));
     fireEvent.click(screen.getByTestId('save-diy'));
-    await new Promise((r) => setTimeout(r, 0));
-
-    expect(screen.getByTestId('editor-error-diy').textContent).toBe(
-      'bad shape'
+    await waitFor(() =>
+      expect(screen.getByTestId('editor-error-diy').textContent).toBe(
+        'bad shape'
+      )
     );
     expect(routerRefresh).not.toHaveBeenCalled();
   });
@@ -216,10 +220,10 @@ describe('<EstimateEditor variant="diy" />', () => {
     );
     fireEvent.click(screen.getByText('Edit estimate'));
     fireEvent.click(screen.getByTestId('save-diy'));
-    await new Promise((r) => setTimeout(r, 0));
-
-    expect(screen.getByTestId('editor-error-diy').textContent).toContain(
-      'Network error'
+    await waitFor(() =>
+      expect(screen.getByTestId('editor-error-diy').textContent).toContain(
+        'Network error'
+      )
     );
   });
 });
@@ -257,7 +261,7 @@ describe('<EstimateEditor variant="contractor" />', () => {
       .item(1) as HTMLInputElement;
     fireEvent.change(costMaxInput, { target: { value: '500' } });
     fireEvent.click(screen.getByTestId('save-contractor'));
-    await new Promise((r) => setTimeout(r, 0));
+    await waitFor(() => expect(routerRefresh).toHaveBeenCalled());
 
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/card/${CARD_ID}/estimate`,

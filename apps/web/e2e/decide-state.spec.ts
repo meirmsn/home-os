@@ -184,6 +184,10 @@ test.describe('decide-state round trip', () => {
     const cardId = await seedDecideCard();
     await page.goto(`/cards/${cardId}`);
 
+    // PathCard renders a native <details> collapsed by default — the
+    // "Edit estimate" button lives inside, so we must expand it first.
+    await page.getByTestId('path-card-diy').getByText('Tap to expand').click();
+
     // Open editor via the editor slot inside the DIY PathCard.
     await page
       .getByTestId('estimate-editor-diy')
@@ -236,11 +240,11 @@ test.describe('decide-state round trip', () => {
     await page.getByTestId('cadence-input').fill('60');
     await page.getByTestId('cadence-confirm').click();
 
+    // Wait for the page to transition into the monitoring UI surface
+    // (router.refresh + server re-render) before checking the DB.
+    await expect(page.getByText(/Monitoring view ships in/i)).toBeVisible();
+
     const admin = adminClient();
-    // Brief wait for the router.refresh + DB write.
-    await page.waitForFunction(
-      async () => true /* refresh handled by Playwright */
-    );
     const { data: row } = await admin
       .from('cards')
       .select('state, monitoring_cadence_days, chosen_path')
