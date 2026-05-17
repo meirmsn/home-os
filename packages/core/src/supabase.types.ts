@@ -84,10 +84,13 @@ export type Database = {
       };
       cards: {
         Row: {
+          chosen_path: string | null;
           closed_at: string | null;
           contractor_tag: Database['public']['Enums']['contractor_tag'] | null;
           cost_estimate_diy: Json | null;
+          cost_estimate_diy_override: Json | null;
           cost_estimate_hire: Json | null;
+          cost_estimate_hire_override: Json | null;
           created_at: string;
           diagnosis: string | null;
           fix_steps_diy: Json | null;
@@ -107,10 +110,13 @@ export type Database = {
           version: number;
         };
         Insert: {
+          chosen_path?: string | null;
           closed_at?: string | null;
           contractor_tag?: Database['public']['Enums']['contractor_tag'] | null;
           cost_estimate_diy?: Json | null;
+          cost_estimate_diy_override?: Json | null;
           cost_estimate_hire?: Json | null;
+          cost_estimate_hire_override?: Json | null;
           created_at?: string;
           diagnosis?: string | null;
           fix_steps_diy?: Json | null;
@@ -130,10 +136,13 @@ export type Database = {
           version?: number;
         };
         Update: {
+          chosen_path?: string | null;
           closed_at?: string | null;
           contractor_tag?: Database['public']['Enums']['contractor_tag'] | null;
           cost_estimate_diy?: Json | null;
+          cost_estimate_diy_override?: Json | null;
           cost_estimate_hire?: Json | null;
+          cost_estimate_hire_override?: Json | null;
           created_at?: string;
           diagnosis?: string | null;
           fix_steps_diy?: Json | null;
@@ -298,6 +307,19 @@ export type Database = {
           card_id: string;
         }[];
       };
+      commit_decide: {
+        Args: {
+          p_cadence: number;
+          p_card: string;
+          p_path: string;
+          p_user: string;
+        };
+        Returns: {
+          card_id: string;
+          new_chosen_path: string;
+          new_state: Database['public']['Enums']['card_state'];
+        }[];
+      };
       complete_triage: {
         Args: {
           p_assistant_content: string;
@@ -317,8 +339,10 @@ export type Database = {
         Args: {
           p_assistant_content: string;
           p_card: string;
+          p_contractor_expansion: Json;
           p_contractor_tag: Database['public']['Enums']['contractor_tag'];
           p_diagnosis: string;
+          p_diy_expansion: Json;
           p_monitoring_cadence_days: number;
           p_severity: Database['public']['Enums']['severity'];
           p_skip: boolean;
@@ -344,6 +368,8 @@ export type Database = {
         | 'capturing'
         | 'triaging'
         | 'diagnosed'
+        | 'decide'
+        | 'planned'
         | 'monitoring'
         | 'closed'
         | 'dismissed';
@@ -507,6 +533,8 @@ export const Constants = {
         'capturing',
         'triaging',
         'diagnosed',
+        'decide',
+        'planned',
         'monitoring',
         'closed',
         'dismissed',

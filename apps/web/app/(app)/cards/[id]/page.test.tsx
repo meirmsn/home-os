@@ -41,6 +41,10 @@ const {
 vi.mock('next/navigation', () => ({
   notFound: notFoundMock,
   redirect: redirectMock,
+  // decide-state (PR N) — <ChoosePath /> uses useRouter().refresh()
+  // when mounted by <DecideView /> / <PlannedView />. Mock is fine
+  // since the page tests don't simulate client interaction.
+  useRouter: () => ({ refresh: () => {} }),
 }));
 
 vi.mock('@sentry/nextjs', () => ({
@@ -150,6 +154,8 @@ type CardState =
   | 'capturing'
   | 'triaging'
   | 'diagnosed'
+  | 'decide'
+  | 'planned'
   | 'monitoring'
   | 'closed'
   | 'dismissed';
@@ -386,6 +392,99 @@ describe('/(app)/cards/[id] — body matrix', () => {
     expect(screen.queryByTestId(`answer-thread-${CARD_ID}`)).toBeNull();
     // The PR #19 provisional preview block should NOT render either.
     expect(screen.queryByTestId('diagnosed-body')).toBeNull();
+  });
+
+  // decide-state (PR N) — new state branches
+  it('decide: renders <DecideView /> with diagnosis + both PathCards', async () => {
+    cardSelect.mockResolvedValue(
+      cardRow('decide', {
+        diagnosis: 'A P-trap leak.',
+        severity: 'soon',
+        severity_confirmed: true,
+        monitoring_cadence_days: 14,
+        cost_estimate_diy: {
+          skill_level: 'intermediate',
+          time_hours_min: 1,
+          time_hours_max: 2,
+          materials: [{ name: 'kit', cost_min: 10, cost_max: 20 }],
+          tools: [{ name: 'wrench', cost_min: 0, cost_max: 25 }],
+          total_min: 10,
+          total_max: 45,
+          gotchas: 'g',
+          abort_condition: 'a',
+          steps: ['s1'],
+        },
+        cost_estimate_hire: {
+          contractor_type: 'plumber',
+          cost_range_min: 100,
+          cost_range_max: 300,
+          questions_for_contractor: ['q1?'],
+          red_flags: [],
+          good_completion: 'gc',
+        },
+      })
+    );
+    await renderPage();
+    expect(screen.getByTestId('decide-view')).toBeTruthy();
+    expect(screen.getByText('A P-trap leak.')).toBeTruthy();
+    expect(screen.getByTestId('path-card-diy')).toBeTruthy();
+    expect(screen.getByTestId('path-card-contractor')).toBeTruthy();
+    expect(screen.getByTestId('choose-path')).toBeTruthy();
+  });
+
+  it('planned: renders <PlannedView /> with chosen DIY banner', async () => {
+    cardSelect.mockResolvedValue(
+      cardRow('planned', {
+        diagnosis: 'A diagnosis.',
+        severity: 'soon',
+        severity_confirmed: true,
+        chosen_path: 'diy',
+        cost_estimate_diy: {
+          skill_level: 'intermediate',
+          time_hours_min: 1,
+          time_hours_max: 2,
+          materials: [],
+          tools: [],
+          total_min: 10,
+          total_max: 45,
+          gotchas: 'g',
+          abort_condition: 'a',
+          steps: ['s1'],
+        },
+        cost_estimate_hire: {
+          contractor_type: 'plumber',
+          cost_range_min: 100,
+          cost_range_max: 300,
+          questions_for_contractor: ['q1?'],
+          red_flags: [],
+          good_completion: 'gc',
+        },
+      })
+    );
+    await renderPage();
+    expect(screen.getByTestId('planned-view')).toBeTruthy();
+    expect(screen.getByTestId('planned-banner').textContent).toBe(
+      'You chose: DIY'
+    );
+  });
+
+  it('decide with malformed jsonb: falls back to "Estimate unavailable" without throwing', async () => {
+    cardSelect.mockResolvedValue(
+      cardRow('decide', {
+        diagnosis: 'A leak.',
+        severity: 'soon',
+        severity_confirmed: true,
+        cost_estimate_diy: { wrong: 'shape' },
+        cost_estimate_hire: { wrong: 'shape' },
+      })
+    );
+    await renderPage();
+    expect(screen.getByTestId('path-card-diy-badge').textContent).toBe(
+      'Estimate unavailable'
+    );
+    expect(screen.getByTestId('path-card-contractor-badge').textContent).toBe(
+      'Estimate unavailable'
+    );
   });
 
   it('monitoring: renders the row-#6 deferred stub', async () => {

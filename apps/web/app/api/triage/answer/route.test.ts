@@ -173,6 +173,36 @@ const VALID_ASK_PARSED = {
   },
 };
 
+// decide-state (PR N) — confirm_assessment now ships diy_expansion +
+// contractor_expansion (the cost estimates that populate
+// cards.cost_estimate_diy / cost_estimate_hire at confirmation time).
+const VALID_DIY_EXPANSION = {
+  skill_level: 'intermediate' as const,
+  time_hours_min: 1,
+  time_hours_max: 2,
+  materials: [{ name: 'P-trap kit', cost_min: 12, cost_max: 18 }],
+  tools: [{ name: 'Channel-locks', cost_min: 0, cost_max: 25 }],
+  total_min: 12,
+  total_max: 43,
+  gotchas: 'PVC cracks if you over-tighten.',
+  abort_condition: 'Stop if the tailpiece threads strip.',
+  steps: [
+    'Place bucket under trap.',
+    'Loosen slip nuts.',
+    'Replace and tighten.',
+    'Run water and verify.',
+  ],
+};
+
+const VALID_CONTRACTOR_EXPANSION = {
+  contractor_type: 'plumber' as const,
+  cost_range_min: 150,
+  cost_range_max: 400,
+  questions_for_contractor: ['Will the tailpiece be replaced?'],
+  red_flags: ['No written quote.'],
+  good_completion: 'No drip under load.',
+};
+
 const VALID_CONFIRM_PARSED = {
   ok: true as const,
   tool: 'confirm_assessment' as const,
@@ -184,6 +214,8 @@ const VALID_CONFIRM_PARSED = {
     monitoring_cadence_days_proposal: 14,
     confidence_note: 'high confidence',
     sources: [{ url: 'https://example.com', title: 'P-trap' }],
+    diy_expansion: VALID_DIY_EXPANSION,
+    contractor_expansion: VALID_CONTRACTOR_EXPANSION,
   },
 };
 
@@ -404,8 +436,22 @@ describe('POST /api/triage/answer — confirm_assessment happy path', () => {
         p_severity: 'soon',
         p_skip: false,
         p_user_answer: 'fine',
+        // decide-state (PR N) — expansions forwarded to the RPC
+        p_diy_expansion: VALID_DIY_EXPANSION,
+        p_contractor_expansion: VALID_CONTRACTOR_EXPANSION,
       })
     );
+  });
+
+  it('forwards diy_expansion + contractor_expansion verbatim from the parsed tool output', async () => {
+    await POST(mockRequest({ card_id: VALID_UUID, answer: 'fine' }));
+    const lastCall = rpc.mock.calls.find(
+      (call: unknown[]) => call[0] === 'confirm_triage'
+    );
+    expect(lastCall).toBeDefined();
+    const args = (lastCall as unknown[])[1] as Record<string, unknown>;
+    expect(args.p_diy_expansion).toEqual(VALID_DIY_EXPANSION);
+    expect(args.p_contractor_expansion).toEqual(VALID_CONTRACTOR_EXPANSION);
   });
 });
 
