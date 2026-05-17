@@ -4,7 +4,13 @@
 //       and error surfacing.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 
 const CARD_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 
@@ -195,11 +201,12 @@ describe('<ChoosePath cardState="decide" />', () => {
       />
     );
     fireEvent.click(screen.getByTestId('choose-diy'));
-    await new Promise((r) => setTimeout(r, 0));
-
-    expect(screen.getByTestId('choose-path-error').textContent).toBe(
-      'invalid_state'
+    await waitFor(() =>
+      expect(screen.getByTestId('choose-path-error').textContent).toBe(
+        'invalid_state'
+      )
     );
+
     expect(routerRefresh).not.toHaveBeenCalled();
   });
 });

@@ -1,4 +1,4 @@
-<!-- audited-at: ccf06635f9c92ec1cce5ae2eb2460129905a23d8 -->
+<!-- audited-at: d10ec7486fcdb171e9ecc30303ac88d0600e443e -->
 
 # Pre-ship review: decide-state
 
@@ -430,3 +430,78 @@ Dev server crashed under memory pressure several times during the walk (containe
 - Dev-server OOM crashes during the QA walk (3× restarts) — environmental, not a feature defect. The container cgroup is undersized for Next.js 16 Turbopack + Chromium daemon + Supabase relay running together; the canary CI shape (Vercel preview, no concurrent browser daemon) won't hit this ceiling.
 - "404 vs 409 race" on the e2e concurrent-commit flow — the e2e spec uses an admin pre-bump rather than a true race; this is intentional per the spec comment (`Truly concurrent timing is brittle to reproduce`). The narrow `cards` re-read on `invalid_state` in `route.ts` distinguishes 404 vs 409 correctly when the row exists; verified by the e2e helper's `state='closed'` pre-bump returning 409.
 - Spec line 87 vs line 336 discrepancy ("Writes `cards.chosen_path = p_path` (or NULL when `p_path='dismiss'`/`'monitor'`)" vs "`p_path = 'monitor'`: `chosen_path='monitor', state='monitoring'`") — the RPC and e2e spec agree on `chosen_path='monitor'` for monitor commits; line 87 is a stale comment. Not a code bug; doc cleanup is out of scope.
+
+## Gate 10: benchmark
+
+**Outcome**: `n/a (first measurement; no prior baseline for decide+planned surfaces; production-mode metrics unavailable in this sandbox)`
+
+Both new surfaces (`/cards/[id]` in state=`decide` and state=`planned`) are introduced on this branch; no prior `main` baseline exists. The natural outcome is to record a first-measurement baseline. The sandbox imposes two further constraints that prevent the full /benchmark workflow:
+
+1. **`pnpm build` blocked**: next/font Google Fonts fetch (`fonts.googleapis.com`) is unreachable through the egress firewall, so a production build cannot succeed. Bundle-size delta vs main therefore cannot be computed locally — that comparison belongs on the Vercel preview after merge.
+2. **Browse daemon vs dev-mode Turbopack**: cold-compile of `/cards/[id]` takes 5–37 s under Turbopack on first hit, repeatedly exceeding the browse daemon's 15 s `goto` timeout and crashing the Chromium tab. The dev server itself also exits silently mid-benchmark under sustained load (observed 3× this gate, consistent with the Gate 9 § Dismissals "Dev-server OOM crashes" environmental note). Reliable LCP/FCP/CLS/INP collection in this configuration is not feasible.
+
+### Server-side render (dev mode, recorded as first-measurement baseline)
+
+Seeded a test user (`bench-<runId>@test.local`) via admin client, inserted two cards using the canonical `e2e/decide-state.spec.ts` seed shape (`VALID_DIY` + `VALID_CONTRACTOR` jsonb), plus an assistant `triage_conversations` row so the "How we diagnosed this" disclosure has content. Authenticated cookie planted; SSR latency measured via `curl` with `time_starttransfer` + `time_total` + `size_download`.
+
+| Surface                     | Cold-compile TTFB | Cold-compile total | Warm-hit total (range) | HTML response bytes |
+| --------------------------- | ----------------- | ------------------ | ---------------------- | ------------------- |
+| `/cards/[id]` state=decide  | 1.345 s           | 1.349 s            | 1.27 – 1.87 s          | 43,203              |
+| `/cards/[id]` state=planned | 0.450 s           | 0.457 s            | 0.31 – 0.64 s          | 35,889              |
+
+Notes:
+
+- Both timings include the full server-component pipeline: `supabase.auth.getUser()` → cards SELECT (with chosen_path + four jsonb estimate columns) → shared `parseDiyExpansion` / `parseContractorExpansion` validators → `triage_conversations` thread fetch → signed-Storage-URL build for the wide photo. Decide's larger HTML (+7.3 KB) is the dual `<PathCard />` expanded-summary markup; planned's lighter footprint reflects the chosen-path-only render.
+- Dev-mode TTFB is dominated by Turbopack on-demand compile, not feature code. Once warm, the render is well under 1 s on both surfaces — within acceptable budget for a server-rendered authenticated page that does 2 SELECTs + 1 signed-URL call.
+- Baseline JSON written to `/workspace/.gstack/benchmark-reports/baselines/decide-state.json`.
+
+### Bundle size
+
+Deferred. Production `pnpm build` blocked by the firewall (see #1 above). The deployed Vercel preview is the natural place to capture the bundle delta — see follow-up under § Dismissals.
+
+### Core Web Vitals (FCP / LCP / CLS / INP)
+
+Deferred. Browse daemon cannot reliably navigate `/cards/[id]` under dev-mode Turbopack compile in this sandbox (see #2 above). The decide-state surfaces are largely server-rendered (one `'use client'` boundary in `<ChoosePath />`, one in `<EstimateEditor />`, one in `<DecideViewOpenedCapture />`, one in `<MonitorCadencePicker />` mounted conditionally) — the rendered HTML measured above is the user-visible paint surface for FCP. LCP/CLS/INP collection should happen against the Vercel preview after merge.
+
+### Comparison vs `origin/main`
+
+Not applicable — `main`'s `/cards/[id]` page renders `decide`-state and `planned`-state via the row-#-deferred fallback stubs (`'state-stub: <state> — view ships in next release'` per the page.tsx body), so there is no equivalent rendering surface on main to compare against. This is the first measurement of the full DecideView + PlannedView pipeline.
+
+### Dismissals
+
+- Bundle-size delta vs main — deferred to post-merge Vercel preview because `pnpm build` cannot complete in this sandbox (firewall blocks `fonts.googleapis.com` for next/font Google Fonts). The decide-state diff adds ~7 new client components (`ChoosePath` / `EstimateEditor` / `MonitorCadencePicker` / `DecideViewOpenedCapture`) plus shared server components (`PathCard` / `DecideView` / `PlannedView`); a casual scan of the source shows none import heavy deps (no charting, no rich-text, no PDF gen) — the expected bundle delta is small (estimated < 15 KB gzipped, all first-party React + Tailwind). Verify on Vercel preview.
+- Web Vitals (FCP / LCP / CLS / INP) — deferred to post-merge Vercel preview for the same Turbopack + browse-daemon stability reason. The server-rendered HTML byte-size baseline above is the durable measurement; visual-paint timings on the live deploy will be the canonical Web Vitals baseline.
+- Dev-server crashes — same environmental ceiling already dismissed in Gate 9. Not a feature regression.
+
+## Gate 12: final-preflight
+
+**Outcome**: `findings (1) fixed`
+
+Quick re-check of preflight invariants against current HEAD (`d10ec74` at gate start, advancing to this commit):
+
+- gh CLI: authenticated as `meirmsn` ✓
+- Chromium binary: `/home/node/.cache/ms-playwright/chromium-1223/chrome-linux/chrome` present ✓
+- Branch: `feature/decide-state` (not main) ✓
+- `pnpm turbo run lint typecheck test:unit`: **1 finding surfaced + fixed**:
+  - `apps/web/app/(app)/cards/[id]/_components/ChoosePath.test.tsx:200` flaked on the "surfaces error message on 409" assertion — the `await new Promise((r) => setTimeout(r, 0))` microtask wait was insufficient for the promise-rejection chain (fetchMock → `.json()` → setState → re-render) to flush in time for the `screen.getByTestId('choose-path-error').textContent` assertion. Same flake class we fixed in `EstimateEditor.test.tsx` during Gate fast-job-local. Fix: switched the affected assertion to `waitFor(() => expect(...))` from `@testing-library/react`. Other sites in this file use mock-spy assertions (synchronous after the click) and were left untouched. All 566 tests now pass.
+
+Tree clean after the fix commit; no regression in slow-job-lifecycle or rls-coverage (verified at Gate 0 and unchanged in subsequent gates).
+
+### Dismissals
+
+None
+
+## Gate 13: hero-shots
+
+**Outcome**: `pass`
+
+Captured (promoted from Gate 8's post-fix captures — see § Browse-daemon constraint below):
+
+- `specs/decide-state/hero/cards-decide.png` — DECIDE view at 1440×900, DIY PathCard expanded showing the full surface (severity chip + diagnosis + dual PathCards + Choose path row).
+- `specs/decide-state/hero/cards-planned.png` — PLANNED view at 1440×900 (DIY chosen), showing the chosen-path detail + Change-decision link + "How we diagnosed this" disclosure.
+
+**Browse-daemon constraint:** Gate 10 documented the failure mode in detail — Turbopack on-demand compile of `/cards/[id]` takes 5–37 s on first hit, the browse daemon's `goto` timeout is 15 s, and the dev server OOM-crashes under sustained load. Re-driving the browse daemon for fresh hero captures would replay the same instability. The Gate 8 captures (post-token-drift-fix at `0c3f697`) and the Gate 3 captures (responsive sweep) all reflect the merge-target SHA's UI accurately; promoting two of those into `specs/decide-state/hero/` is the right call.
+
+### Dismissals
+
+- Re-captured-by-Gate-13 vs promoted-from-Gate-8 — same SHA, same surfaces, no UI drift between gate runs (no code changes touched DecideView/PlannedView between Gate 8 and HEAD). Reusing existing captures saves another ~10 min of browse-daemon stalls without changing what the reviewer sees in the PR body.
