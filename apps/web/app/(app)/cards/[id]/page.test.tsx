@@ -510,6 +510,97 @@ describe('/(app)/cards/[id] — body matrix', () => {
   });
 });
 
+// PR planned-state — <ReminderDueChip /> mount conditions + isReminderDue
+// derivation. The chip is server-rendered in the header section.
+describe('/(app)/cards/[id] — reminder-due chip (planned-state)', () => {
+  // Freeze "now" at 2026-05-17 so the predicate is deterministic.
+  beforeEach(() => {
+    vi.setSystemTime(new Date('2026-05-17T12:00:00.000Z'));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('mounts <ReminderDueChip /> when planned + reminder is today (boundary)', async () => {
+    cardSelect.mockResolvedValue(
+      cardRow('planned', {
+        severity: 'soon',
+        severity_confirmed: true,
+        chosen_path: 'diy',
+        planned_reminder_date: '2026-05-17',
+      })
+    );
+    await renderPage();
+    expect(screen.getByTestId('reminder-due-chip')).toBeTruthy();
+  });
+
+  it('mounts <ReminderDueChip /> when planned + reminder is in the past', async () => {
+    cardSelect.mockResolvedValue(
+      cardRow('planned', {
+        severity: 'soon',
+        severity_confirmed: true,
+        chosen_path: 'diy',
+        planned_reminder_date: '2026-05-10',
+      })
+    );
+    await renderPage();
+    expect(screen.getByTestId('reminder-due-chip')).toBeTruthy();
+  });
+
+  it('does NOT mount the chip for a future reminder date', async () => {
+    cardSelect.mockResolvedValue(
+      cardRow('planned', {
+        severity: 'soon',
+        severity_confirmed: true,
+        chosen_path: 'diy',
+        planned_reminder_date: '2026-12-01',
+      })
+    );
+    await renderPage();
+    expect(screen.queryByTestId('reminder-due-chip')).toBeNull();
+  });
+
+  it('does NOT mount the chip when planned + reminder is null', async () => {
+    cardSelect.mockResolvedValue(
+      cardRow('planned', {
+        severity: 'soon',
+        severity_confirmed: true,
+        chosen_path: 'diy',
+        planned_reminder_date: null,
+      })
+    );
+    await renderPage();
+    expect(screen.queryByTestId('reminder-due-chip')).toBeNull();
+  });
+
+  it('does NOT mount the chip when state != planned even with a past reminder', async () => {
+    cardSelect.mockResolvedValue(
+      cardRow('decide', {
+        severity: 'soon',
+        severity_confirmed: true,
+        chosen_path: null,
+        planned_reminder_date: '2026-05-10',
+      })
+    );
+    await renderPage();
+    expect(screen.queryByTestId('reminder-due-chip')).toBeNull();
+  });
+
+  it('chip label contains the formatted human date for past reminders', async () => {
+    cardSelect.mockResolvedValue(
+      cardRow('planned', {
+        severity: 'soon',
+        severity_confirmed: true,
+        chosen_path: 'diy',
+        planned_reminder_date: '2026-05-10',
+      })
+    );
+    await renderPage();
+    const chip = screen.getByTestId('reminder-due-chip');
+    expect(chip.textContent).toMatch(/^Revisit by /);
+  });
+});
+
 describe('/(app)/cards/[id] — photo block', () => {
   it('renders the most-recent primary/wide photo when present', async () => {
     cardSelect.mockResolvedValue(cardRow('capturing'));
