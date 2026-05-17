@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseDecideBody } from './parse-decide-body';
+import {
+  CADENCE_MAX_DAYS,
+  CADENCE_MIN_DAYS,
+  parseDecideBody,
+} from './parse-decide-body';
 
 describe('parseDecideBody — valid', () => {
   it.each(['diy', 'contractor', 'dismiss', 'decide'] as const)(
@@ -94,5 +98,48 @@ describe('parseDecideBody — rejection', () => {
     });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.field).toBe('monitoring_cadence_days');
+  });
+
+  // Regression: ISSUE-001 — server-side bounded cadence to [7, 365] so a
+  // scripted POST that bypasses <MonitorCadencePicker />'s client-side
+  // clamp can't pollute the DB with out-of-band cadence values.
+  // Found by /qa on 2026-05-17.
+  it('rejects cadence below CADENCE_MIN_DAYS', () => {
+    const r = parseDecideBody({
+      path: 'monitor',
+      monitoring_cadence_days: CADENCE_MIN_DAYS - 1,
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.field).toBe('monitoring_cadence_days');
+      expect(r.reason).toMatch(/between/i);
+    }
+  });
+
+  it('rejects cadence above CADENCE_MAX_DAYS', () => {
+    const r = parseDecideBody({
+      path: 'monitor',
+      monitoring_cadence_days: CADENCE_MAX_DAYS + 1,
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.field).toBe('monitoring_cadence_days');
+      expect(r.reason).toMatch(/between/i);
+    }
+  });
+
+  it('accepts cadence at the inclusive bounds', () => {
+    expect(
+      parseDecideBody({
+        path: 'monitor',
+        monitoring_cadence_days: CADENCE_MIN_DAYS,
+      }).ok
+    ).toBe(true);
+    expect(
+      parseDecideBody({
+        path: 'monitor',
+        monitoring_cadence_days: CADENCE_MAX_DAYS,
+      }).ok
+    ).toBe(true);
   });
 });

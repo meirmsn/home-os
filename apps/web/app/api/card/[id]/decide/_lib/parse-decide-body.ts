@@ -39,13 +39,24 @@ function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
+/** Inclusive cadence bounds. Mirrors `<MonitorCadencePicker />`'s
+ *  `CADENCE_MIN` / `CADENCE_MAX` so the client picker and the server
+ *  trust-boundary agree on the legal range. A scripted client (or a
+ *  future surface that bypasses the picker) cannot ship an out-of-band
+ *  cadence past this validator. */
+export const CADENCE_MIN_DAYS = 7;
+export const CADENCE_MAX_DAYS = 365;
+
 /**
  * Validate the request body for POST /api/card/[id]/decide.
  *
  * Required: `path` (one of the five enum values).
- * Conditionally required: `monitoring_cadence_days` (positive integer)
- *   when `path === 'monitor'`. Other paths may omit it; when present,
- *   it's still validated as a positive integer for symmetry.
+ * Conditionally required: `monitoring_cadence_days` when
+ *   `path === 'monitor'`. When present (on any path), it must be an
+ *   integer in the inclusive range [CADENCE_MIN_DAYS, CADENCE_MAX_DAYS]
+ *   — same bounds the picker UI clamps to. The server enforces the
+ *   range too because the picker's clamping is client-side and a
+ *   scripted POST can ship anything.
  */
 export function parseDecideBody(input: unknown): DecideBodyResult {
   if (!isObject(input)) {
@@ -80,6 +91,13 @@ export function parseDecideBody(input: unknown): DecideBodyResult {
         ok: false,
         field: 'monitoring_cadence_days',
         reason: 'must be a positive integer',
+      };
+    }
+    if (c < CADENCE_MIN_DAYS || c > CADENCE_MAX_DAYS) {
+      return {
+        ok: false,
+        field: 'monitoring_cadence_days',
+        reason: `must be between ${CADENCE_MIN_DAYS} and ${CADENCE_MAX_DAYS} days`,
       };
     }
     cadence = c;
