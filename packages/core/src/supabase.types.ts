@@ -99,6 +99,7 @@ export type Database = {
           initial_description: string | null;
           monitoring_cadence_days: number | null;
           next_check_at: string | null;
+          planned_reminder_date: string | null;
           room_tag: string | null;
           severity: Database['public']['Enums']['severity'] | null;
           severity_confirmed: boolean;
@@ -125,6 +126,7 @@ export type Database = {
           initial_description?: string | null;
           monitoring_cadence_days?: number | null;
           next_check_at?: string | null;
+          planned_reminder_date?: string | null;
           room_tag?: string | null;
           severity?: Database['public']['Enums']['severity'] | null;
           severity_confirmed?: boolean;
@@ -151,6 +153,7 @@ export type Database = {
           initial_description?: string | null;
           monitoring_cadence_days?: number | null;
           next_check_at?: string | null;
+          planned_reminder_date?: string | null;
           room_tag?: string | null;
           severity?: Database['public']['Enums']['severity'] | null;
           severity_confirmed?: boolean;
