@@ -63,7 +63,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T9, T15
 **Done when**: Route + `_lib/parse-estimate-override.ts` (re-exporting helpers from `_lib/estimate-shapes.ts`) exist; tests cover 200 each path, 200 reset, 400 invalid shape, 401, 404, 409, 200 override at monitoring.
 **Risk**: medium
-**Status**: todo
+**Status**: done
 
 ## Task: T8 — `<PathCard />` server component + test
 
