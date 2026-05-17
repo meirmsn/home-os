@@ -202,7 +202,7 @@ export function ChoosePath({
 
       {isError && (
         <p
-          className="text-[var(--color-urgent)] text-sm"
+          className="text-[var(--color-act-soon)] text-sm"
           data-testid="choose-path-error"
         >
           {fetchState.message}

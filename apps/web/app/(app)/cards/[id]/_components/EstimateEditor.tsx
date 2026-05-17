@@ -126,7 +126,7 @@ export function EstimateEditor(props: EstimateEditorProps) {
         )}
         {fetchState.kind === 'error' && (
           <p
-            className="text-[var(--color-urgent)] text-sm"
+            className="text-[var(--color-act-soon)] text-sm"
             data-testid={`editor-error-${props.variant}`}
           >
             {fetchState.message}
@@ -282,7 +282,7 @@ function DiyEditor({
         </button>
         {fetchState.kind === 'error' && (
           <p
-            className="text-[var(--color-urgent)] text-sm"
+            className="text-[var(--color-act-soon)] text-sm"
             data-testid="editor-error-diy"
           >
             {fetchState.message}
@@ -366,7 +366,7 @@ function ContractorEditor({
         </button>
         {fetchState.kind === 'error' && (
           <p
-            className="text-[var(--color-urgent)] text-sm"
+            className="text-[var(--color-act-soon)] text-sm"
             data-testid="editor-error-contractor"
           >
             {fetchState.message}
