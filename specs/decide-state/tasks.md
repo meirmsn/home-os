@@ -108,7 +108,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T14
 **Done when**: Composes severity chip + 2 PathCards + ChoosePath + collapsible "How we diagnosed this"; 6+ test cases.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: T13 — `<PlannedView />` server component + test
 
@@ -117,7 +117,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T14
 **Done when**: Chosen-path summary + chosen-path detail + "Change decision" link + greyed ChoosePath; 5+ test cases.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: T14 — `cards/[id]/page.tsx` body extension
 
