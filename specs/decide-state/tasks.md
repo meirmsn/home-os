@@ -90,7 +90,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T12, T13
 **Done when**: 4-button row + greyed-state for planned; PostHog events fire; 9+ test cases.
 **Risk**: medium
-**Status**: todo
+**Status**: done
 
 ## Task: T11 — `<MonitorCadencePicker />` client component + test
 
@@ -99,7 +99,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T10, T12
 **Done when**: Inline cadence stepper with min/max bounds; confirms POST with cadence; 6+ test cases.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: T12 — `<DecideView />` server component + test
 
