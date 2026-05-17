@@ -10,9 +10,7 @@ Forward-looking plan at the feature/PR grain.
 
 ## Active
 
-| Feature        | Branch                 | Spec                         |
-| -------------- | ---------------------- | ---------------------------- |
-| `decide-state` | `feature/decide-state` | `specs/decide-state/spec.md` |
+_No work in progress._
 
 ## Planned
 
