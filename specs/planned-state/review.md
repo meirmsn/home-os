@@ -119,3 +119,20 @@ Existing decide-state PR #28 screenshots at `specs/decide-state/screenshots/card
 ### Dismissals
 
 - **All 4 viewport×theme combos deferred to Phase 5.9** — rationale: sandbox structurally blocked from running the app (next/font + Playwright both unreachable). Light-mode unsupported at project level (matches decide-state precedent). Phase 5.9 captures fresh screenshots against the Vercel preview URL once CI lands, before the audit comment fires.
+
+## Gate 4: simplify
+
+**Outcome**: `findings (2 — fixed)` (commit `35f9313`)
+
+Three review lenses (reuse / quality / efficiency) found two real issues:
+
+1. **`humanDate` duplicated** in `ReminderEditor.tsx` (lines 266-274) and `ReminderDueChip.tsx` (lines 24-32) — identical implementations of UTC-anchored `'YYYY-MM-DD'` → "Mon Jan 15" formatting. Fixed by extracting `humanReminderDate()` into the shared `_reminder-chip.ts` helper alongside `reminderChipClasses()`. Both components now import from one source of truth; a future format tweak (e.g. include the year on cross-year dates) ripples to both surfaces. Distinct from `page.tsx`'s `humanDate` which takes a full ISO timestamp from `created_at` — different input shape, different function.
+
+2. **`PlannedView.tsx`** had an empty JSDoc `/** */` above `chosenLabel()` (Phase 2 scaffolding leftover) and a stale "Stub for this PR; PR #2 expands" comment — but this IS PR #2 (planned-state expansion). Replaced both with proper docs.
+
+No false positives left unfixed. Stuck-protocol pass: 648/648 unit tests still green after the refactor.
+
+### Dismissals
+
+- **`DecideView` + `PlannedView` parsing IIFEs in `page.tsx` are structurally similar but kept separate** — rationale: both states fall through to one of the four jsonb columns + parse via `parseDiyExpansion` / `parseContractorExpansion`. Lifting the parse out of the state branches would save ~30 lines but couple a render-side parser to TWO state outputs, making future divergence (e.g. PlannedView reading the override-only path while DecideView reads both) harder to track at the call site. Decide-state PR #28 already extracted this pattern via inline IIFE; planned-state follows the same convention rather than refactor decide-state at the same time. Out-of-scope for this PR; if a third state grows the same pattern, factor then with three real consumers.
+- **B-vs-C `data-testid` strings** — `reminder-editor-b` / `reminder-editor-c` look like a magic-string proliferation, but tests assert against them as the user-visible state machine. Folding to one testid + a `data-due` attribute would force every test to read both attributes to distinguish — net wash for readability, breakage risk for the migration. Keep.
