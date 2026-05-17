@@ -61,7 +61,7 @@ export function DecideView(props: DecideViewProps) {
             {chip.label}
           </span>
         )}
-        <h2 className="text-[var(--color-text-primary)] text-xl font-medium">
+        <h2 className="text-[var(--color-text-primary-inverse)] text-xl font-medium">
           {props.diagnosis ?? 'Diagnosis pending.'}
         </h2>
       </header>

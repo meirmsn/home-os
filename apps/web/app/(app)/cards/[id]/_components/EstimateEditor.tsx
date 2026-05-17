@@ -206,7 +206,7 @@ function DiyEditor({
       <label className="block text-sm">
         Skill level
         <select
-          className="bg-[var(--color-surface)] mt-1 block w-full rounded border border-[var(--color-border)] p-2"
+          className="bg-[var(--color-background-raised)] mt-1 block w-full rounded border border-[var(--color-border-default)] p-2"
           value={skillLevel}
           onChange={(e) =>
             setSkillLevel(e.target.value as DiyExpansion['skill_level'])
@@ -224,7 +224,7 @@ function DiyEditor({
             type="number"
             min={0}
             step={1}
-            className="bg-[var(--color-surface)] mt-1 block w-full rounded border border-[var(--color-border)] p-2"
+            className="bg-[var(--color-background-raised)] mt-1 block w-full rounded border border-[var(--color-border-default)] p-2"
             value={timeMin}
             onChange={(e) => setTimeMin(Number(e.target.value))}
           />
@@ -235,7 +235,7 @@ function DiyEditor({
             type="number"
             min={0}
             step={1}
-            className="bg-[var(--color-surface)] mt-1 block w-full rounded border border-[var(--color-border)] p-2"
+            className="bg-[var(--color-background-raised)] mt-1 block w-full rounded border border-[var(--color-border-default)] p-2"
             value={timeMax}
             onChange={(e) => setTimeMax(Number(e.target.value))}
           />
@@ -246,7 +246,7 @@ function DiyEditor({
             type="number"
             min={0}
             step={1}
-            className="bg-[var(--color-surface)] mt-1 block w-full rounded border border-[var(--color-border)] p-2"
+            className="bg-[var(--color-background-raised)] mt-1 block w-full rounded border border-[var(--color-border-default)] p-2"
             value={totalMin}
             onChange={(e) => setTotalMin(Number(e.target.value))}
           />
@@ -257,7 +257,7 @@ function DiyEditor({
             type="number"
             min={0}
             step={1}
-            className="bg-[var(--color-surface)] mt-1 block w-full rounded border border-[var(--color-border)] p-2"
+            className="bg-[var(--color-background-raised)] mt-1 block w-full rounded border border-[var(--color-border-default)] p-2"
             value={totalMax}
             onChange={(e) => setTotalMax(Number(e.target.value))}
           />
@@ -266,7 +266,7 @@ function DiyEditor({
       <div className="flex items-center gap-3">
         <button
           type="submit"
-          className="bg-[var(--color-text-primary)] text-[var(--color-bg)] rounded px-3 py-1.5 text-sm"
+          className="bg-[var(--color-text-primary-inverse)] text-[var(--color-background)] rounded px-3 py-1.5 text-sm"
           disabled={fetchState.kind === 'saving'}
           data-testid="save-diy"
         >
@@ -330,7 +330,7 @@ function ContractorEditor({
             type="number"
             min={0}
             step={1}
-            className="bg-[var(--color-surface)] mt-1 block w-full rounded border border-[var(--color-border)] p-2"
+            className="bg-[var(--color-background-raised)] mt-1 block w-full rounded border border-[var(--color-border-default)] p-2"
             value={costMin}
             onChange={(e) => setCostMin(Number(e.target.value))}
           />
@@ -341,7 +341,7 @@ function ContractorEditor({
             type="number"
             min={0}
             step={1}
-            className="bg-[var(--color-surface)] mt-1 block w-full rounded border border-[var(--color-border)] p-2"
+            className="bg-[var(--color-background-raised)] mt-1 block w-full rounded border border-[var(--color-border-default)] p-2"
             value={costMax}
             onChange={(e) => setCostMax(Number(e.target.value))}
           />
@@ -350,7 +350,7 @@ function ContractorEditor({
       <div className="flex items-center gap-3">
         <button
           type="submit"
-          className="bg-[var(--color-text-primary)] text-[var(--color-bg)] rounded px-3 py-1.5 text-sm"
+          className="bg-[var(--color-text-primary-inverse)] text-[var(--color-background)] rounded px-3 py-1.5 text-sm"
           disabled={fetchState.kind === 'saving'}
           data-testid="save-contractor"
         >

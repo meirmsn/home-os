@@ -127,9 +127,9 @@ export function ChoosePath({
   }
 
   const buttonBase =
-    'rounded-2xl border border-[var(--color-border)] px-3 py-2 text-sm';
+    'rounded-2xl border border-[var(--color-border-default)] px-3 py-2 text-sm';
   const buttonActive =
-    'bg-[var(--color-surface)] text-[var(--color-text-primary)]';
+    'bg-[var(--color-background-raised)] text-[var(--color-text-primary-inverse)]';
   const buttonGreyed = 'opacity-40 cursor-not-allowed';
 
   const isCommitting = fetchState.kind === 'committing';

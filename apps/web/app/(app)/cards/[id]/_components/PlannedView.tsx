@@ -74,7 +74,7 @@ export function PlannedView(props: PlannedViewProps) {
           </span>
         )}
         <h2
-          className="text-[var(--color-text-primary)] text-xl font-medium"
+          className="text-[var(--color-text-primary-inverse)] text-xl font-medium"
           data-testid="planned-banner"
         >
           You chose: {label}

@@ -43,9 +43,9 @@ export function MonitorCadencePicker({
   return (
     <div
       data-testid="monitor-cadence-picker"
-      className="bg-[var(--color-surface)] flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--color-border)] p-3"
+      className="bg-[var(--color-background-raised)] flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--color-border-default)] p-3"
     >
-      <label className="text-[var(--color-text-primary)] text-sm">
+      <label className="text-[var(--color-text-primary-inverse)] text-sm">
         Check back in
         <input
           type="number"
@@ -55,14 +55,14 @@ export function MonitorCadencePicker({
           value={cadence}
           data-testid="cadence-input"
           onChange={(e) => setCadence(clampCadence(Number(e.target.value)))}
-          className="bg-[var(--color-bg)] mx-2 w-20 rounded border border-[var(--color-border)] p-1"
+          className="bg-[var(--color-background)] mx-2 w-20 rounded border border-[var(--color-border-default)] p-1"
         />
         days
       </label>
       <button
         type="button"
         data-testid="cadence-confirm"
-        className="bg-[var(--color-text-primary)] text-[var(--color-bg)] rounded px-3 py-1.5 text-sm"
+        className="bg-[var(--color-text-primary-inverse)] text-[var(--color-background)] rounded px-3 py-1.5 text-sm"
         disabled={isCommitting}
         onClick={() => onConfirm(cadence)}
       >

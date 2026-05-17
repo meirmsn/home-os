@@ -79,10 +79,10 @@ function CardShell({
   return (
     <section
       data-testid={testId}
-      className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4"
+      className="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-background-raised)] p-4"
     >
       <header className="flex items-baseline justify-between">
-        <h2 className="text-[var(--color-text-primary)] text-lg font-medium">
+        <h2 className="text-[var(--color-text-primary-inverse)] text-lg font-medium">
           {title}
         </h2>
         <span
@@ -96,7 +96,7 @@ function CardShell({
         {summary}
       </p>
       <details className="mt-3">
-        <summary className="text-[var(--color-text-primary)] cursor-pointer text-sm">
+        <summary className="text-[var(--color-text-primary-inverse)] cursor-pointer text-sm">
           Tap to expand
         </summary>
         <div className="mt-3 space-y-4">{children}</div>
@@ -123,7 +123,7 @@ function DiyBody({ d }: { d: DiyExpansion }) {
 
       {d.materials.length > 0 && (
         <div>
-          <h3 className="text-[var(--color-text-primary)] mb-1 text-sm font-medium">
+          <h3 className="text-[var(--color-text-primary-inverse)] mb-1 text-sm font-medium">
             Materials
           </h3>
           <ul className="text-[var(--color-text-secondary)] space-y-1 text-sm">
@@ -138,7 +138,7 @@ function DiyBody({ d }: { d: DiyExpansion }) {
 
       {d.tools.length > 0 && (
         <div>
-          <h3 className="text-[var(--color-text-primary)] mb-1 text-sm font-medium">
+          <h3 className="text-[var(--color-text-primary-inverse)] mb-1 text-sm font-medium">
             Tools
           </h3>
           <ul className="text-[var(--color-text-secondary)] space-y-1 text-sm">
@@ -153,7 +153,7 @@ function DiyBody({ d }: { d: DiyExpansion }) {
       )}
 
       <div>
-        <h3 className="text-[var(--color-text-primary)] mb-1 text-sm font-medium">
+        <h3 className="text-[var(--color-text-primary-inverse)] mb-1 text-sm font-medium">
           Steps
         </h3>
         <ol className="text-[var(--color-text-secondary)] list-decimal space-y-1 pl-5 text-sm">
@@ -164,7 +164,7 @@ function DiyBody({ d }: { d: DiyExpansion }) {
       </div>
 
       <div>
-        <h3 className="text-[var(--color-text-primary)] mb-1 text-sm font-medium">
+        <h3 className="text-[var(--color-text-primary-inverse)] mb-1 text-sm font-medium">
           Watch out for
         </h3>
         <p className="text-[var(--color-text-secondary)] text-sm">
@@ -173,7 +173,7 @@ function DiyBody({ d }: { d: DiyExpansion }) {
       </div>
 
       <div>
-        <h3 className="text-[var(--color-text-primary)] mb-1 text-sm font-medium">
+        <h3 className="text-[var(--color-text-primary-inverse)] mb-1 text-sm font-medium">
           When to stop and call a pro
         </h3>
         <p className="text-[var(--color-text-secondary)] text-sm">
@@ -196,7 +196,7 @@ function ContractorBody({ c }: { c: ContractorExpansion }) {
       </p>
 
       <div>
-        <h3 className="text-[var(--color-text-primary)] mb-1 text-sm font-medium">
+        <h3 className="text-[var(--color-text-primary-inverse)] mb-1 text-sm font-medium">
           Questions to ask
         </h3>
         <ul className="text-[var(--color-text-secondary)] list-disc space-y-1 pl-5 text-sm">
@@ -208,7 +208,7 @@ function ContractorBody({ c }: { c: ContractorExpansion }) {
 
       {c.red_flags.length > 0 && (
         <div>
-          <h3 className="text-[var(--color-text-primary)] mb-1 text-sm font-medium">
+          <h3 className="text-[var(--color-text-primary-inverse)] mb-1 text-sm font-medium">
             Red flags
           </h3>
           <ul className="text-[var(--color-text-secondary)] list-disc space-y-1 pl-5 text-sm">
@@ -220,7 +220,7 @@ function ContractorBody({ c }: { c: ContractorExpansion }) {
       )}
 
       <div>
-        <h3 className="text-[var(--color-text-primary)] mb-1 text-sm font-medium">
+        <h3 className="text-[var(--color-text-primary-inverse)] mb-1 text-sm font-medium">
           What good completion looks like
         </h3>
         <p className="text-[var(--color-text-secondary)] text-sm">
