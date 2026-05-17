@@ -9,7 +9,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T2–T15
 **Done when**: `pnpm db:reset` applies cleanly; `pnpm db:gen-types` regenerates `packages/core/src/supabase.types.ts` with the new enum values + columns + RPCs; tests still green.
 **Risk**: medium
-**Status**: todo
+**Status**: done
 
 ## Task: T2 — Extend `_lib/parse-qa-output.ts` + shared estimate-shapes helper
 
