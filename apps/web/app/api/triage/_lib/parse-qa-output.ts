@@ -25,6 +25,12 @@ import {
   type Severity,
   type SystemTag,
 } from './parse-tool-output';
+import {
+  parseContractorExpansion,
+  parseDiyExpansion,
+  type ContractorExpansion,
+  type DiyExpansion,
+} from './estimate-shapes';
 
 /** Shape of the ask_next_question tool input we expect from Claude. */
 export type AskNextQuestion = {
@@ -34,7 +40,13 @@ export type AskNextQuestion = {
   reasoning_so_far: string;
 };
 
-/** Shape of the confirm_assessment tool input we expect from Claude. */
+/** Shape of the confirm_assessment tool input we expect from Claude.
+ *
+ *  Now carries `diy_expansion` + `contractor_expansion` — the cost
+ *  estimates that populate `cards.cost_estimate_diy` / `cost_estimate_hire`
+ *  at confirmation time (spec § D2). Validated via the shared shape
+ *  helpers in `_lib/estimate-shapes.ts` (spec § Gotchas #8 — same
+ *  validator for LLM output AND user PATCH input). */
 export type ConfirmAssessment = {
   final_diagnosis: string;
   severity_confirmed: Severity;
@@ -43,6 +55,8 @@ export type ConfirmAssessment = {
   monitoring_cadence_days_proposal: number;
   confidence_note: string;
   sources: { url: string; title: string }[];
+  diy_expansion: DiyExpansion;
+  contractor_expansion: ContractorExpansion;
 };
 
 export type ParseError = {
@@ -254,6 +268,27 @@ function parseConfirmAssessment(input: unknown): ParseResult {
     }
   }
 
+  // decide-state (PR N) — confirm_assessment now carries DIY + Contractor
+  // expansions that populate cards.cost_estimate_diy + cost_estimate_hire
+  // at confirmation time. Validated via the shared shape helpers; bubble
+  // the field path back up so 502 errors point at the offending field.
+  const diyResult = parseDiyExpansion(input.diy_expansion);
+  if (!diyResult.ok) {
+    return {
+      ok: false,
+      field: `diy_expansion.${diyResult.field}`,
+      reason: diyResult.reason,
+    };
+  }
+  const contractorResult = parseContractorExpansion(input.contractor_expansion);
+  if (!contractorResult.ok) {
+    return {
+      ok: false,
+      field: `contractor_expansion.${contractorResult.field}`,
+      reason: contractorResult.reason,
+    };
+  }
+
   return {
     ok: true,
     tool: 'confirm_assessment',
@@ -266,6 +301,8 @@ function parseConfirmAssessment(input: unknown): ParseResult {
         input.monitoring_cadence_days_proposal as number,
       confidence_note: input.confidence_note,
       sources: input.sources as { url: string; title: string }[],
+      diy_expansion: diyResult.value,
+      contractor_expansion: contractorResult.value,
     },
   };
 }

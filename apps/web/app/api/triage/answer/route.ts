@@ -512,6 +512,12 @@ export async function POST(request: NextRequest) {
     p_user_round: roundState.nextRound,
     p_skip: isSkip,
     p_user_answer: userAnswerForConfirm,
+    // decide-state (PR N) — RPC now persists the DIY + Contractor
+    // expansions onto cards.cost_estimate_diy / cost_estimate_hire at
+    // confirmation time (spec § D2). Validator at parse-qa-output.ts
+    // already guarantees the locked shape; pass through as jsonb.
+    p_diy_expansion: parsed.value.diy_expansion,
+    p_contractor_expansion: parsed.value.contractor_expansion,
   });
 
   if (confirmError) {

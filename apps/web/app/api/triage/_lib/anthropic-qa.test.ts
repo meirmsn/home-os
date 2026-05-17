@@ -132,7 +132,7 @@ describe('callQaTurn — tools array', () => {
     );
   });
 
-  it('confirm_assessment schema requires the seven Q&A fields', async () => {
+  it('confirm_assessment schema requires the nine Q&A + expansion fields', async () => {
     await callQaTurn(BASE_INPUT);
     const tools = createSpy.mock.calls[0]?.[0].tools as Array<{
       name: string;
@@ -148,6 +148,52 @@ describe('callQaTurn — tools array', () => {
         'monitoring_cadence_days_proposal',
         'confidence_note',
         'sources',
+        'diy_expansion',
+        'contractor_expansion',
+      ])
+    );
+  });
+
+  it('confirm_assessment schema declares diy_expansion + contractor_expansion shape (decide-state)', async () => {
+    await callQaTurn(BASE_INPUT);
+    const tools = createSpy.mock.calls[0]?.[0].tools as Array<{
+      name: string;
+      input_schema?: {
+        properties?: {
+          diy_expansion?: { type?: string; required?: string[] };
+          contractor_expansion?: { type?: string; required?: string[] };
+        };
+      };
+    }>;
+    const confirm = tools.find((t) => t.name === CONFIRM_ASSESSMENT_TOOL_NAME);
+    const diy = confirm?.input_schema?.properties?.diy_expansion;
+    const contractor = confirm?.input_schema?.properties?.contractor_expansion;
+
+    expect(diy?.type).toBe('object');
+    expect(diy?.required).toEqual(
+      expect.arrayContaining([
+        'skill_level',
+        'time_hours_min',
+        'time_hours_max',
+        'materials',
+        'tools',
+        'total_min',
+        'total_max',
+        'gotchas',
+        'abort_condition',
+        'steps',
+      ])
+    );
+
+    expect(contractor?.type).toBe('object');
+    expect(contractor?.required).toEqual(
+      expect.arrayContaining([
+        'contractor_type',
+        'cost_range_min',
+        'cost_range_max',
+        'questions_for_contractor',
+        'red_flags',
+        'good_completion',
       ])
     );
   });
