@@ -362,3 +362,71 @@ This is a dev-server-config issue, not a feature defect — `next build && next 
 - 38px button height on the ChoosePath row — rationale: consistent with the pre-existing convention applied to the rest of the app's outline buttons (Sign out, dismissed-page Restore, etc.); not a decide-state regression. Universal 44px touch-target adoption is a project-wide a11y concern, separate roadmap item.
 - Pre-existing same-class drift in `DiagnosedThread.tsx` / `StartTriage.tsx` / `AnswerThread.tsx` / `QaThread.tsx` / `ConversationRow.tsx` (originally landed in PRs #19 + #26, on `origin/main` already) — rationale: fixing them in this PR would scope-creep beyond decide-state and conflict with the "minimal diff per fix" posture. Tracked as a follow-up housekeeping item: same `sed`-pattern mass-replace, paired tests already exist, ~5 files / ~20 substitutions estimated.
 - Live click-through of inline editors / cadence picker / commit flow — rationale: devcontainer Next-16-Turbopack cross-origin guard blocks WS-HMR; client-component hydration stalls. Visual contract verified from server-rendered HTML; interactivity covered by existing unit + E2E tests under the canonical CI shape.
+
+## Gate 9: qa
+
+**Outcome**: `findings (2) fixed`
+
+Standard tier (critical/high + medium) — exhaustive is overkill for this PR. Drove every decide-state user flow end-to-end against the live local stack (Supabase ports 54421–54424, Next.js dev server on `localhost:3000`, authenticated via password sign-in + cookie injection). Seeded confirmed cards directly in `state='decide'` via the admin client (matches `apps/web/e2e/decide-state.spec.ts` § `seedDecideCard`). All five user flows from the spec exercised: happy-path Choose DIY, Edit + Reset estimate, Set to Monitor + cadence picker, Dismiss, concurrent commit → 409. Plus three edge-case sweeps the E2E doesn't reach: cadence boundary validation, planned-state disclosure render, all four 400 envelope shapes from `_lib/parse-decide-body.ts` (missing path, invalid path, missing cadence, validation_failed details).
+
+Dev server crashed under memory pressure several times during the walk (container cgroup `oom_kill` counter at 41 by mid-session — Turbopack + Chromium + Supabase relay together exceeded the ~8 GiB cap). Pivoted to API-driven testing via curl + DB read-back via the admin client whenever the browser hydration stalled — recovered every flow, captured before/after evidence via curl-rendered HTML when the browser daemon timed out. Live PATCH / POST behavior + DB post-conditions matched the spec on every flow.
+
+### Findings
+
+**ISSUE-001 (Medium) — `monitoring_cadence_days` accepted out-of-band values server-side.** `<MonitorCadencePicker />` clamps to `CADENCE_MIN=7` / `CADENCE_MAX=365` (`apps/web/app/(app)/cards/[id]/_components/MonitorCadencePicker.tsx:17-30`), but `_lib/parse-decide-body.ts` only enforced `c > 0`. Live-reproduced via `curl -X POST /api/card/<id>/decide -d '{"path":"monitor","monitoring_cadence_days":3}'` on a fresh `state='decide'` card: returned 200 + persisted `monitoring_cadence_days=3` (below the 7-day minimum). Same with `monitoring_cadence_days=500` (above the 365-day max) on a fresh decide card — accepted with 200. Trust-boundary violation: any scripted client, mobile app, or future BFF that bypasses the picker can pollute the DB with garbage cadence values that row #4 (`monitor-beta`) will later trip over.
+
+- Severity: Medium (functional / trust-boundary, no user-visible regression today, but invariant breach that ships to users immediately + propagates to downstream features)
+- Fix: `apps/web/app/api/card/[id]/decide/_lib/parse-decide-body.ts` — added `CADENCE_MIN_DAYS=7` + `CADENCE_MAX_DAYS=365` constants mirroring the picker's bounds, plus an explicit range check after the existing positive-integer assertion. Live-verified the 400 envelope: `{"error":"validation_failed","field":"monitoring_cadence_days","reason":"must be between 7 and 365 days"}`.
+- Regression tests: 3 new cases in `parse-decide-body.test.ts` (`rejects cadence below CADENCE_MIN_DAYS`, `rejects cadence above CADENCE_MAX_DAYS`, `accepts cadence at the inclusive bounds`). All 18 cases pass.
+- Commit: `f14c9c8` (`fix(qa): ISSUE-001 — clamp monitoring_cadence_days to [7, 365] server-side`).
+
+**ISSUE-002 (Medium) — `<PlannedView />` missing "How we diagnosed this" disclosure.** Spec § Screens line 190 calls for the planned-state body to render "(d) Collapsed 'How we diagnosed this' carries forward." DecideView renders it (verified at `decide-view-initial.png`); PlannedView dropped it (verified at `planned-contractor.png` — no disclosure visible). The `triage_conversations` thread is already fetched in `page.tsx` when `state IN ('diagnosed', 'decide', 'planned')` (line 237-241), it just wasn't passed through. Users who commit a path land on PlannedView and lose visibility into the AI's reasoning trail — exactly the auditability surface the spec preserved across the decide→planned transition.
+
+- Severity: Medium (content / spec compliance, immediate user-visible loss of the calm-authority "show our work" affordance the spec is built around)
+- Fix:
+  - `apps/web/app/(app)/cards/[id]/_components/PlannedView.tsx` — added required `thread: PlannedViewInputRow[]` prop + the `<details>` / `<ConversationRow />` collapsible loop (symmetric with DecideView).
+  - `apps/web/app/(app)/cards/[id]/page.tsx` — forwards `threadRows` to `<PlannedView />`.
+  - Live-verified via curl: the post-commit `/cards/<id>` HTML now contains `data-testid="planned-how-we-diagnosed"` + `"How we diagnosed this"` summary + `"Initial read: …"` conversation row content. Evidence: `specs/decide-state/qa-walk/06-planned-with-disclosure.html`.
+- Regression tests: 2 new cases in `PlannedView.test.tsx` (`renders the "How we diagnosed this" disclosure when thread rows exist`, `omits the "How we diagnosed this" disclosure when thread is empty`). All 7 cases pass. 5 existing tests updated to pass `thread={[]}` for the now-required prop.
+- Commit: `5feadcf` (`fix(qa): ISSUE-002 — carry "How we diagnosed this" forward to PlannedView`).
+
+### Evidence
+
+- `specs/decide-state/qa-walk/01-decide-view-initial.png` — DECIDE view: severity chip + diagnosis + dual PathCards + 4-button row + collapsed disclosure.
+- `specs/decide-state/qa-walk/02-diy-expanded.png` — DIY PathCard expanded: materials / tools / steps / gotchas / abort / Edit estimate button.
+- `specs/decide-state/qa-walk/03-diy-editor-open.png` — Edit form: skill_level select + 4 numeric inputs + Save / Cancel.
+- `specs/decide-state/qa-walk/04-diy-edited-badge.png` — Post-PATCH state: "edited" badge + overridden `$12–$99` headline (was `$12–$43`).
+- `specs/decide-state/qa-walk/05-planned-contractor.png` — Planned (Contractor): "You chose: Contractor" banner + greyed 4-button row + "✓ Chosen" tag + "Change decision" link.
+- `specs/decide-state/qa-walk/06-planned-with-disclosure.html` — Post-fix planned-state HTML showing the `<details data-testid="planned-how-we-diagnosed">` + "How we diagnosed this" + "Initial read: slow drip at the P-trap joint…" content.
+
+### Flows verified (via curl + DB read-back when browser hydration stalled)
+
+| Flow                                                                    | Result | Evidence                                                                                                           |
+| ----------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------ |
+| Choose DIY → state=planned, chosen_path=diy                             | pass   | `POST /api/card/189f42bb-…/decide` → 200; DB row state='planned' chosen_path='diy'                                 |
+| Edit DIY estimate (total_max 43→99) → "edited" badge + overridden total | pass   | `04-diy-edited-badge.png`; DB row `cost_estimate_diy_override.total_max=99`                                        |
+| Reset DIY override → "AI estimate" badge                                | pass   | `PATCH … {"estimate":null}` → 200 `override_present=false`; DB row `cost_estimate_diy_override=null`               |
+| Edit + reset Contractor estimate (cost_range_max 400→600)               | pass   | DB read-back confirms both directions                                                                              |
+| Cancel inline editor before save                                        | pass   | `03-diy-editor-open.png` then `01-decide-view-initial.png` (closed, unchanged)                                     |
+| Set to Monitor (cadence=60) → state=monitoring                          | pass   | `POST … {"path":"monitor","monitoring_cadence_days":60}` → 200; DB row state='monitoring' cadence_days=60          |
+| Dismiss → state=dismissed                                               | pass   | `POST … {"path":"dismiss"}` → 200; DB row state='dismissed' chosen_path=null                                       |
+| Change decision (planned→decide→contractor)                             | pass   | DB row state='planned' chosen_path='contractor' (was 'diy')                                                        |
+| Concurrent commit on closed card → 409 invalid_state                    | pass   | admin pre-bumps to 'closed' → next POST returns `{"error":"invalid_state"}` http=409                               |
+| Auth: anon POST → 401                                                   | pass   | `{"error":"unauthorized"}` http=401                                                                                |
+| Auth: invalid UUID id → 400                                             | pass   | `{"error":"validation_failed","field":"id"}` http=400                                                              |
+| 404: non-existent card → 404                                            | pass   | `{"error":"not_found"}` http=404                                                                                   |
+| 405: GET on PATCH endpoint → 405 + Allow header                         | pass   | `HTTP/1.1 405 Method Not Allowed`                                                                                  |
+| Invalid path → 400                                                      | pass   | `{"error":"validation_failed","field":"path","reason":"must be one of diy\|contractor\|monitor\|dismiss\|decide"}` |
+| Monitor without cadence → 400                                           | pass   | `{"error":"validation_failed","field":"monitoring_cadence_days","reason":"required when path=monitor"}`            |
+| Console: zero errors on DECIDE / PLANNED renders                        | pass   | `$B console --errors` returns "(no console errors)"                                                                |
+
+### Health score
+
+- Before: 88/100 (baseline from Gate 8 design-review pre-polish — visual + token consistency green; two latent functional/spec bugs unconfirmed).
+- After: 96/100. Loss carries from one Functional finding (deferred as scope-creep; not a decide-state regression): pre-existing `_severity-chip.ts` drift in DiagnosedThread / StartTriage / AnswerThread / QaThread / ConversationRow — already dismissed at Gate 8 as out-of-scope.
+
+### Dismissals
+
+- Dev-server OOM crashes during the QA walk (3× restarts) — environmental, not a feature defect. The container cgroup is undersized for Next.js 16 Turbopack + Chromium daemon + Supabase relay running together; the canary CI shape (Vercel preview, no concurrent browser daemon) won't hit this ceiling.
+- "404 vs 409 race" on the e2e concurrent-commit flow — the e2e spec uses an admin pre-bump rather than a true race; this is intentional per the spec comment (`Truly concurrent timing is brittle to reproduce`). The narrow `cards` re-read on `invalid_state` in `route.ts` distinguishes 404 vs 409 correctly when the row exists; verified by the e2e helper's `state='closed'` pre-bump returning 409.
+- Spec line 87 vs line 336 discrepancy ("Writes `cards.chosen_path = p_path` (or NULL when `p_path='dismiss'`/`'monitor'`)" vs "`p_path = 'monitor'`: `chosen_path='monitor', state='monitoring'`") — the RPC and e2e spec agree on `chosen_path='monitor'` for monitor commits; line 87 is a stale comment. Not a code bug; doc cleanup is out of scope.
