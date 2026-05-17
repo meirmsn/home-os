@@ -27,7 +27,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T5
 **Done when**: confirm_assessment tool definition includes `diy_expansion` + `contractor_expansion` properties + `required` lists; existing test extended.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: T4 — Extend `_lib/prompt-qa.ts` for expansion fields
 
