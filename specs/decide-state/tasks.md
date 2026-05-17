@@ -81,7 +81,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T12
 **Done when**: Inline edit form with per-field controls; save + reset POST/PATCH; 10+ test cases.
 **Risk**: medium
-**Status**: todo
+**Status**: done
 
 ## Task: T10 — `<ChoosePath />` client component + test
 
