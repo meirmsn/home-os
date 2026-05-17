@@ -135,7 +135,7 @@ Dependency-ordered task breakdown for the `decide-state` PR. Mirrors `spec.md §
 **Blocks**: T16
 **Done when**: 5-case Playwright spec exists; skips gracefully on non-local.
 **Risk**: medium
-**Status**: todo
+**Status**: done
 
 ## Task: T16 — Docs (CLAUDE.md, METRICS.md, tasks.md)
 
