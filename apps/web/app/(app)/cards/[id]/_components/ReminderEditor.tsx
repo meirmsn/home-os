@@ -19,6 +19,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import posthog from 'posthog-js';
+import { humanReminderDate } from './_reminder-chip';
 
 export type ReminderEditorProps = {
   cardId: string;
@@ -226,7 +227,7 @@ export function ReminderEditor(props: ReminderEditorProps) {
         className="text-sm text-[var(--color-text-secondary)]"
         data-testid="reminder-subline"
       >
-        Revisit by {humanDate(props.plannedReminderDate)}
+        Revisit by {humanReminderDate(props.plannedReminderDate)}
       </p>
       <button
         type="button"
@@ -259,16 +260,4 @@ export function ReminderEditor(props: ReminderEditorProps) {
       )}
     </div>
   );
-}
-
-/** Human-readable short date for a 'YYYY-MM-DD' string (UTC-anchored to
- *  avoid timezone drift on the rendered label). */
-function humanDate(iso: string): string {
-  const date = new Date(`${iso}T00:00:00.000Z`);
-  return date.toLocaleDateString(undefined, {
-    timeZone: 'UTC',
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
 }

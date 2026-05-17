@@ -33,3 +33,23 @@ export function reminderChipClasses(humanDate: string): ReminderChipClasses {
     label: `Revisit by ${humanDate}`,
   };
 }
+
+/** Format a `'YYYY-MM-DD'` reminder date string as a short, human-readable
+ *  label (e.g. "Mon Jan 15"). UTC-anchored on both sides so the rendered
+ *  label never drifts vs. the stored date — spec § Gotchas #3 codifies
+ *  the same UTC-strip discipline for the date comparison.
+ *
+ *  Shared between <ReminderEditor /> (subline copy) and <ReminderDueChip />
+ *  (chip label) so a future format tweak ripples to both surfaces. The
+ *  `humanDate` in cards/[id]/page.tsx is a separate helper that takes a
+ *  full ISO timestamp from `created_at` — different input shape, different
+ *  function. */
+export function humanReminderDate(iso: string): string {
+  const date = new Date(`${iso}T00:00:00.000Z`);
+  return date.toLocaleDateString(undefined, {
+    timeZone: 'UTC',
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+}

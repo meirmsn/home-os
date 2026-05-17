@@ -60,16 +60,14 @@ export type PlannedViewProps = {
   isReminderDue: boolean;
 };
 
-/**
- *
- */
+/** Human-readable label for the chosen-path banner. */
 function chosenLabel(path: ChosenPath): string {
   if (path === 'diy') return 'DIY';
   if (path === 'contractor') return 'Contractor';
   return 'Monitor';
 }
 
-/** PLANNED state body. Stub for this PR; PR #2 expands. */
+/** PLANNED state body — see file header. */
 export function PlannedView(props: PlannedViewProps) {
   if (!props.chosenPath) {
     // Should not happen in practice — chosen_path is set by
