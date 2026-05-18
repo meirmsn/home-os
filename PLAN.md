@@ -10,9 +10,7 @@ Forward-looking plan at the feature/PR grain.
 
 ## Active
 
-| Branch                  | Spec                          | Hook                                                                                                                                                                           |
-| ----------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `feature/planned-state` | `specs/planned-state/spec.md` | Card face shows DIY/Contractor decision + what's needed before CLOSE, optional reminder date, never-overdue treatment, reminder-due chip lifts to Tier 1 (calm indigo outline) |
+_No work in progress._
 
 ## Planned
 
