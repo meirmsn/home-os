@@ -1,23 +1,31 @@
 // What: Server component for the PLANNED state body on /cards/[id].
 //       Renders: confirmed severity chip + "You chose: <path>" banner
 //       + chosen-path detail (DIY: materials/tools/steps; Contractor:
-//       contractor_type + questions) + a greyed <ChoosePath /> with
-//       "✓ Chosen" tag + "Change decision" link.
-// Why:  spec § D10 — minimal stub for this PR. PR #2 (planned-state)
-//       expands with reminder dates, never-overdue treatment, and the
-//       full "what's needed before CLOSE" surface.
-// Does NOT: Handle reminder dates, due-date pinning, dashboard-tier
-//           lifts. Doesn't fire any PostHog events — the prior commit
-//           already fired decide_path_chosen; subsequent
-//           decide_path_changed fires from <ChoosePath /> on re-commit.
+//       contractor_type + questions) + <BeforeCloseSummary /> +
+//       greyed <ChoosePath /> + <ReminderEditor /> + "How we diagnosed
+//       this" collapsible.
+// Why:  spec § D4 + D5 — the planned-state body is the user's home
+//       base after they commit to a path. <BeforeCloseSummary /> shows
+//       what's needed before CLOSE; <ReminderEditor /> manages the
+//       optional revisit date. The header chip in cards/[id]/page.tsx
+//       carries the urgency signal when the reminder is due.
+// Does NOT: Render the <ReminderDueChip /> in the page header (page.tsx
+//           owns that, gated on isReminderDue). Doesn't fire any
+//           PostHog events — the prior commit already fired
+//           decide_path_chosen; <ChoosePath /> fires decide_path_changed
+//           on re-commit; <ReminderEditor /> fires the three reminder
+//           events. <BeforeCloseSummary /> is mounted-conditionally for
+//           DIY + Contractor; it returns null for chosen_path='monitor'.
 
 import type {
   ContractorExpansion,
   DiyExpansion,
 } from '@/app/api/triage/_lib/estimate-shapes';
+import { BeforeCloseSummary } from './BeforeCloseSummary';
 import { ChoosePath } from './ChoosePath';
 import { ConversationRow, type ConversationRowData } from './ConversationRow';
 import { PathCard } from './PathCard';
+import { ReminderEditor } from './ReminderEditor';
 import { severityChipClasses, type Severity } from './_severity-chip';
 
 type ChosenPath = 'diy' | 'contractor' | 'monitor';
@@ -41,18 +49,25 @@ export type PlannedViewProps = {
    *  (d)). May be empty when a card was confirmed by an earlier flow
    *  that didn't persist the thread. */
   thread: PlannedViewInputRow[];
+  /** Current reminder date for this planned card (ISO `'YYYY-MM-DD'`)
+   *  or null when no reminder is set. Threaded into <ReminderEditor />
+   *  for its three-state render switch (spec § D5). */
+  plannedReminderDate: string | null;
+  /** Server-derived "today or past" predicate computed in
+   *  cards/[id]/page.tsx (spec § D3 + Gotchas #3). Threaded so the
+   *  client component doesn't recompute it (and avoids the midnight-
+   *  UTC drift trap). */
+  isReminderDue: boolean;
 };
 
-/**
- *
- */
+/** Human-readable label for the chosen-path banner. */
 function chosenLabel(path: ChosenPath): string {
   if (path === 'diy') return 'DIY';
   if (path === 'contractor') return 'Contractor';
   return 'Monitor';
 }
 
-/** PLANNED state body. Stub for this PR; PR #2 expands. */
+/** PLANNED state body — see file header. */
 export function PlannedView(props: PlannedViewProps) {
   if (!props.chosenPath) {
     // Should not happen in practice — chosen_path is set by
@@ -121,11 +136,32 @@ export function PlannedView(props: PlannedViewProps) {
         </p>
       )}
 
+      {/* "Before you close" — between the path detail and the
+          ChoosePath row, per spec § D4. Returns null for chosen_path=
+          'monitor' (cadence line above is the right summary). */}
+      <BeforeCloseSummary
+        chosenPath={props.chosenPath}
+        diyEstimate={props.diyEstimate}
+        diyOverride={props.diyOverride}
+        contractorEstimate={props.contractorEstimate}
+        contractorOverride={props.contractorOverride}
+      />
+
       <ChoosePath
         cardId={props.cardId}
         cardState="planned"
         prevChosenPath={props.chosenPath}
         proposedCadence={props.monitoringCadenceDays}
+      />
+
+      {/* Reminder management — bottom of the body per spec § D5.
+          The calm-indigo chip in the page header carries the urgency
+          cue when isReminderDue=true; this section keeps the
+          management affordances (Set/Edit/Clear) in all three states. */}
+      <ReminderEditor
+        cardId={props.cardId}
+        plannedReminderDate={props.plannedReminderDate}
+        isReminderDue={props.isReminderDue}
       />
 
       {props.thread.length > 0 && (
