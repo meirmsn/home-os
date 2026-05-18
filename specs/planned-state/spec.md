@@ -300,7 +300,7 @@ Date-only string comparison avoids the UTC-vs-local-time drift (§ Gotchas #3). 
 
 - **200** — `{ card_id: string, planned_reminder_date: string | null }`.
 - **400** — `{ error: 'validation_failed', field: 'reminder_date', reason: string }`.
-- **401** — `{ error: 'unauthenticated' }`.
+- **401** — `{ error: 'unauthorized' }`.
 - **404** — `{ error: 'not_found' }` — card doesn't exist or RLS hides it.
 - **409** — `{ error: 'invalid_state' }` — card not in `state='planned'`. 404-vs-409 distinguished by a narrow `cards` re-read (matches PR #27's `/decide` route posture).
 - **500** — `{ error: 'server_error' }` with Sentry capture.
@@ -426,7 +426,7 @@ These are the load-bearing traps for this PR. The ones not already documented ge
 
 8. **`tools[].optional === true` filter in `<BeforeCloseSummary />`** — non-optional tools go in the "to acquire" preview; optional tools are user-already-owned and shouldn't appear in the close-list count or preview. Filter via `tools.filter(t => t.optional !== true)` (note: `!== true` not `=== false` — defaulting to non-optional when the flag is absent, since `optional?: boolean` per D3 means undefined = required). This filter mirrors how a homeowner would scan the list: "what do I need to buy?" — not "what tools exist?". The filter is the difference between a calm scannable list and a noisy inventory.
 
-9. **`days_out` in PostHog events is signed** — negative values are legitimate. When a user sets `'2026-05-10'` and today is `2026-05-17`, `days_out` is `-7` (reminder is already overdue by 7 days). This is a real user intent — they want a card marked due-now. Don't `Math.abs(...)` it in the event payload; the sign is the signal. Compute via `Math.floor((new Date(reminder_date).getTime() - new Date().setHours(0,0,0,0)) / 86400000)` and document the signed semantic in the METRICS.md row.
+9. **`days_out` in PostHog events is signed** — negative values are legitimate. When a user sets `'2026-05-10'` and today is `2026-05-17`, `days_out` is `-7` (reminder is already overdue by 7 days). This is a real user intent — they want a card marked due-now. Don't `Math.abs(...)` it in the event payload; the sign is the signal. Compute as a UTC-midnight-anchored Δdays — both sides are exact multiples of 86400000, so `Math.round` and `Math.floor` agree on the integer result. Document the signed semantic in the METRICS.md row.
 
 10. **Path-map freshness hook — T8 must touch CLAUDE.md.** CLAUDE.md § Where Things Happen has `kit/scripts/commit-hooks/check-docs-freshness-project.sh` blocking PRs that add a triggering surface without updating the section. This PR adds: 1 route + 1 parser + 4 components + 1 helper + 1 migration + 2 modified files (`page.tsx`, `PlannedView.tsx`) — all triggering. T8's commit must update CLAUDE.md or the pre-commit hook fails. The hook checks per-commit, so as long as T8's commit touches CLAUDE.md, the hook is satisfied.
 

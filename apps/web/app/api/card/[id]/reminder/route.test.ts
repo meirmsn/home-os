@@ -278,6 +278,32 @@ describe('PATCH /api/card/[id]/reminder — auth + state', () => {
     expect(res.status).toBe(409);
   });
 
+  it('returns 409 when row exists in capturing state', async () => {
+    updateMaybeSingle.mockResolvedValue({ data: null, error: null });
+    lookupMaybeSingle.mockResolvedValue({
+      data: { id: VALID_UUID, state: 'capturing' },
+      error: null,
+    });
+    const res = await PATCH(
+      mockRequest({ reminder_date: null }),
+      paramsContext(VALID_UUID)
+    );
+    expect(res.status).toBe(409);
+  });
+
+  it('returns 409 when row exists in triaging state', async () => {
+    updateMaybeSingle.mockResolvedValue({ data: null, error: null });
+    lookupMaybeSingle.mockResolvedValue({
+      data: { id: VALID_UUID, state: 'triaging' },
+      error: null,
+    });
+    const res = await PATCH(
+      mockRequest({ reminder_date: null }),
+      paramsContext(VALID_UUID)
+    );
+    expect(res.status).toBe(409);
+  });
+
   it('returns 500 + Sentry on update error', async () => {
     updateMaybeSingle.mockResolvedValue({
       data: null,
