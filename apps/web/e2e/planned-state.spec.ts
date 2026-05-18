@@ -304,8 +304,13 @@ test.describe('planned-state round trip', () => {
 
   test('state guard — PATCH /api/card/[id]/reminder rejects non-planned states with 409', async ({
     page,
-    request,
   }) => {
+    // Use `page.request` (NOT the top-level `request` fixture). The
+    // top-level fixture has its own APIRequestContext that doesn't
+    // share cookies with the page's BrowserContext — auth cookie set
+    // via `page.context().addCookies` in beforeEach is invisible to
+    // it, so requests return 401 instead of the state-guard 409 we're
+    // asserting.
     // Seed in state='decide' (no chosen_path yet). The UI doesn't
     // surface the reminder editor for decide, so we use the direct
     // request API.
@@ -334,7 +339,7 @@ test.describe('planned-state round trip', () => {
     await page.goto(`/cards/${cardId}`);
 
     // Bypass UI — PATCH directly. Decide state → 409.
-    const r1 = await request.patch(`/api/card/${cardId}/reminder`, {
+    const r1 = await page.request.patch(`/api/card/${cardId}/reminder`, {
       data: { reminder_date: '2026-06-15' },
     });
     expect(r1.status()).toBe(409);
@@ -342,14 +347,14 @@ test.describe('planned-state round trip', () => {
 
     // Move card to dismissed → still 409.
     await admin.from('cards').update({ state: 'dismissed' }).eq('id', cardId);
-    const r2 = await request.patch(`/api/card/${cardId}/reminder`, {
+    const r2 = await page.request.patch(`/api/card/${cardId}/reminder`, {
       data: { reminder_date: '2026-06-15' },
     });
     expect(r2.status()).toBe(409);
 
     // Move card to monitoring → 409 (reminders only apply to planned).
     await admin.from('cards').update({ state: 'monitoring' }).eq('id', cardId);
-    const r3 = await request.patch(`/api/card/${cardId}/reminder`, {
+    const r3 = await page.request.patch(`/api/card/${cardId}/reminder`, {
       data: { reminder_date: '2026-06-15' },
     });
     expect(r3.status()).toBe(409);
