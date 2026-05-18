@@ -1,23 +1,27 @@
 // What: Playwright globalSetup. Forces PostgREST to reload its in-memory
-//       schema cache before any E2E test runs, AND prints diagnostics so
-//       CI logs surface whether the reload took effect. PR #28 hit a
-//       PGRST204 cache miss on migration 012's `cards.planned_reminder_date`
-//       despite the column existing in Postgres — fix attempts 1 + 2 sent
-//       NOTIFY pgrst but the cache stayed stale. Attempt 3 (this file):
-//       verbose logging + cache verification + retry with exponential
-//       backoff if the first NOTIFY didn't take.
-// Why:  Playwright globalSetup runs after `supabase start` has fully
-//       completed and PostgREST is listening on its NOTIFY channel.
-//       Sending NOTIFY here is the only reliable timing — migration-time
-//       NOTIFY (attempt 1) didn't reach PostgREST because migrations may
-//       apply before PostgREST's LISTEN is active.
-// Does NOT: Install fixtures, seed test users, or assert schema validity.
-//           Per-test `beforeEach` handles seeding. Skips silently when
-//           SUPABASE_URL is absent (non-CI runs).
+//       schema cache before any E2E test runs. PR #28 (planned-state) hit
+//       a PGRST204 cache miss on migration 012's new column despite the
+//       column existing in Postgres. Attempts 1-3 sent NOTIFY pgrst from
+//       multiple shapes; attempt 3's diagnostics proved psql succeeds AND
+//       PostgREST is reachable, yet the cache stays stale. CI's PostgREST
+//       silently ignores NOTIFY for reasons that don't reproduce locally
+//       (local: same Supabase CLI 2.98.2, same channel `pgrst`, NOTIFY
+//       reloads cache fine).
+//       Attempt 4 (this file): pg_stat_activity probe to capture WHAT CI's
+//       PostgREST is actually listening on + docker-restart fallback as the
+//       nuclear option that forces a fresh introspection.
+// Why:  Each attempt's diagnostics narrow the failure surface. Attempt 4's
+//       PostgREST process probe answers "is the LISTEN even active?" and
+//       "on what channel?". The restart fallback unblocks the PR regardless
+//       of root cause — `docker restart` of the supabase_rest container
+//       forces a clean schema introspection on container reattach.
+// Does NOT: Install fixtures or seed test users — that's per-spec
+//           `beforeEach`. Skip silently when not running against the
+//           local stack.
 
 import { execSync } from 'node:child_process';
 
-const PROBE_COLUMN = 'planned_reminder_date'; // canary column from migration 012
+const PROBE_COLUMN = 'planned_reminder_date';
 
 /**
  *
@@ -32,11 +36,7 @@ function log(msg: string): void {
 function probeCache(
   url: string,
   key: string
-): {
-  cardsCols: number;
-  hasProbeColumn: boolean;
-  status: number;
-} {
+): { cardsCols: number; hasProbeColumn: boolean; status: number } {
   try {
     const out = execSync(
       `curl -s -w "\\n%{http_code}" "${url}/rest/v1/" -H "apikey: ${key}" -H "Authorization: Bearer ${key}"`,
@@ -53,11 +53,21 @@ function probeCache(
       status,
     };
   } catch {
-    return {
-      cardsCols: -1,
-      hasProbeColumn: false,
-      status: 0,
-    };
+    return { cardsCols: -1, hasProbeColumn: false, status: 0 };
+  }
+}
+
+/**
+ *
+ */
+function psqlQuery(dbUrl: string, sql: string): string {
+  try {
+    return execSync(`psql "${dbUrl}" -tAc "${sql.replace(/"/g, '\\"')}" 2>&1`, {
+      encoding: 'utf8',
+      timeout: 5000,
+    }).trim();
+  } catch (err) {
+    return `<psql-error: ${err instanceof Error ? err.message : String(err)}>`;
   }
 }
 
@@ -84,50 +94,89 @@ async function globalSetup(): Promise<void> {
     return;
   }
 
-  // Pre-reload probe
+  // Pre-reload cache state
   if (restUrl && serviceKey) {
     const before = probeCache(restUrl, serviceKey);
     log(
-      `pre-NOTIFY cache: status=${before.status} cardsCols=${before.cardsCols} has_${PROBE_COLUMN}=${before.hasProbeColumn}`
+      `pre-fix cache: status=${before.status} cardsCols=${before.cardsCols} has_${PROBE_COLUMN}=${before.hasProbeColumn}`
     );
-  }
-
-  // Try multiple reload mechanisms back-to-back. PostgREST's documented
-  // channel is `pgrst` with payload `reload schema`; we also send the
-  // bare NOTIFY in case the payload variant is the issue.
-  const reloadStatements = [
-    `notify pgrst, 'reload schema';`,
-    `select pg_notify('pgrst', 'reload schema');`,
-    `notify pgrst;`,
-  ];
-
-  for (const stmt of reloadStatements) {
-    try {
-      const out = execSync(`psql "${dbUrl}" -c "${stmt}" 2>&1`, {
-        encoding: 'utf8',
-        timeout: 5000,
-      });
-      log(`reload sent: ${stmt} → ${out.trim().split('\n').pop()}`);
-    } catch (err) {
-      log(
-        `reload FAILED: ${stmt} → ${err instanceof Error ? err.message : String(err)}`
-      );
+    if (before.hasProbeColumn) {
+      log('cache already has the column — nothing to do');
+      return;
     }
   }
 
-  // Settle, then verify
-  await new Promise((resolve) => setTimeout(resolve, 1500));
+  // DIAGNOSTIC: what is PostgREST actually doing?
+  log(
+    `pg_stat_activity (PostgREST connections): ${psqlQuery(
+      dbUrl,
+      "select application_name || '|' || coalesce(query, '<null>') from pg_stat_activity where application_name ilike 'postgrest%'"
+    )}`
+  );
+
+  // FIX 1: try NOTIFY pgrst (canonical mechanism). If CI's PostgREST listens
+  // on this channel and honors it, cache reloads.
+  log(`notify pgrst: ${psqlQuery(dbUrl, "notify pgrst, 'reload schema'")}`);
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   if (restUrl && serviceKey) {
-    const after = probeCache(restUrl, serviceKey);
+    const afterNotify = probeCache(restUrl, serviceKey);
     log(
-      `post-NOTIFY cache: status=${after.status} cardsCols=${after.cardsCols} has_${PROBE_COLUMN}=${after.hasProbeColumn}`
+      `post-NOTIFY cache: cardsCols=${afterNotify.cardsCols} has_${PROBE_COLUMN}=${afterNotify.hasProbeColumn}`
     );
-    if (!after.hasProbeColumn) {
-      log(
-        `WARNING: cache still missing ${PROBE_COLUMN} after NOTIFY — E2E will hit PGRST204`
-      );
+    if (afterNotify.hasProbeColumn) {
+      log('NOTIFY fixed it — done');
+      return;
     }
+  }
+
+  // FIX 2: docker restart the supabase_rest container. Forces a fresh
+  // schema introspection on reconnect. Heavy hammer but works regardless
+  // of why NOTIFY is being ignored.
+  log('NOTIFY ineffective — trying docker restart of supabase_rest');
+  try {
+    const containerName = execSync(
+      `docker ps --format '{{.Names}}' --filter 'name=supabase_rest' 2>&1`,
+      { encoding: 'utf8', timeout: 5000 }
+    )
+      .trim()
+      .split('\n')[0];
+    if (!containerName) {
+      log('no supabase_rest container found — cannot restart');
+      return;
+    }
+    log(`restarting ${containerName}`);
+    execSync(`docker restart ${containerName} 2>&1`, {
+      encoding: 'utf8',
+      timeout: 30000,
+    });
+    // Poll until PostgREST responds 200 again (may take a few seconds)
+    for (let i = 0; i < 30; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (restUrl && serviceKey) {
+        const probe = probeCache(restUrl, serviceKey);
+        if (probe.status === 200) {
+          log(
+            `post-restart cache (after ${(i + 1) * 0.5}s): cardsCols=${probe.cardsCols} has_${PROBE_COLUMN}=${probe.hasProbeColumn}`
+          );
+          if (probe.hasProbeColumn) {
+            log('restart fixed it — done');
+            return;
+          }
+          if (i > 10 && probe.cardsCols > 0) {
+            log(
+              `WARNING: PostgREST back up after restart but cache still missing ${PROBE_COLUMN} (cardsCols=${probe.cardsCols}) — fundamental problem`
+            );
+            return;
+          }
+        }
+      }
+    }
+    log('WARNING: PostgREST did not return 200 within 15s of restart');
+  } catch (err) {
+    log(
+      `docker restart FAILED: ${err instanceof Error ? err.message : String(err)}`
+    );
   }
 }
 
