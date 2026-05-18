@@ -44,9 +44,18 @@ create index if not exists cards_planned_reminder_due_idx
 --    below (https://postgrest.org/en/stable/references/schema_cache.html).
 notify pgrst, 'reload schema';
 
--- Rollback (commented in-file per PR #1 / migration 006a convention).
--- Reserved for a true schema crisis. Uncommenting drops user-set reminder
--- dates — forward-fix the route / component bugs instead.
+-- Rollback notes: required for ci-rollback-explain.sh iteration. The
+-- script iterates migrations carrying `-- ROLLBACK:` markers, applying
+-- their rollback block then re-applying their forward. Without this
+-- marker migration 012 is SKIPPED, and migration 002's rollback (which
+-- DROPs the cards table cascade-style) wipes planned_reminder_date with
+-- no way to restore it — causing PR #28's PGRST204 cache-miss (the
+-- column genuinely wasn't in the DB post-round-trip).
 --
--- DROP INDEX IF EXISTS public.cards_planned_reminder_due_idx;
--- ALTER TABLE public.cards DROP COLUMN IF EXISTS planned_reminder_date;
+-- The forward is idempotent (`add column if not exists` +
+-- `create index if not exists`), so the round-trip cycle restores the
+-- column even when prior migrations cascade-dropped it.
+
+-- ROLLBACK:
+-- drop index if exists public.cards_planned_reminder_due_idx;
+-- alter table public.cards drop column if exists planned_reminder_date;
