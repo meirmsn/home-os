@@ -32,6 +32,7 @@ import { DiagnosedThread } from './_components/DiagnosedThread';
 import { QaThread } from './_components/QaThread';
 import { DecideView } from './_components/DecideView';
 import { PlannedView } from './_components/PlannedView';
+import { ReminderDueChip } from './_components/ReminderDueChip';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,6 +64,9 @@ type CardRow = {
   cost_estimate_diy_override: unknown;
   cost_estimate_hire: unknown;
   cost_estimate_hire_override: unknown;
+  /** Optional reminder date (PostgREST surfaces Postgres `date` as the
+   *  ISO `'YYYY-MM-DD'` string shape). Null when no reminder is set. */
+  planned_reminder_date: string | null;
 };
 
 type ThreadRow = {
@@ -169,7 +173,7 @@ export default async function CardDetailPage({
   const { data: cardRow, error: cardError } = await supabase
     .from('cards')
     .select(
-      'id, state, initial_description, system_tag, room_tag, created_at, closed_at, diagnosis, severity, severity_confirmed, contractor_tag, monitoring_cadence_days, chosen_path, cost_estimate_diy, cost_estimate_diy_override, cost_estimate_hire, cost_estimate_hire_override'
+      'id, state, initial_description, system_tag, room_tag, created_at, closed_at, diagnosis, severity, severity_confirmed, contractor_tag, monitoring_cadence_days, chosen_path, cost_estimate_diy, cost_estimate_diy_override, cost_estimate_hire, cost_estimate_hire_override, planned_reminder_date'
     )
     .eq('id', id)
     .maybeSingle();
@@ -298,6 +302,18 @@ export default async function CardDetailPage({
     activeQuestion = assistantContent.what_i_need_to_know[0];
   }
 
+  // Reminder-due derivation (spec § D3 + Gotcha #3). Strip clock-time
+  // from both sides via UTC string slicing so the comparison is
+  // lexicographic on `'YYYY-MM-DD'` strings — never on Date objects.
+  // PostgREST returns Postgres `date` as the ISO string shape, so the
+  // RHS is already in the right form. Never compare timestamps here;
+  // `new Date('2026-05-17') >= new Date()` flakes around midnight UTC.
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const isReminderDue =
+    card.state === 'planned' &&
+    card.planned_reminder_date !== null &&
+    card.planned_reminder_date <= todayIso;
+
   return (
     <main className="mx-auto w-full max-w-2xl space-y-6 px-6 py-10">
       <header className="space-y-1">
@@ -319,6 +335,15 @@ export default async function CardDetailPage({
             Captured {humanDate(card.created_at)}
           </span>
         </div>
+        {/* Calm-indigo "Revisit by [date]" chip — only when planned +
+            past-or-today + reminder set. Future-dated reminders show no
+            chip; the in-body <ReminderEditor /> subline carries those.
+            Spec § D3 + § Screens header table. */}
+        {isReminderDue && card.planned_reminder_date && (
+          <div className="pt-1">
+            <ReminderDueChip plannedReminderDate={card.planned_reminder_date} />
+          </div>
+        )}
       </header>
 
       <section
@@ -554,6 +579,8 @@ export default async function CardDetailPage({
               contractorOverride={contractorOverride}
               monitoringCadenceDays={card.monitoring_cadence_days}
               thread={threadRows}
+              plannedReminderDate={card.planned_reminder_date}
+              isReminderDue={isReminderDue}
             />
           );
         })()}

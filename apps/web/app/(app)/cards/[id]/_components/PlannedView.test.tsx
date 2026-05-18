@@ -46,6 +46,13 @@ afterEach(() => {
   cleanup();
 });
 
+// Default reminder-state props (no reminder set) — extracted to keep
+// each existing test concise after the prop expansion in PR planned-state.
+const noReminder = {
+  plannedReminderDate: null as string | null,
+  isReminderDue: false,
+};
+
 describe('<PlannedView />', () => {
   it('renders DIY banner + PathCard when chosenPath=diy', () => {
     render(
@@ -60,6 +67,7 @@ describe('<PlannedView />', () => {
         contractorOverride={null}
         monitoringCadenceDays={null}
         thread={[]}
+        {...noReminder}
       />
     );
     expect(screen.getByTestId('planned-banner').textContent).toBe(
@@ -82,6 +90,7 @@ describe('<PlannedView />', () => {
         contractorOverride={null}
         monitoringCadenceDays={null}
         thread={[]}
+        {...noReminder}
       />
     );
     expect(screen.getByTestId('planned-banner').textContent).toBe(
@@ -104,6 +113,7 @@ describe('<PlannedView />', () => {
         contractorOverride={null}
         monitoringCadenceDays={60}
         thread={[]}
+        {...noReminder}
       />
     );
     expect(screen.getByTestId('planned-banner').textContent).toBe(
@@ -127,6 +137,7 @@ describe('<PlannedView />', () => {
         contractorOverride={null}
         monitoringCadenceDays={null}
         thread={[]}
+        {...noReminder}
       />
     );
     const diyBtn = screen.getByTestId('choose-diy') as HTMLButtonElement;
@@ -148,6 +159,7 @@ describe('<PlannedView />', () => {
         contractorOverride={null}
         monitoringCadenceDays={null}
         thread={[]}
+        {...noReminder}
       />
     );
     expect(screen.getByText('Decision pending.')).toBeTruthy();
@@ -186,6 +198,7 @@ describe('<PlannedView />', () => {
         contractorOverride={null}
         monitoringCadenceDays={null}
         thread={[threadRow]}
+        {...noReminder}
       />
     );
     expect(screen.getByTestId('planned-how-we-diagnosed')).toBeTruthy();
@@ -205,8 +218,154 @@ describe('<PlannedView />', () => {
         contractorOverride={null}
         monitoringCadenceDays={null}
         thread={[]}
+        {...noReminder}
       />
     );
     expect(screen.queryByTestId('planned-how-we-diagnosed')).toBeNull();
+  });
+});
+
+// PR planned-state additions: <BeforeCloseSummary /> + <ReminderEditor />
+// mount conditions + reminder-state prop threading.
+describe('<PlannedView /> — planned-state extensions', () => {
+  it('mounts <BeforeCloseSummary /> for chosenPath=diy', () => {
+    render(
+      <PlannedView
+        cardId={CARD_ID}
+        severity="soon"
+        diagnosis="d"
+        chosenPath="diy"
+        diyEstimate={diyEstimate()}
+        diyOverride={null}
+        contractorEstimate={null}
+        contractorOverride={null}
+        monitoringCadenceDays={null}
+        thread={[]}
+        {...noReminder}
+      />
+    );
+    expect(screen.getByTestId('before-close-diy')).toBeTruthy();
+  });
+
+  it('mounts <BeforeCloseSummary /> for chosenPath=contractor', () => {
+    render(
+      <PlannedView
+        cardId={CARD_ID}
+        severity="soon"
+        diagnosis="d"
+        chosenPath="contractor"
+        diyEstimate={null}
+        diyOverride={null}
+        contractorEstimate={contractorEstimate()}
+        contractorOverride={null}
+        monitoringCadenceDays={null}
+        thread={[]}
+        {...noReminder}
+      />
+    );
+    expect(screen.getByTestId('before-close-contractor')).toBeTruthy();
+  });
+
+  it('does NOT mount <BeforeCloseSummary /> for chosenPath=monitor (returns null)', () => {
+    render(
+      <PlannedView
+        cardId={CARD_ID}
+        severity="monitor"
+        diagnosis="d"
+        chosenPath="monitor"
+        diyEstimate={null}
+        diyOverride={null}
+        contractorEstimate={null}
+        contractorOverride={null}
+        monitoringCadenceDays={30}
+        thread={[]}
+        {...noReminder}
+      />
+    );
+    expect(screen.queryByTestId('before-close-diy')).toBeNull();
+    expect(screen.queryByTestId('before-close-contractor')).toBeNull();
+  });
+
+  it('mounts <ReminderEditor /> in State A when plannedReminderDate=null', () => {
+    render(
+      <PlannedView
+        cardId={CARD_ID}
+        severity="soon"
+        diagnosis="d"
+        chosenPath="diy"
+        diyEstimate={diyEstimate()}
+        diyOverride={null}
+        contractorEstimate={null}
+        contractorOverride={null}
+        monitoringCadenceDays={null}
+        thread={[]}
+        plannedReminderDate={null}
+        isReminderDue={false}
+      />
+    );
+    expect(screen.getByTestId('reminder-editor-a')).toBeTruthy();
+  });
+
+  it('mounts <ReminderEditor /> in State B for a future reminder', () => {
+    render(
+      <PlannedView
+        cardId={CARD_ID}
+        severity="soon"
+        diagnosis="d"
+        chosenPath="diy"
+        diyEstimate={diyEstimate()}
+        diyOverride={null}
+        contractorEstimate={null}
+        contractorOverride={null}
+        monitoringCadenceDays={null}
+        thread={[]}
+        plannedReminderDate="2026-12-01"
+        isReminderDue={false}
+      />
+    );
+    expect(screen.getByTestId('reminder-editor-b')).toBeTruthy();
+    expect(screen.queryByTestId('reminder-editor-a')).toBeNull();
+  });
+
+  it('mounts <ReminderEditor /> in State C when isReminderDue=true', () => {
+    render(
+      <PlannedView
+        cardId={CARD_ID}
+        severity="soon"
+        diagnosis="d"
+        chosenPath="diy"
+        diyEstimate={diyEstimate()}
+        diyOverride={null}
+        contractorEstimate={null}
+        contractorOverride={null}
+        monitoringCadenceDays={null}
+        thread={[]}
+        plannedReminderDate="2026-05-10"
+        isReminderDue={true}
+      />
+    );
+    expect(screen.getByTestId('reminder-editor-c')).toBeTruthy();
+  });
+
+  it('mounts <ReminderEditor /> for chosenPath=monitor (reminder applies to all paths)', () => {
+    render(
+      <PlannedView
+        cardId={CARD_ID}
+        severity="monitor"
+        diagnosis="d"
+        chosenPath="monitor"
+        diyEstimate={null}
+        diyOverride={null}
+        contractorEstimate={null}
+        contractorOverride={null}
+        monitoringCadenceDays={30}
+        thread={[]}
+        plannedReminderDate={null}
+        isReminderDue={false}
+      />
+    );
+    // BeforeCloseSummary returns null for monitor, but ReminderEditor
+    // is mounted regardless — D5 doesn't gate it on chosen_path.
+    expect(screen.getByTestId('reminder-editor-a')).toBeTruthy();
   });
 });

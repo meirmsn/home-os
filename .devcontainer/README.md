@@ -82,7 +82,7 @@ Settings that affect the container at build / run time live in `compose.yml` (un
 TZ: ${TZ:-America/Los_Angeles}
 CLAUDE_CODE_VERSION: latest
 GIT_DELTA_VERSION: 0.19.2
-SUPABASE_CLI_VERSION: 2.84.2
+SUPABASE_CLI_VERSION: 2.98.2
 DCG_VERSION: 0.4.0
 GITLEAKS_VERSION: 8.30.1
 ```
@@ -227,7 +227,7 @@ SUPABASE_SERVICE_ROLE_KEY: <well-known supabase-local default JWT>
 build:
   context: ./supabase-runner
   args:
-    SUPABASE_CLI_VERSION: 2.84.2
+    SUPABASE_CLI_VERSION: 2.98.2
 volumes:
   - ${LOCAL_WORKSPACE_FOLDER}/supabase:${LOCAL_WORKSPACE_FOLDER}/supabase
   - /var/run/docker.sock:/var/run/docker.sock
