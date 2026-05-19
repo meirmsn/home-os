@@ -31,8 +31,17 @@ Organized by version to mirror `PRODUCT-ROADMAP.md`:
 
 - **login-form-429-copy-honesty** — `apps/web/app/login/_components/LoginForm.tsx`'s 429 branch renders "You're sending links too fast. Wait a minute and try again." But the actual rate-limit window for Supabase inbuilt-SMTP free tier is ~2 emails/hour project-wide, not 1 minute. The copy lies to users.
   - **Why**: A friend hit this 30min after another invitee's attempts and assumed they'd hit a per-user rate limit they could wait a minute on; really the project-wide bucket was exhausted and the wait was up to an hour. Misleading copy degrades trust + wastes invitee patience.
-  - **How**: rewrite the 429 copy to be vague-but-honest ("Try again in a bit — we're rate-limited") or specific-and-actionable if you have visibility into when the bucket refills. Pair with the rate-limit-bump or Resend SMTP wire (see CLAUDE.md § Gotchas) so the cap stops biting at all.
+  - **How**: rewrite the 429 copy to be vague-but-honest ("Try again in a bit — we're rate-limited") or specific-and-actionable if you have visibility into when the bucket refills. Pair with the rate-limit-bump or Resend SMTP wire (see `KNOWN-ISSUES.md § Supabase inbuilt-SMTP rate limit`) so the cap stops biting at all.
   - **Where**: `apps/web/app/login/_components/LoginForm.tsx`. Same PR as `auth-callback-observability` makes sense — both are LoginForm-adjacent copy/observability work.
+
+- **vercel-dashboard-config** — Four one-time operator actions on the Vercel dashboard for project `home-os` (team `homeos`). Lifted from `CLAUDE.md § Vercel dashboard follow-ups (operator)` during the CLAUDE.md sustainability migration — these are operator-actionable TODOs, not Claude-actionable items, so they live here.
+  - **Why**: Initial `vercel link` and CLI-driven config left these settings at defaults that affect build cache, image optimization, and monorepo build correctness. Production builds currently work but with sub-optimal settings; left unset they will bite when monorepo dependencies grow.
+  - **How**: in the Vercel dashboard for project `home-os`:
+    1. Set **Framework Preset** → `Next.js` (currently `Other`) — affects build cache + image optimization.
+    2. Set **Root Directory** → `apps/web` (currently `.`) — required for monorepo build to find `next.config.ts`.
+    3. Set **Install Command** → `pnpm install --frozen-lockfile` (optional but explicit).
+    4. Establish **GitHub Login Connection** at https://vercel.com/account/login-connections — initial `vercel link` reported "Failed to link meirmsn/home-os. You need to add a Login Connection". Required for auto-import + auto-deploy on push.
+  - **Where**: out-of-band (Vercel dashboard). Verifiable via `pnpm exec vercel inspect home-os --token "$VERCEL_TOKEN" --scope homeos`. See `DEPLOY.md § Platform` for project IDs.
 
 <!--
 Each entry:

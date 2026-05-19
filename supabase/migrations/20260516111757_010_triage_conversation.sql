@@ -92,6 +92,19 @@ begin
     raise exception 'qa_invalid_state' using errcode = 'P0001';
   end if;
 
+  -- is_location_ask is dual-written: the SAME flag value goes on BOTH
+  -- the user reply row AND the assistant question row. Filter posture
+  -- depends on which side is asking:
+  --   • Round counting (qaUserCount) filters role='user' AND
+  --     is_location_ask=false → location asks are FREE rounds outside
+  --     the 3-round budget (D4).
+  --   • Next-turn dispatch reads the most-recent ASSISTANT row's flag
+  --     via priorWasLocationAsk → decides whether the current user
+  --     answer should dual-write to users.location (D6).
+  -- Setting both means round-counting can filter on either side AND
+  -- the location-turn detection survives page refreshes (no transient
+  -- client state involved).
+
   -- Insert the user reply row.
   insert into public.triage_conversations (
     card_id, user_id, round, role, content, is_location_ask, tool_name

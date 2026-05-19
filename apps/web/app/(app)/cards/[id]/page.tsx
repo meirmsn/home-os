@@ -308,6 +308,15 @@ export default async function CardDetailPage({
   // PostgREST returns Postgres `date` as the ISO string shape, so the
   // RHS is already in the right form. Never compare timestamps here;
   // `new Date('2026-05-17') >= new Date()` flakes around midnight UTC.
+  //
+  // Derived in TWO places by design: here (card detail page) AND
+  // (when it ships) PR #4's dashboard query. Spec § D7 explicitly
+  // rejected centralizing this in a SQL view — adding one now would
+  // be dead infra with one consumer; the abstraction surfaces when
+  // PR #4 has its own real query shape (joins, additional derived
+  // columns). When PR #4 lands, audit both call sites are still in
+  // lock-step. Universal pattern: `kit/docs/guide/date-handling.md
+  // § Trap 2`.
   const todayIso = new Date().toISOString().slice(0, 10);
   const isReminderDue =
     card.state === 'planned' &&
