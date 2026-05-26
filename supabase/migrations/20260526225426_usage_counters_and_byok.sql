@@ -126,6 +126,11 @@ begin
           then usage_counters.triage_session_count + 1
           else 1
         end,
+        card_count = case
+          when usage_counters.week_start = v_monday
+          then usage_counters.card_count
+          else 0
+        end,
         week_start = v_monday,
         updated_at = now();
 
