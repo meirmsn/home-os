@@ -46,10 +46,19 @@ Per-surface env file: [`apps/web/.env.example`](./apps/web/.env.example). Naming
 supabase migration new <name>   # create migration (workspace — fs only, no docker)
 pnpm db:reset                   # apply locally (relay → supabase-runner)
 pnpm db:gen-types               # regen types from local stack
+pnpm db:advisor                 # DB hardening lints (run before shipping a migration)
 # Migrations deploy via CI on push-to-main (.github/workflows/deploy-migrations.yml).
 ```
 
 Migration history + RPC inventory + RLS posture: [`supabase/README.md`](./supabase/README.md). Migration conventions (ROLLBACK markers, plpgsql OUT-param collisions, enum rename-recreate, ON DELETE on `auth.users` FK, Supabase Cloud GRANT posture): `kit/docs/guide/migrations.md`.
+
+**SQL conventions** (every migration enforces these; `pnpm db:advisor` checks mechanically):
+
+1. **`SECURITY DEFINER` functions pin `search_path`**: `create function ... security definer set search_path = public, pg_temp as $$ ... $$;`. Without the pin, an unqualified call inside the body resolves through the caller's search path → schema-injection vector.
+2. **RLS policies wrap `auth.uid()` in a subquery**: `using (owner_id = (select auth.uid()))`. Bare `auth.uid()` re-evaluates per row (10× slower at scale); the subquery lets Postgres initplan it once per statement.
+3. **Every foreign key has a backing index** (or an `-- ADVISOR-EXEMPT(unindexed_foreign_key): <reason>` comment on the migration). Unindexed FKs scan the child table linearly on parent delete/update.
+
+When a finding is intentional, annotate the migration with `-- ADVISOR-EXEMPT(<lint_name>): <reason>` to scope the exemption to that lint.
 
 ## Deploy
 
