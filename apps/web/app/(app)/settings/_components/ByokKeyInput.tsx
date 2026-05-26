@@ -126,7 +126,7 @@ export function ByokKeyInput({ byokUsed }: ByokKeyInputProps) {
           type="submit"
           disabled={isValidating || key.trim().length === 0}
           data-testid="byok-validate"
-          className="inline-flex min-h-11 items-center justify-center rounded-md bg-[var(--color-surface-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--color-text-on-primary)] hover:bg-[var(--color-surface-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex min-h-12 items-center justify-center rounded-md bg-[var(--color-surface-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--color-text-on-primary)] hover:bg-[var(--color-surface-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isValidating ? 'Validating...' : 'Validate'}
         </button>
@@ -134,19 +134,28 @@ export function ByokKeyInput({ byokUsed }: ByokKeyInputProps) {
 
       {/* Inline feedback */}
       {state === 'valid' && (
-        <p data-testid="byok-feedback" className="text-sm text-green-500">
+        <p
+          data-testid="byok-feedback"
+          className="text-sm text-[var(--color-note)]"
+        >
           Key accepted
         </p>
       )}
 
       {state === 'invalid_key' && (
-        <p data-testid="byok-feedback" className="text-sm text-red-500">
+        <p
+          data-testid="byok-feedback"
+          className="text-sm text-[var(--color-act-soon)]"
+        >
           Key didn&apos;t work -- check and try again
         </p>
       )}
 
       {state === 'out_of_credits' && (
-        <p data-testid="byok-feedback" className="text-sm text-red-500">
+        <p
+          data-testid="byok-feedback"
+          className="text-sm text-[var(--color-act-soon)]"
+        >
           This key is out of credits --{' '}
           <a
             href="https://console.anthropic.com/settings/billing"
@@ -160,7 +169,10 @@ export function ByokKeyInput({ byokUsed }: ByokKeyInputProps) {
       )}
 
       {state === 'network_error' && (
-        <p data-testid="byok-feedback" className="text-sm text-red-500">
+        <p
+          data-testid="byok-feedback"
+          className="text-sm text-[var(--color-act-soon)]"
+        >
           Couldn&apos;t validate -- check your connection and try again
         </p>
       )}

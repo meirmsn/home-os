@@ -57,7 +57,7 @@ export default async function AppLayout({
             href="/settings"
             aria-label="Settings"
             data-testid="settings-link"
-            className="text-[var(--color-text-secondary-inverse)] hover:text-[var(--color-text-primary-inverse)]"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-md text-[var(--color-text-secondary-inverse)] hover:text-[var(--color-text-primary-inverse)]"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
