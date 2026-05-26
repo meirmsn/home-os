@@ -78,7 +78,7 @@ Test surface: `apps/web/e2e/rls-isolation.spec.ts` — two-user Playwright spec 
 | `system_tag`      | (per home-os taxonomy — see migration 001)                                                                        |
 | `severity`        | `note`, `watch`, `act_soon`                                                                                       |
 | `contractor_tag`  | (per home-os taxonomy)                                                                                            |
-| `touchpoint_type` | `primary`, `monitoring`, `close` (and others)                                                                     |
+| `touchpoint_type` | `primary`, `context`, `closeup`, `close`                                                                          |
 | `photo_slot`      | `wide`, `zoom`, `detail`                                                                                          |
 | `triage_role`     | `user`, `assistant`                                                                                               |
 
