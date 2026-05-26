@@ -19,11 +19,14 @@ import {
   waitFor,
 } from '@testing-library/react';
 
-const { capture, captureException, routerRefresh } = vi.hoisted(() => ({
-  capture: vi.fn(),
-  captureException: vi.fn(),
-  routerRefresh: vi.fn(),
-}));
+const { capture, captureException, routerRefresh, byokKeyValue } = vi.hoisted(
+  () => ({
+    capture: vi.fn(),
+    captureException: vi.fn(),
+    routerRefresh: vi.fn(),
+    byokKeyValue: { current: null as string | null },
+  })
+);
 
 vi.mock('@/lib/posthog', () => ({
   posthog: { capture },
@@ -36,6 +39,14 @@ vi.mock('@sentry/nextjs', () => ({
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: routerRefresh }),
+}));
+
+vi.mock('@/app/(app)/_components/ByokKeyProvider', () => ({
+  useByokKey: () => ({
+    byokKey: byokKeyValue.current,
+    setByokKey: vi.fn(),
+    clearByokKey: vi.fn(),
+  }),
 }));
 
 import { AnswerThread } from './AnswerThread';
@@ -69,6 +80,7 @@ beforeEach(() => {
   capture.mockReset();
   captureException.mockReset();
   routerRefresh.mockReset();
+  byokKeyValue.current = null;
 });
 
 afterEach(() => {
@@ -369,5 +381,137 @@ describe('<AnswerThread /> — error response paths', () => {
     expect(
       (screen.getByTestId('answer-textarea') as HTMLTextAreaElement).value
     ).toBe('keep this');
+  });
+});
+
+describe('<AnswerThread /> — TRIAGE_LIMIT_REACHED', () => {
+  it('renders limit-reached banner with link to /settings', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        status: 429,
+        json: async () => ({
+          error: 'TRIAGE_LIMIT_REACHED',
+          resets: '2026-06-01T00:00:00.000Z',
+        }),
+      })
+    );
+    render(<AnswerThread {...defaultProps()} />);
+    typeAnswer('x');
+    fireEvent.click(screen.getByTestId('answer-send'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('limit-reached-banner')).toBeTruthy()
+    );
+    expect(screen.getByTestId('limit-reached-settings-link')).toBeTruthy();
+    expect(
+      screen.getByTestId('limit-reached-settings-link').getAttribute('href')
+    ).toBe('/settings');
+  });
+
+  it('fires triage_limit_reached PostHog event with resets property', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        status: 429,
+        json: async () => ({
+          error: 'TRIAGE_LIMIT_REACHED',
+          resets: '2026-06-01T00:00:00.000Z',
+        }),
+      })
+    );
+    render(<AnswerThread {...defaultProps()} />);
+    typeAnswer('x');
+    fireEvent.click(screen.getByTestId('answer-send'));
+
+    await waitFor(() =>
+      expect(captureCall('triage_limit_reached')).toBeTruthy()
+    );
+    expect(captureCall('triage_limit_reached')?.[1]).toEqual({
+      resets: '2026-06-01T00:00:00.000Z',
+    });
+  });
+
+  it('does NOT fire triage_qa_failed when limit is reached', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        status: 429,
+        json: async () => ({
+          error: 'TRIAGE_LIMIT_REACHED',
+          resets: '2026-06-01T00:00:00.000Z',
+        }),
+      })
+    );
+    render(<AnswerThread {...defaultProps()} />);
+    typeAnswer('x');
+    fireEvent.click(screen.getByTestId('answer-send'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('limit-reached-banner')).toBeTruthy()
+    );
+    expect(captureCall('triage_qa_failed')).toBeUndefined();
+  });
+});
+
+describe('<AnswerThread /> — BYOK key pass-through', () => {
+  it('includes byok_key in the fetch body when the context has a key', async () => {
+    byokKeyValue.current = 'sk-ant-user-key';
+    let lastFetchInit: RequestInit | null = null;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_: string, init: RequestInit) => {
+        lastFetchInit = init;
+        return Promise.resolve({
+          status: 200,
+          json: async () => ({
+            tool: 'ask_next_question',
+            card_id: CARD_ID,
+            round_number: 1,
+            question: 'next',
+            is_location_ask: false,
+            updated_provisional_severity: 'monitor',
+          }),
+        });
+      })
+    );
+
+    render(<AnswerThread {...defaultProps()} />);
+    typeAnswer('answer');
+    fireEvent.click(screen.getByTestId('answer-send'));
+
+    await waitFor(() => expect(routerRefresh).toHaveBeenCalled());
+    const body = JSON.parse((lastFetchInit!.body as string) ?? '{}');
+    expect(body.byok_key).toBe('sk-ant-user-key');
+  });
+
+  it('does NOT include byok_key when context has no key', async () => {
+    byokKeyValue.current = null;
+    let lastFetchInit: RequestInit | null = null;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_: string, init: RequestInit) => {
+        lastFetchInit = init;
+        return Promise.resolve({
+          status: 200,
+          json: async () => ({
+            tool: 'ask_next_question',
+            card_id: CARD_ID,
+            round_number: 1,
+            question: 'next',
+            is_location_ask: false,
+            updated_provisional_severity: 'monitor',
+          }),
+        });
+      })
+    );
+
+    render(<AnswerThread {...defaultProps()} />);
+    typeAnswer('answer');
+    fireEvent.click(screen.getByTestId('answer-send'));
+
+    await waitFor(() => expect(routerRefresh).toHaveBeenCalled());
+    const body = JSON.parse((lastFetchInit!.body as string) ?? '{}');
+    expect(body.byok_key).toBeUndefined();
   });
 });

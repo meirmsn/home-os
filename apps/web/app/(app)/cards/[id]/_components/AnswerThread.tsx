@@ -20,8 +20,10 @@
 
 import * as Sentry from '@sentry/nextjs';
 import { useCallback, useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { posthog } from '@/lib/posthog';
+import { useByokKey } from '@/app/(app)/_components/ByokKeyProvider';
 
 /** Aligns with the D10 + D9 envelope error class set (plus `network`). */
 type ErrorClass =
@@ -40,7 +42,8 @@ type Stage =
   | 'idle'
   | 'submitting'
   | 'already-confirmed-notice'
-  | 'retryable-error';
+  | 'retryable-error'
+  | 'limit-reached';
 
 const RETRYABLE_ERRORS: ErrorClass[] = [
   'triage_rate_limited',
@@ -107,6 +110,7 @@ export function AnswerThread({
   contractorTag,
 }: AnswerThreadProps) {
   const router = useRouter();
+  const { byokKey } = useByokKey();
   const [stage, setStage] = useState<Stage>('idle');
   const [errorClass, setErrorClass] = useState<ErrorClass | null>(null);
   const [answer, setAnswer] = useState('');
@@ -132,16 +136,20 @@ export function AnswerThread({
         is_skip: isSkip,
       });
 
+      // Build the fetch body — include byok_key when present per spec D3.
+      const fetchBody: Record<string, unknown> = isSkip
+        ? { card_id: cardId, skip: true }
+        : { card_id: cardId, answer };
+      if (byokKey) {
+        fetchBody.byok_key = byokKey;
+      }
+
       let response: Response;
       try {
         response = await fetch('/api/triage/answer', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(
-            isSkip
-              ? { card_id: cardId, skip: true }
-              : { card_id: cardId, answer }
-          ),
+          body: JSON.stringify(fetchBody),
         });
       } catch (err) {
         const latency = Date.now() - start;
@@ -203,13 +211,29 @@ export function AnswerThread({
 
       // Non-200 paths.
       let error: ErrorClass = 'server_error';
+      let resets: string | undefined;
       try {
-        const json = (await response.json()) as { error?: string };
+        const json = (await response.json()) as {
+          error?: string;
+          resets?: string;
+        };
         if (typeof json.error === 'string') {
           error = json.error as ErrorClass;
         }
+        if (typeof json.resets === 'string') {
+          resets = json.resets;
+        }
       } catch {
         // Body wasn't JSON; default already set.
+      }
+
+      // Handle TRIAGE_LIMIT_REACHED — spec D2.
+      if (error === ('TRIAGE_LIMIT_REACHED' as ErrorClass)) {
+        posthog.capture('triage_limit_reached', {
+          resets: resets ?? '',
+        });
+        setStage('limit-reached');
+        return;
       }
 
       posthog.capture('triage_qa_failed', {
@@ -238,7 +262,7 @@ export function AnswerThread({
       setErrorClass(error);
       setStage('retryable-error');
     },
-    [answer, cardId, contractorTag, eventRoundNumber, router, stage]
+    [answer, byokKey, cardId, contractorTag, eventRoundNumber, router, stage]
   );
 
   const onFormSubmit = useCallback(
@@ -263,6 +287,32 @@ export function AnswerThread({
       >
         Already confirmed — refreshing…
       </p>
+    );
+  }
+
+  if (stage === 'limit-reached') {
+    return (
+      <div
+        role="alert"
+        data-testid="limit-reached-banner"
+        className="space-y-2 rounded-md border border-[var(--color-act-soon)] bg-[color-mix(in_srgb,var(--color-act-soon)_10%,transparent)] px-4 py-3"
+      >
+        <p className="text-sm text-[var(--color-text-primary-inverse)]">
+          You&apos;ve used your 5 AI triage sessions this week -- resets Monday.
+        </p>
+        <p className="text-sm">
+          <Link
+            href="/settings"
+            className="text-[var(--color-planned)] underline hover:text-[var(--color-text-primary-inverse)]"
+            data-testid="limit-reached-settings-link"
+          >
+            Add your own Claude API key
+          </Link>{' '}
+          <span className="text-[var(--color-text-secondary-inverse)]">
+            or set your path manually below.
+          </span>
+        </p>
+      </div>
     );
   }
 
