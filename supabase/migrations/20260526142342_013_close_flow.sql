@@ -81,7 +81,6 @@ $$;
 -- DROP FUNCTION IF EXISTS public.close_card(uuid, uuid, int, text);
 -- ALTER TABLE public.cards DROP COLUMN IF EXISTS spend_notes;
 -- ALTER TABLE public.cards DROP COLUMN IF EXISTS actual_spend_cents;
--- Rename-recreate touchpoint_type back to (primary, context, closeup):
 -- ALTER TYPE public.touchpoint_type RENAME TO touchpoint_type_new;
 -- CREATE TYPE public.touchpoint_type AS ENUM ('primary', 'context', 'closeup');
 -- ALTER TABLE public.card_photos
