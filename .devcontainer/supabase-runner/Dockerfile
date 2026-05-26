@@ -1,6 +1,6 @@
 FROM debian:trixie-slim
 
-ARG SUPABASE_CLI_VERSION=2.98.2
+ARG SUPABASE_CLI_VERSION=2.84.2
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -8,13 +8,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 # `docker compose stop supabase-runner` cleanly tears down the relay + any
 # lingering child processes instead of leaving zombies.
 #
-# socat: forwards 127.0.0.1:54421 / :54422 inside the runner to
-# host.docker.internal:54421 / :54422 so that `supabase start`'s healthcheck
+# socat: forwards 127.0.0.1:54321 / :54322 inside the runner to
+# host.docker.internal:54321 / :54322 so that `supabase start`'s healthcheck
 # (which hardcodes 127.0.0.1 for the db connection) can reach the
 # supabase_db_* / supabase_kong_* SIBLING containers whose ports are
 # bound to the HOST docker engine, not to the runner. Without this,
 # `supabase start` fails with
-# "dial tcp 127.0.0.1:54422: connect: connection refused" because the
+# "dial tcp 127.0.0.1:54322: connect: connection refused" because the
 # runner's loopback has nothing listening on those ports.
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl wget gnupg \
@@ -52,6 +52,6 @@ RUN ARCH=$(dpkg --print-architecture) \
 COPY cmd-relay.mjs /usr/local/bin/cmd-relay.mjs
 RUN chmod +x /usr/local/bin/cmd-relay.mjs
 
-EXPOSE 54421 54422 9000
+EXPOSE 54321 54322 9000
 
 ENTRYPOINT ["/usr/bin/tini", "--"]

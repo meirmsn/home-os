@@ -218,7 +218,7 @@ jobs:
             # cold-start flake; we retry once on that.
             for i in $(seq 1 10); do
               code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 \
-                "http://127.0.0.1:54321/functions/v1/" 2>/dev/null || echo "000")
+                "http://127.0.0.1:54421/functions/v1/" 2>/dev/null || echo "000")
               if [ "$code" = "401" ] || [ "$code" = "404" ]; then
                 echo "Edge runtime healthy (HTTP $code)"
                 return 0
