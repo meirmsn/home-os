@@ -8,10 +8,11 @@
 //       would undermine the security posture.
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import React from 'react';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { ByokKeyProvider, useByokKey } from './ByokKeyProvider';
 
-/** Test consumer that renders the context value + exposes setters. */
+/** Test consumer that renders the context value + exposes setters via ref. */
 let setByokKeyRef: (key: string) => void;
 let clearByokKeyRef: () => void;
 
@@ -20,8 +21,11 @@ let clearByokKeyRef: () => void;
  */
 function TestConsumer() {
   const { byokKey, setByokKey, clearByokKey } = useByokKey();
-  setByokKeyRef = setByokKey;
-  clearByokKeyRef = clearByokKey;
+  // Capture setters in an effect to avoid render-time side-effect lint errors.
+  React.useEffect(() => {
+    setByokKeyRef = setByokKey;
+    clearByokKeyRef = clearByokKey;
+  });
   return <span data-testid="key-value">{byokKey ?? 'null'}</span>;
 }
 

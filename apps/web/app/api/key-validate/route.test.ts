@@ -29,6 +29,7 @@ vi.mock('@/lib/supabase/server', () => ({
 // create spy controls whether the probe succeeds or throws.
 class MockAPIError extends Error {
   status: number;
+
   constructor(
     status: number,
     _err: unknown,
