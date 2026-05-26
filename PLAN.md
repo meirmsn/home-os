@@ -54,7 +54,9 @@ Each Planned row is one feature / one PR. Long-form context (problem statement, 
 
 ## Active
 
-_No work in progress._
+| Feature      | Branch               | Spec                       |
+| ------------ | -------------------- | -------------------------- |
+| `close-flow` | `feature/close-flow` | `specs/close-flow/spec.md` |
 
 ## Planned (v0)
 
@@ -62,7 +64,6 @@ v0 Phase 1 — sorted by Leverage descending. Each row is one `/ak-build` cycle,
 
 | Feature                         | Hook                                                                                       | Impact                                                                          | Risk                                                                                     | Cost           | Lev     | Deps                                        | Source                                                                                           |
 | ------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------- | ------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `close-flow`                    | Cards in PLANNED can close with optional spend log and before/after photo pair             | 🟡 M — completes the card lifecycle end-to-end                                  | 🟡 M — cards stuck forever in PLANNED with no resolution                                 | 🟡 M — ~2–3 hr | **3.6** | —                                           | ceo-review § Scope (CLOSE) + design-review § Card Model (Photo Comparison)                       |
 | `usage-counters-and-byok`       | Weekly triage usage bar + optional BYOK key for unlimited AI sessions                      | 🟡 M — surfaces the hidden session cap; unlocks power users                     | 🟡 M — users hit invisible 5/wk wall with no warning or workaround                       | 🟡 M — ~2–3 hr | **3.6** | —                                           | eng-review § Business Logic (Usage limits + BYOK) + design-review § Settings/Profile             |
 | `monitor-beta`                  | Monitor-path cards gain AI-set check-in cadence, multi-photo capture, and walkthrough mode | 🔴 L — Monitor is a primary decision outcome; without it the path is a dead end | 🔴 L — users who chose Monitor have no follow-through surface                            | 🔴 L — ~5–7 hr | **3.2** | —                                           | ceo-review § Scope (MONITOR) + eng-review § Build Order step 10 + design-review § MONITOR (Beta) |
 | `dashboard`                     | Tiered priority card list replaces the flat home page with Act Soon / overdue hierarchy    | 🔴 L — primary navigation surface; flat list fails past 3–4 cards               | 🔴 L — equal visual weight on all cards triggers the anxiety spiral the product prevents | 🔴 L — ~5–8 hr | **3.2** | ⛔ `monitor-beta`, ⛔ `photo-comparison-ui` | ceo-review § Scope (Dashboard) + design-review § Dashboard — Filtered Card List                  |
