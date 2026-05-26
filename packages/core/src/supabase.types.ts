@@ -84,6 +84,7 @@ export type Database = {
       };
       cards: {
         Row: {
+          actual_spend_cents: number | null;
           chosen_path: string | null;
           closed_at: string | null;
           contractor_tag: Database['public']['Enums']['contractor_tag'] | null;
@@ -103,6 +104,7 @@ export type Database = {
           room_tag: string | null;
           severity: Database['public']['Enums']['severity'] | null;
           severity_confirmed: boolean;
+          spend_notes: string | null;
           state: Database['public']['Enums']['card_state'];
           system_tag: Database['public']['Enums']['system_tag'] | null;
           title: string | null;
@@ -111,6 +113,7 @@ export type Database = {
           version: number;
         };
         Insert: {
+          actual_spend_cents?: number | null;
           chosen_path?: string | null;
           closed_at?: string | null;
           contractor_tag?: Database['public']['Enums']['contractor_tag'] | null;
@@ -130,6 +133,7 @@ export type Database = {
           room_tag?: string | null;
           severity?: Database['public']['Enums']['severity'] | null;
           severity_confirmed?: boolean;
+          spend_notes?: string | null;
           state?: Database['public']['Enums']['card_state'];
           system_tag?: Database['public']['Enums']['system_tag'] | null;
           title?: string | null;
@@ -138,6 +142,7 @@ export type Database = {
           version?: number;
         };
         Update: {
+          actual_spend_cents?: number | null;
           chosen_path?: string | null;
           closed_at?: string | null;
           contractor_tag?: Database['public']['Enums']['contractor_tag'] | null;
@@ -157,6 +162,7 @@ export type Database = {
           room_tag?: string | null;
           severity?: Database['public']['Enums']['severity'] | null;
           severity_confirmed?: boolean;
+          spend_notes?: string | null;
           state?: Database['public']['Enums']['card_state'];
           system_tag?: Database['public']['Enums']['system_tag'] | null;
           title?: string | null;
@@ -310,6 +316,19 @@ export type Database = {
           card_id: string;
         }[];
       };
+      close_card: {
+        Args: {
+          p_card: string;
+          p_spend_cents?: number;
+          p_spend_notes?: string;
+          p_user: string;
+        };
+        Returns: {
+          card_id: string;
+          closed_at: string;
+          new_state: Database['public']['Enums']['card_state'];
+        }[];
+      };
       commit_decide: {
         Args: {
           p_cadence: number;
@@ -397,7 +416,7 @@ export type Database = {
         | 'appliance'
         | 'safety'
         | 'other';
-      touchpoint_type: 'primary' | 'context' | 'closeup';
+      touchpoint_type: 'primary' | 'context' | 'closeup' | 'close';
       triage_role: 'system' | 'user' | 'assistant';
     };
     CompositeTypes: {
@@ -565,7 +584,7 @@ export const Constants = {
         'safety',
         'other',
       ],
-      touchpoint_type: ['primary', 'context', 'closeup'],
+      touchpoint_type: ['primary', 'context', 'closeup', 'close'],
       triage_role: ['system', 'user', 'assistant'],
     },
   },
