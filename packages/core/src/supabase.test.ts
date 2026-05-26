@@ -9,17 +9,16 @@ import { createClient, assertNotProdUrlInTestEnv } from './supabase';
 import type { CoreConfig } from './supabase';
 
 // Substituted at scaffold time by /ak-new-project Step 10 alongside the
-// PRODUCTION_PROJECT_REF constant in supabase.ts. While the placeholder is
-// unsubstituted, the guard self-disables (see supabase.ts), so the
-// "throws on prod URL" tests are skipped.
-// Type widened to `string` so TS doesn't narrow the literal and flag the
-// sentinel check as "never true".
+// PRODUCTION_PROJECT_REF constant in supabase.ts. Tests run unconditionally
+// in both states: the unscaffolded template (PROD_REF = the literal
+// placeholder) and scaffolded projects (PROD_REF = a real project ref).
+// In both states, PROD_URL contains `${PROD_REF}.supabase.co`, so the
+// guard's URL-substring check in supabase.ts:45 fires correctly — the
+// throw assertions hold without any conditional-skip dressing.
+// Widening to `: string` keeps post-substitution comparisons (used by
+// future readers checking against literal strings) legal under TS
+// literal-type narrowing.
 const PROD_REF: string = 'kxhxbbljgunpjfhivccb';
-// Sentinel literal — must NOT match PROD_REF after substitution. If the skill's
-// sed substitutes both lines (the original bug), guardActive collapses to false
-// and all prod-URL tests silently skip. Spelling the sentinel as 'UNSCAFFOLDED'
-// keeps it stable across re-runs.
-const guardActive = PROD_REF !== 'UNSCAFFOLDED';
 const PROD_URL = `https://${PROD_REF}.supabase.co`;
 
 describe('createClient', () => {
@@ -36,18 +35,15 @@ describe('createClient', () => {
     expect(typeof client.auth).toBe('object');
   });
 
-  it.skipIf(!guardActive)(
-    'throws when test env tries to dial the production project',
-    () => {
-      // NODE_ENV is 'test' by vitest default — the guard fires on the prod URL.
-      const config: CoreConfig = {
-        supabaseUrl: PROD_URL,
-        supabaseAnonKey: 'prod-anon-key',
-      };
+  it('throws when test env tries to dial the production project', () => {
+    // NODE_ENV is 'test' by vitest default — the guard fires on the prod URL.
+    const config: CoreConfig = {
+      supabaseUrl: PROD_URL,
+      supabaseAnonKey: 'prod-anon-key',
+    };
 
-      expect(() => createClient(config)).toThrow(/production project/);
-    }
-  );
+    expect(() => createClient(config)).toThrow(/production project/);
+  });
 });
 
 describe('assertNotProdUrlInTestEnv', () => {
@@ -55,14 +51,9 @@ describe('assertNotProdUrlInTestEnv', () => {
     vi.unstubAllEnvs();
   });
 
-  it.skipIf(!guardActive)(
-    'throws in test env when URL points at the production project ref',
-    () => {
-      expect(() => assertNotProdUrlInTestEnv(PROD_URL)).toThrow(
-        /NODE_ENV=test/
-      );
-    }
-  );
+  it('throws in test env when URL points at the production project ref', () => {
+    expect(() => assertNotProdUrlInTestEnv(PROD_URL)).toThrow(/NODE_ENV=test/);
+  });
 
   it('no-ops in test env for non-production URLs (localhost, staging, fake)', () => {
     expect(() =>
@@ -76,19 +67,13 @@ describe('assertNotProdUrlInTestEnv', () => {
     ).not.toThrow();
   });
 
-  it.skipIf(!guardActive)(
-    'no-ops in production env even for the production URL',
-    () => {
-      vi.stubEnv('NODE_ENV', 'production');
-      expect(() => assertNotProdUrlInTestEnv(PROD_URL)).not.toThrow();
-    }
-  );
+  it('no-ops in production env even for the production URL', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    expect(() => assertNotProdUrlInTestEnv(PROD_URL)).not.toThrow();
+  });
 
-  it.skipIf(!guardActive)(
-    'no-ops in development env (preserves dev-against-prod workflow)',
-    () => {
-      vi.stubEnv('NODE_ENV', 'development');
-      expect(() => assertNotProdUrlInTestEnv(PROD_URL)).not.toThrow();
-    }
-  );
+  it('no-ops in development env (preserves dev-against-prod workflow)', () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    expect(() => assertNotProdUrlInTestEnv(PROD_URL)).not.toThrow();
+  });
 });
