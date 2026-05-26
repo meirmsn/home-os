@@ -272,6 +272,14 @@ export async function POST(request: NextRequest) {
   const parsedBody = validation.value;
   const { card_id: cardId } = parsedBody;
 
+  // Extract optional BYOK key from body (spec D3 — key transit via
+  // request body, never persisted).
+  const byokKey =
+    body && typeof body === 'object' && 'byok_key' in body
+      ? (body as { byok_key: unknown }).byok_key
+      : undefined;
+  const hasByokKey = typeof byokKey === 'string' && byokKey.trim().length > 0;
+
   // 3. Load + state-classify the card under user-context RLS.
   const { data: cardRow, error: cardError } = await supabase
     .from('cards')
@@ -321,11 +329,60 @@ export async function POST(request: NextRequest) {
     roundState.qaUserCount >= QA_USER_ROUND_LIMIT ||
     ('skip' in parsedBody && parsedBody.skip === true);
 
+  // 4b. Usage check (free tier only — spec D2). BYOK users bypass entirely.
+  if (!hasByokKey) {
+    const { data: usageRow, error: usageError } = await supabase
+      .from('usage_counters')
+      .select('triage_session_count, week_start')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (usageError) {
+      Sentry.captureException(usageError, {
+        tags: { route: 'POST /api/triage/answer', stage: 'usage_check' },
+      });
+      return NextResponse.json({ error: 'server_error' }, { status: 500 });
+    }
+
+    // NULL row = first-time user = count 0 (under limit).
+    // Week-rollover: if the row's week_start doesn't match current Monday,
+    // the count is stale — treat as 0.
+    const now = new Date();
+    const currentMonday = new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() - ((now.getUTCDay() + 6) % 7)
+      )
+    );
+    const mondayStr = currentMonday.toISOString().slice(0, 10);
+
+    let currentCount = 0;
+    if (usageRow && usageRow.week_start === mondayStr) {
+      currentCount = usageRow.triage_session_count ?? 0;
+    }
+
+    if (currentCount >= 5) {
+      // Compute next Monday UTC 00:00:00.
+      const nextMonday = new Date(currentMonday);
+      nextMonday.setUTCDate(nextMonday.getUTCDate() + 7);
+      return NextResponse.json(
+        {
+          error: 'TRIAGE_LIMIT_REACHED',
+          resets: nextMonday.toISOString(),
+        },
+        { status: 429 }
+      );
+    }
+  }
+
   // 5. Load photo bytes via user-context client + Storage RLS.
   const images = await fetchCardPhotosAsBase64(supabase, user.id, cardId);
 
-  // 6. Build the Anthropic call.
-  const apiKey = (process.env.ANTHROPIC_API_KEY ?? '').trim();
+  // 6. Build the Anthropic call. Use BYOK key when present.
+  const apiKey = hasByokKey
+    ? byokKey.trim()
+    : (process.env.ANTHROPIC_API_KEY ?? '').trim();
   if (!apiKey) {
     Sentry.captureException(new Error('ANTHROPIC_API_KEY is unset'), {
       tags: { route: 'POST /api/triage/answer', stage: 'env_check' },
@@ -352,6 +409,16 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     if (err instanceof AnthropicAPIError) {
+      // BYOK-specific error responses (spec § error rescue map #6/#7).
+      if (hasByokKey && err.status === 401) {
+        return NextResponse.json({ error: 'byok_invalid' }, { status: 401 });
+      }
+      if (hasByokKey && err.status === 402) {
+        return NextResponse.json(
+          { error: 'byok_out_of_credits' },
+          { status: 402 }
+        );
+      }
       if (err.status === 429) {
         return NextResponse.json(
           {

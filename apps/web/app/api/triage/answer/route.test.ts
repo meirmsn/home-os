@@ -18,6 +18,7 @@ const {
   cardMaybeSingle,
   threadOrder,
   usersUpdateChain,
+  usageCountersMaybeSingle,
   rpc,
   fetchPhotos,
   callQaTurnMock,
@@ -30,6 +31,7 @@ const {
   cardMaybeSingle: vi.fn(),
   threadOrder: vi.fn(),
   usersUpdateChain: vi.fn(),
+  usageCountersMaybeSingle: vi.fn(),
   rpc: vi.fn(),
   fetchPhotos: vi.fn(),
   callQaTurnMock: vi.fn(),
@@ -71,6 +73,13 @@ vi.mock('@/lib/supabase/server', () => ({
       if (table === 'users') {
         return {
           update: () => new UsersUpdateChain(),
+        };
+      }
+      if (table === 'usage_counters') {
+        return {
+          select: () => ({
+            eq: () => ({ maybeSingle: usageCountersMaybeSingle }),
+          }),
         };
       }
       throw new Error(`unexpected table: ${table}`);
@@ -219,11 +228,25 @@ const VALID_CONFIRM_PARSED = {
   },
 };
 
+/** Helper: compute current Monday UTC as YYYY-MM-DD for usage check tests. */
+function currentMondayStr(): string {
+  const now = new Date();
+  const monday = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() - ((now.getUTCDay() + 6) % 7)
+    )
+  );
+  return monday.toISOString().slice(0, 10);
+}
+
 beforeEach(() => {
   getUser.mockReset();
   cardMaybeSingle.mockReset();
   threadOrder.mockReset();
   usersUpdateChain.mockReset();
+  usageCountersMaybeSingle.mockReset();
   rpc.mockReset();
   fetchPhotos.mockReset();
   callQaTurnMock.mockReset();
@@ -233,6 +256,8 @@ beforeEach(() => {
   sentryMessage.mockReset();
 
   getUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
+  // Default: user under the free-tier limit (count=0).
+  usageCountersMaybeSingle.mockResolvedValue({ data: null, error: null });
   cardMaybeSingle.mockResolvedValue({ data: cardRow(), error: null });
   threadOrder.mockResolvedValue({
     data: [
@@ -674,5 +699,108 @@ describe('POST /api/triage/answer — env checks', () => {
     process.env.ANTHROPIC_API_KEY = '   ';
     const res = await POST(mockRequest({ card_id: VALID_UUID, answer: 'a' }));
     expect(res.status).toBe(500);
+  });
+});
+
+describe('POST /api/triage/answer — usage check (free tier)', () => {
+  it('returns 429 TRIAGE_LIMIT_REACHED when triage_session_count >= 5', async () => {
+    usageCountersMaybeSingle.mockResolvedValue({
+      data: { triage_session_count: 5, week_start: currentMondayStr() },
+      error: null,
+    });
+    const res = await POST(mockRequest({ card_id: VALID_UUID, answer: 'a' }));
+    expect(res.status).toBe(429);
+    const body = await res.json();
+    expect(body.error).toBe('TRIAGE_LIMIT_REACHED');
+    expect(body.resets).toBeDefined();
+    // resets should be next Monday ISO string
+    const resets = new Date(body.resets);
+    expect(resets.getUTCDay()).toBe(1); // Monday
+    expect(callQaTurnMock).not.toHaveBeenCalled();
+  });
+
+  it('proceeds normally when triage_session_count < 5', async () => {
+    usageCountersMaybeSingle.mockResolvedValue({
+      data: { triage_session_count: 3, week_start: currentMondayStr() },
+      error: null,
+    });
+    const res = await POST(mockRequest({ card_id: VALID_UUID, answer: 'a' }));
+    expect(res.status).toBe(200);
+    expect(callQaTurnMock).toHaveBeenCalled();
+  });
+
+  it('treats NULL usage_counters row as count=0 (under limit)', async () => {
+    usageCountersMaybeSingle.mockResolvedValue({ data: null, error: null });
+    const res = await POST(mockRequest({ card_id: VALID_UUID, answer: 'a' }));
+    expect(res.status).toBe(200);
+    expect(callQaTurnMock).toHaveBeenCalled();
+  });
+
+  it('treats stale week_start as count=0 (under limit)', async () => {
+    usageCountersMaybeSingle.mockResolvedValue({
+      data: { triage_session_count: 5, week_start: '2025-01-06' },
+      error: null,
+    });
+    const res = await POST(mockRequest({ card_id: VALID_UUID, answer: 'a' }));
+    expect(res.status).toBe(200);
+    expect(callQaTurnMock).toHaveBeenCalled();
+  });
+
+  it('returns 500 when usage_counters query errors', async () => {
+    usageCountersMaybeSingle.mockResolvedValue({
+      data: null,
+      error: { message: 'db down' },
+    });
+    const res = await POST(mockRequest({ card_id: VALID_UUID, answer: 'a' }));
+    expect(res.status).toBe(500);
+    expect(sentryCapture).toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/triage/answer — BYOK key handling', () => {
+  it('skips usage check when byok_key is present', async () => {
+    usageCountersMaybeSingle.mockResolvedValue({
+      data: { triage_session_count: 5, week_start: currentMondayStr() },
+      error: null,
+    });
+    const res = await POST(
+      mockRequest({ card_id: VALID_UUID, answer: 'a', byok_key: 'sk-ant-user' })
+    );
+    expect(res.status).toBe(200);
+    // usage_counters should NOT be queried at all
+    expect(usageCountersMaybeSingle).not.toHaveBeenCalled();
+  });
+
+  it('uses byok_key for the Anthropic call instead of server key', async () => {
+    await POST(
+      mockRequest({ card_id: VALID_UUID, answer: 'a', byok_key: 'sk-ant-user' })
+    );
+    expect(callQaTurnMock).toHaveBeenCalledWith(
+      expect.objectContaining({ apiKey: 'sk-ant-user' })
+    );
+  });
+
+  it('returns 401 byok_invalid when Anthropic returns 401 with BYOK key', async () => {
+    callQaTurnMock.mockRejectedValue(makeAnthropicError({ status: 401 }));
+    const res = await POST(
+      mockRequest({ card_id: VALID_UUID, answer: 'a', byok_key: 'sk-ant-bad' })
+    );
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.error).toBe('byok_invalid');
+  });
+
+  it('returns 402 byok_out_of_credits when Anthropic returns 402 with BYOK key', async () => {
+    callQaTurnMock.mockRejectedValue(makeAnthropicError({ status: 402 }));
+    const res = await POST(
+      mockRequest({
+        card_id: VALID_UUID,
+        answer: 'a',
+        byok_key: 'sk-ant-nocredit',
+      })
+    );
+    expect(res.status).toBe(402);
+    const body = await res.json();
+    expect(body.error).toBe('byok_out_of_credits');
   });
 });
