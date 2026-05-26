@@ -54,9 +54,7 @@ Each Planned row is one feature / one PR. Long-form context (problem statement, 
 
 ## Active
 
-| Feature      | Branch               | Spec                       |
-| ------------ | -------------------- | -------------------------- |
-| `close-flow` | `feature/close-flow` | `specs/close-flow/spec.md` |
+_No work in progress._
 
 ## Planned (v0)
 
