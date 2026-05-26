@@ -28,6 +28,18 @@ Project-specific silent-failure traps. For broader trap classes (`.trim()` on en
 
 - **Locked-jsonb-shape validation lives in TWO places (deliberate DRY-tension).** The same `DiyExpansion` + `ContractorExpansion` shapes from `decide-state` spec § D3 are validated at (a) LLM-output time in `apps/web/app/api/triage/_lib/parse-qa-output.ts` (the `confirm_assessment` tool's expansion fields) and (b) user-PATCH time in `apps/web/app/api/card/[id]/estimate/_lib/parse-estimate-override.ts` (the override jsonb). Both delegate to the shared module `apps/web/app/api/triage/_lib/estimate-shapes.ts` — `parseDiyExpansion` + `parseContractorExpansion`. Do NOT inline either validator at the call site; a shape drift in one path would silently let the other accept rejected shapes. The shared module is the contract; if it tightens, both trust boundaries get the update for free. Pattern: `kit/docs/guide/llm-trust-boundaries.md § Pattern 3`.
 
+- **BYOK key must NEVER be logged, persisted, or included in error payloads.** The user's Anthropic API key transits through the request body JSON -> route handler variable -> Anthropic SDK constructor -> garbage collected. Do NOT include `byok_key` in Sentry extra data, console logs, or error response bodies. The key is held in React state only (`ByokKeyProvider` in `apps/web/app/(app)/_components/ByokKeyProvider.tsx`) -- never localStorage/sessionStorage/cookies. Cleared on tab close / page refresh / sign-out per spec D3.
+
+- **Usage check in `/api/triage/answer` must handle NULL `usage_counters` row.** A user who has never completed a triage session has no row in `usage_counters`. The Supabase query returns `data: null`. Treat null as count=0 (under limit). Do NOT treat null as "at limit" -- that would block first-time users.
+
+- **`triage_session_count` increment fires on EVERY `confirm_triage` call, including BYOK sessions.** The counter tracks total sessions, not free-tier sessions only. The usage CHECK (`>= 5`) is what the route handler enforces for free-tier users; the counter itself is a neutral metric. BYOK users' counters go above 5 -- the usage bar on Settings shows the true count.
+
+- **The initial-read route (`POST /api/triage`) does NOT check the usage counter.** Per spec D2, the initial read is always free -- users always see what the AI thinks before spending a session. Only the Q&A answer route checks the counter. This is an intentional asymmetry.
+
+- **`key-validate` returns HTTP 200 for both valid keys and invalid/out-of-credits keys.** The endpoint wraps the Anthropic error in a 200 response body (`{ error: 'invalid_key' }`) rather than proxying the Anthropic 401 as an HTTP 401. Reason: the user IS authenticated with our app. An HTTP 401 from our endpoint would look like our session expired, not like the BYOK key is bad.
+
+- **Migration 014 (`20260526225426_usage_counters_and_byok.sql`)** -- adds `mark_byok_used` RPC + drops/recreates `confirm_triage` with atomic `triage_session_count` increment. Key surfaces: `POST /api/key-validate` (BYOK validation), `/settings` page (usage bar + BYOK input), `ByokKeyProvider` (React context in `(app)` layout).
+
 ## Env Var Naming
 
 | Base name                                          | GitHub Variable / Secret                                       | Vercel (`apps/web`)                                              |
