@@ -49,7 +49,7 @@ export function ByokKeyInput({ byokUsed }: ByokKeyInputProps) {
           body: JSON.stringify({ key: trimmed }),
         });
 
-        if (!res.ok && res.status !== 200) {
+        if (!res.ok) {
           setState('network_error');
           return;
         }
