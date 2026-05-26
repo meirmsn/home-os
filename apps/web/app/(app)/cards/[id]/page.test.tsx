@@ -146,6 +146,28 @@ vi.mock('./_components/QaThread', () => ({
   QaThread: () => <div data-testid="qa-thread-stub" />,
 }));
 
+vi.mock('./_components/ClosedView', () => ({
+  ClosedView: ({
+    severity,
+    closedAt,
+    actualSpendCents,
+    spendNotes,
+  }: {
+    severity: string | null;
+    closedAt: string | null;
+    actualSpendCents: number | null;
+    spendNotes: string | null;
+  }) => (
+    <div
+      data-testid="closed-view"
+      data-severity={severity ?? 'null'}
+      data-closed-at={closedAt ?? 'null'}
+      data-spend={actualSpendCents ?? 'null'}
+      data-notes={spendNotes ?? 'null'}
+    />
+  ),
+}));
+
 import CardDetailPage from './page';
 
 const CARD_ID = '11111111-2222-3333-4444-555555555555';
@@ -176,6 +198,9 @@ function cardRow(state: CardState, extra: Record<string, unknown> = {}) {
       severity_confirmed: false,
       contractor_tag: state === 'diagnosed' ? 'plumber' : null,
       monitoring_cadence_days: null,
+      updated_at: '2026-05-15T10:00:00Z',
+      actual_spend_cents: null,
+      spend_notes: null,
       ...extra,
     },
     error: null,
@@ -493,10 +518,22 @@ describe('/(app)/cards/[id] — body matrix', () => {
     expect(screen.getByText(/monitor-beta/i)).toBeTruthy();
   });
 
-  it('closed: renders the row-#5 deferred stub with closed_at', async () => {
-    cardSelect.mockResolvedValue(cardRow('closed'));
+  it('closed: renders <ClosedView /> with severity + spend data', async () => {
+    cardSelect.mockResolvedValue(
+      cardRow('closed', {
+        severity: 'soon',
+        severity_confirmed: true,
+        chosen_path: 'diy',
+        actual_spend_cents: 8550,
+        spend_notes: 'P-trap kit',
+      })
+    );
     await renderPage();
-    expect(screen.getByText(/card closed/i)).toBeTruthy();
+    const cv = screen.getByTestId('closed-view');
+    expect(cv).toBeTruthy();
+    expect(cv.getAttribute('data-severity')).toBe('soon');
+    expect(cv.getAttribute('data-spend')).toBe('8550');
+    expect(cv.getAttribute('data-notes')).toBe('P-trap kit');
   });
 
   it('dismissed: renders the stub with a /dismissed link', async () => {

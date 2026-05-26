@@ -30,6 +30,7 @@ import { StartTriage } from './_components/StartTriage';
 import { AnswerThread } from './_components/AnswerThread';
 import { DiagnosedThread } from './_components/DiagnosedThread';
 import { QaThread } from './_components/QaThread';
+import { ClosedView } from './_components/ClosedView';
 import { DecideView } from './_components/DecideView';
 import { PlannedView } from './_components/PlannedView';
 import { ReminderDueChip } from './_components/ReminderDueChip';
@@ -67,6 +68,13 @@ type CardRow = {
   /** Optional reminder date (PostgREST surfaces Postgres `date` as the
    *  ISO `'YYYY-MM-DD'` string shape). Null when no reminder is set. */
   planned_reminder_date: string | null;
+  /** Timestamp of the last row update. Used as a proxy for
+   *  planned_entered_at in the close-flow PostHog event (Gotcha #8). */
+  updated_at: string;
+  /** Actual spend in cents, recorded at close time. Null until closed. */
+  actual_spend_cents: number | null;
+  /** Free-text spend notes, recorded at close time. Null until closed. */
+  spend_notes: string | null;
 };
 
 type ThreadRow = {
@@ -173,7 +181,7 @@ export default async function CardDetailPage({
   const { data: cardRow, error: cardError } = await supabase
     .from('cards')
     .select(
-      'id, state, initial_description, system_tag, room_tag, created_at, closed_at, diagnosis, severity, severity_confirmed, contractor_tag, monitoring_cadence_days, chosen_path, cost_estimate_diy, cost_estimate_diy_override, cost_estimate_hire, cost_estimate_hire_override, planned_reminder_date'
+      'id, state, initial_description, system_tag, room_tag, created_at, closed_at, diagnosis, severity, severity_confirmed, contractor_tag, monitoring_cadence_days, chosen_path, cost_estimate_diy, cost_estimate_diy_override, cost_estimate_hire, cost_estimate_hire_override, planned_reminder_date, updated_at, actual_spend_cents, spend_notes'
     )
     .eq('id', id)
     .maybeSingle();
@@ -216,7 +224,7 @@ export default async function CardDetailPage({
   // only retrieved via a signed URL because the bucket is private.
   const { data: photoRow } = await supabase
     .from('card_photos')
-    .select('storage_path')
+    .select('storage_path, created_at')
     .eq('card_id', id)
     .eq('touchpoint_type', 'primary')
     .eq('slot', 'wide')
@@ -225,14 +233,40 @@ export default async function CardDetailPage({
     .maybeSingle();
 
   let photoUrl: string | null = null;
+  let beforePhotoDate: string | null = null;
   if (photoRow?.storage_path) {
     const { data: signed } = await supabase.storage
       .from('card-photos')
       .createSignedUrl(photoRow.storage_path, 60 * 10); // 10 minutes
     photoUrl = signed?.signedUrl ?? null;
+    beforePhotoDate = photoRow.created_at ?? null;
   }
 
-  // For diagnosed/decide/planned cards, pull the FULL thread so the
+  // Close-photo queries: for closed cards, pull the latest
+  // touchpoint_type='close' photo (the finished photo) for the
+  // before/after pair. Signed URL TTL: 10 minutes (same as capture).
+  let closePhotoUrl: string | null = null;
+  let closePhotoDate: string | null = null;
+  if (card.state === 'closed') {
+    const { data: closePhotoRow } = await supabase
+      .from('card_photos')
+      .select('storage_path, created_at')
+      .eq('card_id', id)
+      .eq('touchpoint_type', 'close')
+      .eq('slot', 'wide')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (closePhotoRow?.storage_path) {
+      const { data: closeSigned } = await supabase.storage
+        .from('card-photos')
+        .createSignedUrl(closePhotoRow.storage_path, 60 * 10);
+      closePhotoUrl = closeSigned?.signedUrl ?? null;
+      closePhotoDate = closePhotoRow.created_at ?? null;
+    }
+  }
+
+  // For diagnosed/decide/planned/closed cards, pull the FULL thread so the
   // page can render <QaThread /> + <AnswerThread /> + <DiagnosedThread />
   // + <DecideView />'s "How we diagnosed this" collapsible from
   // server-fetched data.
@@ -241,7 +275,8 @@ export default async function CardDetailPage({
   if (
     card.state === 'diagnosed' ||
     card.state === 'decide' ||
-    card.state === 'planned'
+    card.state === 'planned' ||
+    card.state === 'closed'
   ) {
     const { data: convoRows } = await supabase
       .from('triage_conversations')
@@ -590,6 +625,7 @@ export default async function CardDetailPage({
               thread={threadRows}
               plannedReminderDate={card.planned_reminder_date}
               isReminderDue={isReminderDue}
+              updatedAt={card.updated_at}
             />
           );
         })()}
@@ -601,10 +637,25 @@ export default async function CardDetailPage({
       )}
 
       {card.state === 'closed' && (
-        <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] p-5 text-sm text-[var(--color-text-secondary-inverse)]">
-          Card closed
-          {card.closed_at ? <> on {humanDate(card.closed_at)}</> : null}.
-        </section>
+        <ClosedView
+          severity={card.severity}
+          closedAt={card.closed_at}
+          diagnosis={card.diagnosis}
+          chosenPath={card.chosen_path}
+          actualSpendCents={card.actual_spend_cents}
+          spendNotes={card.spend_notes}
+          before={
+            photoUrl && beforePhotoDate
+              ? { url: photoUrl, date: beforePhotoDate }
+              : null
+          }
+          after={
+            closePhotoUrl && closePhotoDate
+              ? { url: closePhotoUrl, date: closePhotoDate }
+              : null
+          }
+          thread={threadRows}
+        />
       )}
 
       {card.state === 'dismissed' && (

@@ -46,11 +46,12 @@ afterEach(() => {
   cleanup();
 });
 
-// Default reminder-state props (no reminder set) — extracted to keep
-// each existing test concise after the prop expansion in PR planned-state.
+// Default reminder-state + close-flow props — extracted to keep each
+// existing test concise after prop expansions.
 const noReminder = {
   plannedReminderDate: null as string | null,
   isReminderDue: false,
+  updatedAt: '2026-05-20T00:00:00Z',
 };
 
 describe('<PlannedView />', () => {
@@ -301,6 +302,7 @@ describe('<PlannedView /> — planned-state extensions', () => {
         thread={[]}
         plannedReminderDate={null}
         isReminderDue={false}
+        updatedAt="2026-05-20T00:00:00Z"
       />
     );
     expect(screen.getByTestId('reminder-editor-a')).toBeTruthy();
@@ -321,6 +323,7 @@ describe('<PlannedView /> — planned-state extensions', () => {
         thread={[]}
         plannedReminderDate="2026-12-01"
         isReminderDue={false}
+        updatedAt="2026-05-20T00:00:00Z"
       />
     );
     expect(screen.getByTestId('reminder-editor-b')).toBeTruthy();
@@ -342,6 +345,7 @@ describe('<PlannedView /> — planned-state extensions', () => {
         thread={[]}
         plannedReminderDate="2026-05-10"
         isReminderDue={true}
+        updatedAt="2026-05-20T00:00:00Z"
       />
     );
     expect(screen.getByTestId('reminder-editor-c')).toBeTruthy();
@@ -362,10 +366,58 @@ describe('<PlannedView /> — planned-state extensions', () => {
         thread={[]}
         plannedReminderDate={null}
         isReminderDue={false}
+        updatedAt="2026-05-20T00:00:00Z"
       />
     );
     // BeforeCloseSummary returns null for monitor, but ReminderEditor
     // is mounted regardless — D5 doesn't gate it on chosen_path.
     expect(screen.getByTestId('reminder-editor-a')).toBeTruthy();
+  });
+});
+
+// close-flow additions: <CloseCardForm /> mount conditions.
+describe('<PlannedView /> — close-flow extensions', () => {
+  it.each(['diy', 'contractor', 'monitor'] as const)(
+    'mounts <CloseCardForm /> for chosenPath=%s',
+    (path) => {
+      render(
+        <PlannedView
+          cardId={CARD_ID}
+          severity="soon"
+          diagnosis="d"
+          chosenPath={path}
+          diyEstimate={diyEstimate()}
+          diyOverride={null}
+          contractorEstimate={contractorEstimate()}
+          contractorOverride={null}
+          monitoringCadenceDays={path === 'monitor' ? 30 : null}
+          thread={[]}
+          {...noReminder}
+        />
+      );
+      expect(screen.getByTestId('close-card-form-collapsed')).toBeTruthy();
+      expect(screen.getByTestId('close-card-expand').textContent).toBe(
+        'Mark as closed'
+      );
+    }
+  );
+
+  it('does NOT mount <CloseCardForm /> when chosenPath=null', () => {
+    render(
+      <PlannedView
+        cardId={CARD_ID}
+        severity="soon"
+        diagnosis="d"
+        chosenPath={null}
+        diyEstimate={null}
+        diyOverride={null}
+        contractorEstimate={null}
+        contractorOverride={null}
+        monitoringCadenceDays={null}
+        thread={[]}
+        {...noReminder}
+      />
+    );
+    expect(screen.queryByTestId('close-card-form-collapsed')).toBeNull();
   });
 });

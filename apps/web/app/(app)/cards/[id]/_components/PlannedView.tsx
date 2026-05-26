@@ -23,6 +23,7 @@ import type {
 } from '@/app/api/triage/_lib/estimate-shapes';
 import { BeforeCloseSummary } from './BeforeCloseSummary';
 import { ChoosePath } from './ChoosePath';
+import { CloseCardForm } from './CloseCardForm';
 import { ConversationRow, type ConversationRowData } from './ConversationRow';
 import { PathCard } from './PathCard';
 import { ReminderEditor } from './ReminderEditor';
@@ -58,6 +59,10 @@ export type PlannedViewProps = {
    *  client component doesn't recompute it (and avoids the midnight-
    *  UTC drift trap). */
   isReminderDue: boolean;
+  /** cards.updated_at — proxy for planned_entered_at (close-flow
+   *  Gotcha #8). Threaded to <CloseCardForm /> for days_in_planned
+   *  computation in the PostHog event. */
+  updatedAt: string;
 };
 
 /** Human-readable label for the chosen-path banner. */
@@ -162,6 +167,15 @@ export function PlannedView(props: PlannedViewProps) {
         cardId={props.cardId}
         plannedReminderDate={props.plannedReminderDate}
         isReminderDue={props.isReminderDue}
+      />
+
+      {/* Close action — below ReminderEditor, before the diagnosis
+          collapsible. Shown for all three chosen paths; the null-
+          chosenPath branch returns early above. */}
+      <CloseCardForm
+        cardId={props.cardId}
+        chosenPath={props.chosenPath}
+        updatedAt={props.updatedAt}
       />
 
       {props.thread.length > 0 && (
