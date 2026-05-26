@@ -1,11 +1,5 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalPassThroughEnv": [
-    "SENTRY_AUTH_TOKEN",
-    "VERCEL",
-    "VERCEL_ENV",
-    "VERCEL_URL"
-  ],
   "tasks": {
     "lint": {
       "dependsOn": ["^lint"]
@@ -15,10 +9,6 @@
     },
     "test:unit": {
       "dependsOn": ["^build"],
-      "cache": false
-    },
-    "test:e2e": {
-      "dependsOn": ["build"],
       "cache": false
     },
     "test": {
