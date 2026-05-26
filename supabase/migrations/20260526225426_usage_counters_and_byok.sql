@@ -135,10 +135,76 @@ $$;
 
 -- ROLLBACK:
 -- DROP FUNCTION IF EXISTS public.mark_byok_used(uuid);
--- Drop the 014 confirm_triage and restore the 011 body:
 -- DROP FUNCTION IF EXISTS public.confirm_triage(
 --   uuid, uuid, text, public.severity, public.system_tag, public.contractor_tag,
 --   int, text, int, boolean, text, jsonb, jsonb
 -- );
--- Then re-create confirm_triage using the migration 011 body
--- (see 20260517031335_011_decide_state.sql § 6).
+-- -- Restore confirm_triage to its migration 011 body (decide-state shape).
+-- CREATE OR REPLACE FUNCTION public.confirm_triage(
+--   p_user uuid,
+--   p_card uuid,
+--   p_diagnosis text,
+--   p_severity public.severity,
+--   p_system_tag public.system_tag,
+--   p_contractor_tag public.contractor_tag,
+--   p_monitoring_cadence_days int,
+--   p_assistant_content text,
+--   p_user_round int,
+--   p_skip boolean,
+--   p_user_answer text,
+--   p_diy_expansion jsonb,
+--   p_contractor_expansion jsonb
+-- )
+-- RETURNS TABLE (card_id uuid)
+-- LANGUAGE plpgsql
+-- SECURITY DEFINER
+-- SET search_path = public, pg_catalog
+-- AS $$
+-- DECLARE
+--   v_card_id uuid;
+-- BEGIN
+--   IF p_user IS DISTINCT FROM auth.uid() THEN
+--     RAISE EXCEPTION 'forbidden' USING errcode = '42501';
+--   END IF;
+--
+--   UPDATE public.cards
+--     SET diagnosis = p_diagnosis,
+--         severity = p_severity,
+--         system_tag = p_system_tag,
+--         contractor_tag = p_contractor_tag,
+--         monitoring_cadence_days = p_monitoring_cadence_days,
+--         severity_confirmed = true,
+--         state = 'decide'::public.card_state,
+--         cost_estimate_diy = p_diy_expansion,
+--         cost_estimate_hire = p_contractor_expansion,
+--         updated_at = now()
+--   WHERE public.cards.id = p_card
+--     AND public.cards.user_id = p_user
+--     AND public.cards.state = 'diagnosed'
+--     AND public.cards.severity_confirmed = false
+--   RETURNING public.cards.id INTO v_card_id;
+--
+--   IF v_card_id IS NULL THEN
+--     RAISE EXCEPTION 'qa_invalid_state' USING errcode = 'P0001';
+--   END IF;
+--
+--   IF p_skip = false AND p_user_answer IS NOT NULL THEN
+--     INSERT INTO public.triage_conversations (
+--       card_id, user_id, round, role, content, is_location_ask, tool_name
+--     )
+--     VALUES (
+--       p_card, p_user, p_user_round, 'user', p_user_answer, false, null
+--     );
+--   END IF;
+--
+--   INSERT INTO public.triage_conversations (
+--     card_id, user_id, round, role, content, is_location_ask, tool_name
+--   )
+--   VALUES (
+--     p_card, p_user, p_user_round, 'assistant',
+--     p_assistant_content, false, 'confirm_assessment'
+--   );
+--
+--   RETURN QUERY SELECT v_card_id;
+-- END;
+-- $$;
