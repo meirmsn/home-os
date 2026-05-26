@@ -196,7 +196,7 @@ jobs:
         # need Playwright browsers (saves ~3 min); the step short-circuits
         # until the first apps/web/e2e/*.spec.ts lands.
         if: hashFiles('apps/web/e2e/**/*.spec.ts') != ''
-        run: pnpm --filter apps/web exec playwright install --with-deps chromium webkit
+        run: pnpm --filter @home-os/web exec playwright install --with-deps chromium webkit
 
       - uses: supabase/setup-cli@v1
         with:
@@ -284,7 +284,7 @@ jobs:
           # defaults).
           NEXT_PUBLIC_SUPABASE_URL: ${{ env.API_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.ANON_KEY }}
-        run: pnpm turbo run build --filter=apps/web
+        run: pnpm turbo run build --filter=@home-os/web
 
       - name: Start next + run Playwright E2E
         if: hashFiles('apps/web/e2e/**/*.spec.ts') != ''
@@ -318,7 +318,7 @@ jobs:
             cat /tmp/next.log
             exit 1
           fi
-          pnpm --filter apps/web test:e2e
+          pnpm --filter @home-os/web test:e2e
 
       - name: Upload Playwright traces on failure
         if: failure() && hashFiles('apps/web/e2e/**/*.spec.ts') != ''
