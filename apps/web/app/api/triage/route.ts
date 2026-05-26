@@ -146,6 +146,17 @@ export async function POST(request: NextRequest) {
       : undefined;
   const hasByokKey = typeof byokKey === 'string' && byokKey.trim().length > 0;
 
+  // Max-length guard — matches KEY_MAX_LEN in /api/key-validate (200 chars).
+  if (typeof byokKey === 'string' && byokKey.length > 200) {
+    return NextResponse.json(
+      {
+        error: 'validation_failed',
+        fields: { byok_key: 'byok_key must be ≤ 200 characters.' },
+      },
+      { status: 400 }
+    );
+  }
+
   // 3. Load + state-classify the card (RLS scopes visibility).
   const { data: cardRow, error: cardError } = await supabase
     .from('cards')
