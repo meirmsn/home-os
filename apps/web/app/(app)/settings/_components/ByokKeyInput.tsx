@@ -30,7 +30,7 @@ export type ByokKeyInputProps = {
  * BYOK key input section with validate button and inline feedback.
  */
 export function ByokKeyInput({ byokUsed }: ByokKeyInputProps) {
-  const { setByokKey } = useByokKey();
+  const { setByokKey, clearByokKey } = useByokKey();
   const [key, setKey] = useState('');
   const [state, setState] = useState<ValidationState>('idle');
 
@@ -77,7 +77,14 @@ export function ByokKeyInput({ byokUsed }: ByokKeyInputProps) {
     [key, setByokKey]
   );
 
+  const removeKey = useCallback(() => {
+    clearByokKey();
+    setKey('');
+    setState('idle');
+  }, [clearByokKey]);
+
   const isValidating = state === 'validating';
+  const isValid = state === 'valid';
 
   return (
     <section aria-label="Claude API key" className="space-y-3">
@@ -122,60 +129,73 @@ export function ByokKeyInput({ byokUsed }: ByokKeyInputProps) {
           className="block h-12 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-input)] px-3 text-sm text-[var(--color-text-primary-inverse)] placeholder:text-[var(--color-text-secondary-inverse)] focus:outline-none focus:ring-2 focus:ring-[var(--color-surface-primary)] disabled:cursor-not-allowed disabled:opacity-60"
         />
 
-        <button
-          type="submit"
-          disabled={isValidating || key.trim().length === 0}
-          data-testid="byok-validate"
-          className="inline-flex min-h-12 items-center justify-center rounded-md bg-[var(--color-surface-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--color-text-on-primary)] hover:bg-[var(--color-surface-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isValidating ? 'Validating...' : 'Validate'}
-        </button>
+        {isValid ? (
+          <button
+            type="button"
+            onClick={removeKey}
+            data-testid="byok-remove"
+            className="text-sm text-[var(--color-text-secondary-inverse)] underline hover:text-[var(--color-text-primary-inverse)]"
+          >
+            Remove key
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={isValidating || key.trim().length === 0}
+            data-testid="byok-validate"
+            className="inline-flex min-h-12 items-center justify-center rounded-md bg-[var(--color-surface-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--color-text-on-primary)] hover:bg-[var(--color-surface-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isValidating ? 'Validating...' : 'Validate'}
+          </button>
+        )}
       </form>
 
-      {/* Inline feedback */}
-      {state === 'valid' && (
-        <p
-          data-testid="byok-feedback"
-          className="text-sm text-[var(--color-note)]"
-        >
-          Key accepted
-        </p>
-      )}
-
-      {state === 'invalid_key' && (
-        <p
-          data-testid="byok-feedback"
-          className="text-sm text-[var(--color-act-soon)]"
-        >
-          Key didn&apos;t work -- check and try again
-        </p>
-      )}
-
-      {state === 'out_of_credits' && (
-        <p
-          data-testid="byok-feedback"
-          className="text-sm text-[var(--color-act-soon)]"
-        >
-          This key is out of credits --{' '}
-          <a
-            href="https://console.anthropic.com/settings/billing"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
+      {/* Inline feedback — aria-live region so screen readers announce state changes */}
+      <div aria-live="polite" data-testid="byok-feedback-region">
+        {state === 'valid' && (
+          <p
+            data-testid="byok-feedback"
+            className="text-sm text-[var(--color-note)]"
           >
-            check your Anthropic billing
-          </a>
-        </p>
-      )}
+            Key accepted
+          </p>
+        )}
 
-      {state === 'network_error' && (
-        <p
-          data-testid="byok-feedback"
-          className="text-sm text-[var(--color-act-soon)]"
-        >
-          Couldn&apos;t validate -- check your connection and try again
-        </p>
-      )}
+        {state === 'invalid_key' && (
+          <p
+            data-testid="byok-feedback"
+            className="text-sm text-[var(--color-act-soon)]"
+          >
+            Key didn&apos;t work -- check and try again
+          </p>
+        )}
+
+        {state === 'out_of_credits' && (
+          <p
+            data-testid="byok-feedback"
+            className="text-sm text-[var(--color-act-soon)]"
+          >
+            This key is out of credits --{' '}
+            <a
+              href="https://console.anthropic.com/settings/billing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              check your Anthropic billing
+            </a>
+          </p>
+        )}
+
+        {state === 'network_error' && (
+          <p
+            data-testid="byok-feedback"
+            className="text-sm text-[var(--color-act-soon)]"
+          >
+            Couldn&apos;t validate -- check your connection and try again
+          </p>
+        )}
+      </div>
     </section>
   );
 }
