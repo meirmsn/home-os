@@ -8,6 +8,15 @@ Project build history. One entry per merged PR, most-recent first. Written by `/
 
 For forward-looking plan: `PLAN.md`. For deferred/long-term work: `PRODUCT-ROADMAP.md`.
 
+### close-flow (2026-05-26)
+
+- **Branch**: `feature/close-flow`
+- **Spec**: `specs/close-flow/spec.md`
+- **Headline**: Cards can now be marked as closed after the user completes their repair or schedules their contractor, with an optional record of what they spent and a finished photo that automatically pairs with the original capture for a visual before-and-after.
+- **Summary**: Adds the PLANNED → CLOSED state transition (step 9 in ceo-review build order). Migration 013 extends the `touchpoint_type` enum with `'close'` and adds `actual_spend_cents` + `spend_notes` to cards. New `close_card` SECURITY DEFINER RPC enforces the state guard atomically. `POST /api/card/[id]/close` handles multipart form (optional spend + optional photo) in the same posture as `POST /api/card`. `<CloseCardForm />` on PlannedView is the user-facing trigger; `<ClosedView />` replaces the current one-line stub with before/after photo pair + spend log + severity chip + diagnosis thread.
+- **Commits**: 12 (2 Phase 0/1 spec + 1 PLAN move + 7 atomic implement T1–T8 + 1 Gate 1 docs fix + 1 review.md)
+- **Quality gates**: all passed — 8 gates (docs-check findings fixed, metrics-check, fast-job-local, changed-tests-local, /simplify, /review, /cso, convention)
+
 ### planned-state (2026-05-18)
 
 - **Branch**: `feature/planned-state` (merging via [#28](https://github.com/meirmsn/home-os/pull/28))
