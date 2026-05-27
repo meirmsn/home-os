@@ -109,9 +109,7 @@ test.describe('auth edge cases', () => {
       expect(page.url()).toMatch(/\/home$/);
       // /home renders the signed-in shell — confirms the redirect didn't
       // just bounce off middleware into another anon redirect loop.
-      await expect(
-        page.getByRole('heading', { level: 1, name: 'home-os' })
-      ).toBeVisible();
+      await expect(page.getByTestId('signed-in-email')).toBeVisible();
     } finally {
       if (userId) await admin.auth.admin.deleteUser(userId);
     }
@@ -186,9 +184,7 @@ test.describe('auth edge cases', () => {
       expect(page.url()).toMatch(/\/home$/);
       // /home renders the signed-in shell — confirms the redirect didn't
       // bounce into the noscript-fallback anchor at /.
-      await expect(
-        page.getByRole('heading', { level: 1, name: 'home-os' })
-      ).toBeVisible();
+      await expect(page.getByTestId('signed-in-email')).toBeVisible();
     } finally {
       if (userId) await admin.auth.admin.deleteUser(userId);
     }

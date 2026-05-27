@@ -49,6 +49,10 @@ vi.mock('./_components/SignInCompletedCapture', () => ({
   ),
 }));
 
+vi.mock('./_components/TriagePendingBadge', () => ({
+  TriagePendingBadge: () => null,
+}));
+
 import AppLayout from './layout';
 
 describe('(app)/layout', () => {

@@ -8,6 +8,15 @@ Project build history. One entry per merged PR, most-recent first. Written by `/
 
 For forward-looking plan: `PLAN.md`. For deferred/long-term work: `PRODUCT-ROADMAP.md`.
 
+### dashboard (2026-05-27)
+
+- **Branch**: `feat/dashboard`
+- **Spec**: `specs/dashboard/spec.md`
+- **Headline**: The home page now shows your cards organized by urgency — items that need attention soon lead the list with full visual weight, while monitoring and planned cards step back. When monitoring items are overdue, a walkthrough prompt lets you check in on all of them in one session.
+- **Summary**: Replaces the stub `/(app)/home/page.tsx` with a tiered card list. Tier 1: Act Soon cards (state `decide`/`diagnosed`, severity `urgent`/`soon`) + reminder-due PLANNED cards. Tier 2: overdue MONITOR cards + TRIAGE_PENDING. PLANNED tab with dot indicator. Filter bar (sticky tabs). Empty states for first-time and nothing-active. Walkthrough mode: inline prompt for stale monitoring items, sequences through overdue cards with check-in/change-path actions. Card thumbnails via `card_photos` signed URLs. 4 PostHog events.
+- **Commits**: 31 (2 Phase 0/1 spec + 8 atomic implement T1–T8 + 8 pre-ship gate fixes + 13 inherited from monitor-beta base)
+- **Quality gates**: all passed — 15 gates (metrics-check, rls-coverage, slow-job-lifecycle, fast-job-local, migration-rollback-roundtrip, changed-tests-local, advisor-clean, responsive-theme finding fixed, simplify 3 findings fixed, convention 2 findings fixed, design-conformance 2 findings fixed, review, cso, preflight-final)
+
 ### monitor-beta (2026-05-27)
 
 - **Branch**: `feat/monitor-beta`

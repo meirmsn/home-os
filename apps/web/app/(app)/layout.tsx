@@ -18,6 +18,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ByokKeyProvider } from './_components/ByokKeyProvider';
 import { SignInCompletedCapture } from './_components/SignInCompletedCapture';
+import { TriagePendingBadge } from './_components/TriagePendingBadge';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,6 +48,7 @@ export default async function AppLayout({
           home-os
         </div>
         <div className="flex items-center gap-3">
+          <TriagePendingBadge />
           <span
             className="text-sm text-[var(--color-text-secondary-inverse)]"
             data-testid="signed-in-email"
