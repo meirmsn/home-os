@@ -77,7 +77,6 @@ end;
 $$;
 
 -- ROLLBACK:
--- Restore the migration 006b version (resets card_count only):
 -- drop function if exists public.claim_card_slot(uuid, text, text, public.system_tag, text);
 -- create or replace function public.claim_card_slot(
 --   p_user uuid, p_title text, p_description text,
