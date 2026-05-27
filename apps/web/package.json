@@ -13,16 +13,16 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.96.0",
+    "@anthropic-ai/sdk": "^0.99.0",
     "@home-os/core": "workspace:*",
     "@home-os/ui": "workspace:*",
-    "@sentry/nextjs": "^10.53.1",
-    "@supabase/ssr": "^0.5.0",
-    "@supabase/supabase-js": "^2.45.0",
+    "@sentry/nextjs": "^10.54.0",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.106.2",
     "next": "16.2.6",
-    "posthog-js": "^1.373.4",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "posthog-js": "^1.376.3",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
