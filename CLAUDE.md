@@ -38,6 +38,12 @@ Project-specific silent-failure traps. For broader trap classes (`.trim()` on en
 
 - **`key-validate` returns HTTP 200 for both valid keys and invalid/out-of-credits keys.** The endpoint wraps the Anthropic error in a 200 response body (`{ error: 'invalid_key' }`) rather than proxying the Anthropic 401 as an HTTP 401. Reason: the user IS authenticated with our app. An HTTP 401 from our endpoint would look like our session expired, not like the BYOK key is bad.
 
+- **Check-in photo ordering is RPC-first, photos-after (opposite of close-flow).** `POST /api/card/[id]/checkin` calls `record_checkin` RPC first, then uploads photos. If a photo upload fails after the RPC succeeds, the check-in row still exists (recoverable — retry upload or skip). This is the inverse of close-flow where photo is first because the check-in event itself is the core signal (cadence clock reset) and photos are supplementary.
+
+- **Cadence editor recalculates `next_check_at` from now, not from last check-in.** `PATCH /api/card/[id]/cadence` sets `next_check_at = now() + cadence_days`. This is intentional — the user is saying "I want to check back in N days from now." If they change cadence from 30 to 7, they want the next check-in in 7 days, not `last_check_in + 7 days` (which might be in the past).
+
+- **Migration 015 (`20260527064802_015_monitor_beta.sql`)** -- extends `touchpoint_type` with `'checkin'`, creates `check_ins` table, adds `record_checkin` RPC, widens `commit_decide` state predicate to include `'monitoring'`. Key surfaces: `POST /api/card/[id]/checkin` (check-in submission), `PATCH /api/card/[id]/cadence` (cadence adjustment), `<MonitorView />` (monitoring state body).
+
 - **Migration 014 (`20260526225426_usage_counters_and_byok.sql`)** -- adds `mark_byok_used` RPC + drops/recreates `confirm_triage` with atomic `triage_session_count` increment. Key surfaces: `POST /api/key-validate` (BYOK validation), `/settings` page (usage bar + BYOK input), `ByokKeyProvider` (React context in `(app)` layout).
 
 ## Env Var Naming

@@ -14,6 +14,7 @@ const {
   cardSelect,
   photoSelect,
   convoSelect,
+  checkInsSelect,
   signedUrl,
   getUser,
   notFoundMock,
@@ -26,6 +27,7 @@ const {
   // New shape: page now fetches the FULL thread (no maybeSingle)
   // via from('triage_conversations').select(...).eq('card_id', id).order(...).
   convoSelect: vi.fn(),
+  checkInsSelect: vi.fn(),
   signedUrl: vi.fn(),
   getUser: vi.fn(),
   notFoundMock: vi.fn(() => {
@@ -84,6 +86,13 @@ vi.mock('@/lib/supabase/server', () => ({
         return {
           select: () => ({
             eq: () => ({ order: convoSelect }),
+          }),
+        };
+      }
+      if (table === 'check_ins') {
+        return {
+          select: () => ({
+            eq: () => ({ order: checkInsSelect }),
           }),
         };
       }
@@ -168,6 +177,25 @@ vi.mock('./_components/ClosedView', () => ({
   ),
 }));
 
+vi.mock('./_components/MonitorView', () => ({
+  MonitorView: ({
+    cardId,
+    cadenceDays,
+    isOverdue,
+  }: {
+    cardId: string;
+    cadenceDays: number;
+    isOverdue: boolean;
+  }) => (
+    <div
+      data-testid="monitor-view"
+      data-card-id={cardId}
+      data-cadence={cadenceDays}
+      data-overdue={String(isOverdue)}
+    />
+  ),
+}));
+
 import CardDetailPage from './page';
 
 const CARD_ID = '11111111-2222-3333-4444-555555555555';
@@ -198,6 +226,7 @@ function cardRow(state: CardState, extra: Record<string, unknown> = {}) {
       severity_confirmed: false,
       contractor_tag: state === 'diagnosed' ? 'plumber' : null,
       monitoring_cadence_days: null,
+      next_check_at: null,
       updated_at: '2026-05-15T10:00:00Z',
       actual_spend_cents: null,
       spend_notes: null,
@@ -231,6 +260,7 @@ beforeEach(() => {
   cardSelect.mockReset();
   photoSelect.mockReset();
   convoSelect.mockReset();
+  checkInsSelect.mockReset();
   signedUrl.mockReset();
   getUser.mockReset();
   notFoundMock.mockClear();
@@ -239,9 +269,10 @@ beforeEach(() => {
   sentryCaptureMessage.mockClear();
   // Default authed user.
   getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
-  // Defaults: no photo, empty thread.
+  // Defaults: no photo, empty thread, empty check-ins.
   photoSelect.mockResolvedValue({ data: null, error: null });
   convoSelect.mockResolvedValue({ data: [], error: null });
+  checkInsSelect.mockResolvedValue({ data: [], error: null });
   signedUrl.mockResolvedValue({
     data: { signedUrl: 'https://signed.example/p.jpg' },
     error: null,
@@ -512,10 +543,17 @@ describe('/(app)/cards/[id] — body matrix', () => {
     );
   });
 
-  it('monitoring: renders the row-#6 deferred stub', async () => {
-    cardSelect.mockResolvedValue(cardRow('monitoring'));
+  it('monitoring: renders <MonitorView />', async () => {
+    cardSelect.mockResolvedValue(
+      cardRow('monitoring', {
+        monitoring_cadence_days: 30,
+        next_check_at: '2026-07-01T00:00:00Z',
+      })
+    );
     await renderPage();
-    expect(screen.getByText(/monitor-beta/i)).toBeTruthy();
+    const mv = screen.getByTestId('monitor-view');
+    expect(mv).toBeTruthy();
+    expect(mv.getAttribute('data-cadence')).toBe('30');
   });
 
   it('closed: renders <ClosedView /> with severity + spend data', async () => {
