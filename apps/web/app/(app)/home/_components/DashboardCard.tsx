@@ -62,11 +62,11 @@ export function DashboardCard({ card, tier, photoUrl }: DashboardCardProps) {
           )}
         </div>
         <div className="p-4 space-y-1">
-          <h3 className="text-xl font-semibold text-[var(--color-text-primary-inverse)]">
+          <h3 className="text-xl font-semibold text-[var(--color-text-primary,#2C2B27)]">
             {displayTitle}
           </h3>
           {card.diagnosis && (
-            <p className="text-sm text-[var(--color-text-secondary-inverse)] line-clamp-1">
+            <p className="text-sm text-[var(--color-text-secondary,#8A8880)] line-clamp-1">
               {card.diagnosis}
             </p>
           )}
@@ -88,7 +88,7 @@ export function DashboardCard({ card, tier, photoUrl }: DashboardCardProps) {
           </span>
         </div>
         <div className="p-4 space-y-2">
-          <h3 className="text-xl font-semibold text-[var(--color-text-primary-inverse)]">
+          <h3 className="text-xl font-semibold text-[var(--color-text-primary,#2C2B27)]">
             {displayTitle}
           </h3>
           {card.planned_reminder_date && (
@@ -99,7 +99,7 @@ export function DashboardCard({ card, tier, photoUrl }: DashboardCardProps) {
               Revisit by {humanDate(card.planned_reminder_date)}
             </span>
           )}
-          <p className="text-sm text-[var(--color-text-secondary-inverse)]">
+          <p className="text-sm text-[var(--color-text-secondary,#8A8880)]">
             {card.chosen_path === 'diy'
               ? 'DIY'
               : card.chosen_path === 'contractor'
