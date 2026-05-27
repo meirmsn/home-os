@@ -8,6 +8,15 @@ Project build history. One entry per merged PR, most-recent first. Written by `/
 
 For forward-looking plan: `PLAN.md`. For deferred/long-term work: `PRODUCT-ROADMAP.md`.
 
+### monitor-beta (2026-05-27)
+
+- **Branch**: `feat/monitor-beta`
+- **Spec**: `specs/monitor-beta/spec.md`
+- **Headline**: Cards set to Monitor now show a full monitoring view with check-in history, cadence tracking, and an overdue indicator — plus a multi-photo check-in flow that lets you record what you see with up to three photos alongside your previous check-in for easy comparison.
+- **Summary**: Migration 015 extends `touchpoint_type` with `'checkin'` and adds a `check_ins` table for per-card check-in events. New `POST /api/card/[id]/checkin` route handles multipart form (optional notes + up to 3 photos) and atomically resets `cards.next_check_at`. `<MonitorView />` replaces the current one-line stub with cadence display, overdue chip, check-in timeline, reference-photo comparison, and inline check-in form. Cards in monitoring state gain a "Change path" action that returns them to DECIDE with full context.
+- **Commits**: 8 (2 Phase 0/1 spec + 1 implementation + 5 pre-ship gate fixes)
+- **Quality gates**: all passed — 10 gates (preflight, metrics-check, rls-coverage, fast-job-local findings fixed, migration-rollback-roundtrip, changed-tests-local, simplify findings fixed, /review finding fixed, /cso finding fixed, convention finding fixed, preflight-final)
+
 ### usage-counters-and-byok (2026-05-26)
 
 - **Branch**: `feature/usage-counters-and-byok`
