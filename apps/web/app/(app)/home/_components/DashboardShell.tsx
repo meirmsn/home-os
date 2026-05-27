@@ -138,20 +138,21 @@ function AttentionTab({
     <div className="space-y-4">
       {hasOverdueMonitor && (
         <div className="px-4">
-          <div
+          <p
             data-testid="walkthrough-prompt-wrapper"
-            className="flex flex-col gap-3 rounded-lg border border-[var(--color-act-soon,#C4622D)] bg-[var(--color-act-soon,#C4622D)]/10 p-4 sm:flex-row sm:items-center sm:justify-between"
+            className="px-1 text-sm text-[var(--color-text-primary-inverse)]"
           >
             <WalkthroughPrompt overdueCount={overdueCount} />
+            {' — '}
             <button
               type="button"
               data-testid="start-walkthrough"
               onClick={onStartWalkthrough}
-              className="min-h-11 shrink-0 rounded-md bg-[var(--color-act-soon,#C4622D)] px-5 py-2.5 text-sm font-semibold text-white"
+              className="underline underline-offset-2"
             >
               Start walkthrough
             </button>
-          </div>
+          </p>
         </div>
       )}
 
