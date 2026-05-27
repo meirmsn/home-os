@@ -247,9 +247,16 @@ notify pgrst, 'reload schema';
 -- DROP POLICY IF EXISTS check_ins_select_own ON public.check_ins;
 -- ALTER TABLE public.check_ins DISABLE ROW LEVEL SECURITY;
 -- DROP TABLE IF EXISTS public.check_ins CASCADE;
--- ALTER TYPE public.touchpoint_type RENAME TO touchpoint_type_015;
--- CREATE TYPE public.touchpoint_type AS ENUM ('primary', 'context', 'closeup', 'close');
--- ALTER TABLE public.card_photos
---   ALTER COLUMN touchpoint_type TYPE public.touchpoint_type
---   USING touchpoint_type::text::public.touchpoint_type;
--- DROP TYPE public.touchpoint_type_015;
+-- DO $$ BEGIN
+--   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'card_photos') THEN
+--     ALTER TYPE public.touchpoint_type RENAME TO touchpoint_type_015;
+--     CREATE TYPE public.touchpoint_type AS ENUM ('primary', 'context', 'closeup', 'close');
+--     ALTER TABLE public.card_photos
+--       ALTER COLUMN touchpoint_type TYPE public.touchpoint_type
+--       USING touchpoint_type::text::public.touchpoint_type;
+--     DROP TYPE public.touchpoint_type_015;
+--   ELSE
+--     DROP TYPE IF EXISTS public.touchpoint_type;
+--     CREATE TYPE public.touchpoint_type AS ENUM ('primary', 'context', 'closeup', 'close');
+--   END IF;
+-- END $$;
