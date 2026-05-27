@@ -66,7 +66,7 @@ returns table (
 )
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = public, pg_catalog
 as $$
 declare
   v_checkin_id uuid;
