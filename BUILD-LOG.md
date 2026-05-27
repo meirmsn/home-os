@@ -8,6 +8,15 @@ Project build history. One entry per merged PR, most-recent first. Written by `/
 
 For forward-looking plan: `PLAN.md`. For deferred/long-term work: `PRODUCT-ROADMAP.md`.
 
+### usage-counters-and-byok (2026-05-26)
+
+- **Branch**: `feature/usage-counters-and-byok`
+- **Spec**: `specs/usage-counters-and-byok/spec.md`
+- **Headline**: A new Settings screen shows how many of your five weekly AI triage sessions you've used, with a progress bar that turns warm when you hit the limit and a reset-day indicator, plus an optional field to add your own Claude API key for unlimited sessions.
+- **Summary**: Adds `/settings` route with usage bar (reads `usage_counters` via Supabase client) and BYOK key input (two-state UI per `users.byok_used`). Extends `confirm_triage` RPC to atomically increment `triage_session_count` with week-rollover. Adds `POST /api/key-validate` for minimal Anthropic API probe. Wires BYOK key transit through `POST /api/triage` and `/api/triage/answer` request bodies — free-tier users are blocked at the 5-session cap; BYOK users bypass it. Header gains a gear icon link to Settings.
+- **Commits**: 20 (2 Phase 0/1 spec + 1 PLAN move + 9 atomic implement T1–T9 + 8 pre-ship gate fixes)
+- **Quality gates**: all passed — 15 gates (fast-job-local findings fixed, metrics-check finding fixed, rls-coverage, slow-job-lifecycle, changed-tests-local, migration-rollback-roundtrip finding fixed, advisor-clean, responsive-theme findings fixed, /simplify finding fixed, docs-and-tests-review, /review HIGH fixed, /cso, design-conformance findings fixed, preflight-final, convention)
+
 ### close-flow (2026-05-26)
 
 - **Branch**: `feature/close-flow`

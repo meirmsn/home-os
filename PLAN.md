@@ -54,9 +54,7 @@ Each Planned row is one feature / one PR. Long-form context (problem statement, 
 
 ## Active
 
-| Branch                          | Spec                                  | Hook                                                                  |
-| ------------------------------- | ------------------------------------- | --------------------------------------------------------------------- |
-| feature/usage-counters-and-byok | specs/usage-counters-and-byok/spec.md | Weekly triage usage bar + optional BYOK key for unlimited AI sessions |
+_No work in progress._
 
 ## Planned (v0)
 
