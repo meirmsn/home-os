@@ -234,7 +234,6 @@ $$;
 --    covers future tables, but the grant may not apply retroactively in
 --    Supabase Cloud if the table is created by the migration runner user).
 grant all on public.check_ins to authenticated;
-grant all on public.check_ins to anon;
 
 -- 7. Notify PostgREST to reload schema cache (new table + enum change).
 notify pgrst, 'reload schema';
