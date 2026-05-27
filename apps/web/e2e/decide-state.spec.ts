@@ -242,7 +242,7 @@ test.describe('decide-state round trip', () => {
 
     // Wait for the page to transition into the monitoring UI surface
     // (router.refresh + server re-render) before checking the DB.
-    await expect(page.getByText(/Monitoring view ships in/i)).toBeVisible();
+    await expect(page.getByTestId('monitor-view')).toBeVisible();
 
     const admin = adminClient();
     const { data: row } = await admin
