@@ -140,14 +140,14 @@ function AttentionTab({
         <div className="px-4">
           <div
             data-testid="walkthrough-prompt-wrapper"
-            className="flex flex-wrap items-center gap-3 rounded-lg bg-[var(--color-surface-raised)] p-5"
+            className="flex flex-col items-center gap-3 rounded-lg bg-[var(--color-surface-raised)] p-5 sm:flex-row sm:justify-between"
           >
             <WalkthroughPrompt overdueCount={overdueCount} />
             <button
               type="button"
               data-testid="start-walkthrough"
               onClick={onStartWalkthrough}
-              className="ml-auto shrink-0 rounded-md bg-[var(--color-surface-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-text-on-primary)]"
+              className="shrink-0 rounded-md bg-[var(--color-surface-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-text-on-primary)]"
             >
               Start walkthrough
             </button>
