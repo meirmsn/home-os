@@ -180,6 +180,45 @@ export type Database = {
           },
         ];
       };
+      check_ins: {
+        Row: {
+          card_id: string;
+          created_at: string;
+          id: string;
+          notes: string | null;
+          user_id: string;
+        };
+        Insert: {
+          card_id: string;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          user_id: string;
+        };
+        Update: {
+          card_id?: string;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'check_ins_card_id_fkey';
+            columns: ['card_id'];
+            isOneToOne: false;
+            referencedRelation: 'cards';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'check_ins_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       triage_conversations: {
         Row: {
           card_id: string;
@@ -378,6 +417,14 @@ export type Database = {
         }[];
       };
       mark_byok_used: { Args: { p_user: string }; Returns: undefined };
+      record_checkin: {
+        Args: { p_card: string; p_notes?: string; p_user: string };
+        Returns: {
+          card_id: string;
+          checkin_id: string;
+          next_check_at: string;
+        }[];
+      };
       start_triage: {
         Args: { p_card: string; p_user: string };
         Returns: {
@@ -417,7 +464,7 @@ export type Database = {
         | 'appliance'
         | 'safety'
         | 'other';
-      touchpoint_type: 'primary' | 'context' | 'closeup' | 'close';
+      touchpoint_type: 'primary' | 'context' | 'closeup' | 'close' | 'checkin';
       triage_role: 'system' | 'user' | 'assistant';
     };
     CompositeTypes: {
@@ -585,7 +632,7 @@ export const Constants = {
         'safety',
         'other',
       ],
-      touchpoint_type: ['primary', 'context', 'closeup', 'close'],
+      touchpoint_type: ['primary', 'context', 'closeup', 'close', 'checkin'],
       triage_role: ['system', 'user', 'assistant'],
     },
   },

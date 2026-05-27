@@ -33,6 +33,8 @@ import { QaThread } from './_components/QaThread';
 import { ClosedView } from './_components/ClosedView';
 import { DecideView } from './_components/DecideView';
 import { PlannedView } from './_components/PlannedView';
+import { MonitorView } from './_components/MonitorView';
+import type { CheckInPhoto, CheckInEntry } from './_components/CheckInTimeline';
 import { ReminderDueChip } from './_components/ReminderDueChip';
 
 export const dynamic = 'force-dynamic';
@@ -75,6 +77,9 @@ type CardRow = {
   actual_spend_cents: number | null;
   /** Free-text spend notes, recorded at close time. Null until closed. */
   spend_notes: string | null;
+  /** Next check-in due date for monitoring-state cards. Null until
+   *  card enters monitoring state. */
+  next_check_at: string | null;
 };
 
 type ThreadRow = {
@@ -163,6 +168,8 @@ export default async function CardDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  // Server component renders once — Date.now() is stable within a single
+  const now = Date.now();
   const supabase = await createClient();
 
   // Explicit auth check in the page — the (app) layout also runs getUser()
@@ -181,7 +188,7 @@ export default async function CardDetailPage({
   const { data: cardRow, error: cardError } = await supabase
     .from('cards')
     .select(
-      'id, state, initial_description, system_tag, room_tag, created_at, closed_at, diagnosis, severity, severity_confirmed, contractor_tag, monitoring_cadence_days, chosen_path, cost_estimate_diy, cost_estimate_diy_override, cost_estimate_hire, cost_estimate_hire_override, planned_reminder_date, updated_at, actual_spend_cents, spend_notes'
+      'id, state, initial_description, system_tag, room_tag, created_at, closed_at, diagnosis, severity, severity_confirmed, contractor_tag, monitoring_cadence_days, chosen_path, cost_estimate_diy, cost_estimate_diy_override, cost_estimate_hire, cost_estimate_hire_override, planned_reminder_date, updated_at, actual_spend_cents, spend_notes, next_check_at'
     )
     .eq('id', id)
     .maybeSingle();
@@ -276,6 +283,7 @@ export default async function CardDetailPage({
     card.state === 'diagnosed' ||
     card.state === 'decide' ||
     card.state === 'planned' ||
+    card.state === 'monitoring' ||
     card.state === 'closed'
   ) {
     const { data: convoRows } = await supabase
@@ -352,11 +360,98 @@ export default async function CardDetailPage({
   // columns). When PR #4 lands, audit both call sites are still in
   // lock-step. Universal pattern: `kit/docs/guide/date-handling.md
   // § Trap 2`.
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = new Date(now).toISOString().slice(0, 10);
   const isReminderDue =
     card.state === 'planned' &&
     card.planned_reminder_date !== null &&
     card.planned_reminder_date <= todayIso;
+
+  // Monitoring-state data: check-ins, check-in photos, reference photos,
+  // overdue derivation, days-since-last-checkin. Only fetched when the
+  // card is in monitoring state.
+  const monitorCheckInEntries: CheckInEntry[] = [];
+  let monitorReferencePhotos: CheckInPhoto[] = [];
+  let monitorIsOverdue = false;
+  let monitorDaysSinceLastCheckin: number | null = null;
+
+  if (card.state === 'monitoring') {
+    // Fetch check-ins for this card, ordered by created_at desc.
+    const { data: checkInRows } = await supabase
+      .from('check_ins')
+      .select('id, created_at, notes')
+      .eq('card_id', id)
+      .order('created_at', { ascending: false });
+
+    const checkIns = checkInRows ?? [];
+
+    // For each check-in, fetch photos and generate signed URLs.
+    for (const ci of checkIns) {
+      const { data: ciPhotoRows } = await supabase
+        .from('card_photos')
+        .select('slot, storage_path')
+        .eq('card_id', id)
+        .eq('touchpoint_type', 'checkin')
+        .eq('touchpoint_id', ci.id);
+
+      const ciPhotos: CheckInPhoto[] = [];
+      for (const pr of ciPhotoRows ?? []) {
+        if (pr.storage_path) {
+          const { data: ciSigned } = await supabase.storage
+            .from('card-photos')
+            .createSignedUrl(pr.storage_path, 60 * 10);
+          if (ciSigned?.signedUrl) {
+            ciPhotos.push({ slot: pr.slot, url: ciSigned.signedUrl });
+          }
+        }
+      }
+      monitorCheckInEntries.push({
+        id: ci.id,
+        createdAt: ci.created_at,
+        notes: ci.notes,
+        photos: ciPhotos,
+      });
+    }
+
+    // Reference photos: last check-in photos, or capture photos as fallback (G7).
+    if (
+      monitorCheckInEntries.length > 0 &&
+      monitorCheckInEntries[0]!.photos.length > 0
+    ) {
+      monitorReferencePhotos = monitorCheckInEntries[0]!.photos;
+    } else {
+      // Fallback to capture photos (touchpoint_type='primary').
+      const { data: capturePhotoRows } = await supabase
+        .from('card_photos')
+        .select('slot, storage_path')
+        .eq('card_id', id)
+        .eq('touchpoint_type', 'primary');
+      for (const pr of capturePhotoRows ?? []) {
+        if (pr.storage_path) {
+          const { data: capSigned } = await supabase.storage
+            .from('card-photos')
+            .createSignedUrl(pr.storage_path, 60 * 10);
+          if (capSigned?.signedUrl) {
+            monitorReferencePhotos.push({
+              slot: pr.slot,
+              url: capSigned.signedUrl,
+            });
+          }
+        }
+      }
+    }
+
+    // Overdue derivation (G4 — server time).
+    monitorIsOverdue =
+      card.next_check_at !== null && new Date(card.next_check_at).getTime() <= now;
+
+    // Days since last check-in.
+    if (checkIns.length > 0) {
+      const lastCheckinAt = new Date(checkIns[0]!.created_at);
+      monitorDaysSinceLastCheckin = Math.floor(
+        (now - lastCheckinAt.getTime()) / 86400000
+      );
+    }
+  }
 
   return (
     <main className="mx-auto w-full max-w-2xl space-y-6 px-6 py-10">
@@ -631,9 +726,18 @@ export default async function CardDetailPage({
         })()}
 
       {card.state === 'monitoring' && (
-        <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] p-5 text-sm text-[var(--color-text-secondary-inverse)]">
-          Monitoring view ships in <code>monitor-beta</code>.
-        </section>
+        <MonitorView
+          cardId={card.id}
+          severity={card.severity}
+          diagnosis={card.diagnosis}
+          cadenceDays={card.monitoring_cadence_days ?? 30}
+          isOverdue={monitorIsOverdue}
+          nextCheckAt={card.next_check_at}
+          daysSinceLastCheckin={monitorDaysSinceLastCheckin}
+          checkIns={monitorCheckInEntries}
+          referencePhotos={monitorReferencePhotos}
+          thread={threadRows}
+        />
       )}
 
       {card.state === 'closed' && (
