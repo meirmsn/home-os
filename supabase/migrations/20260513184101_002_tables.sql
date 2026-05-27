@@ -88,8 +88,9 @@ create table public.usage_counters (
 );
 
 -- ROLLBACK:
+-- drop table if exists public.check_ins;
 -- drop table if exists public.usage_counters;
 -- drop table if exists public.card_photos;
 -- drop table if exists public.triage_conversations;
--- drop table if exists public.cards cascade;
+-- drop table if exists public.cards;
 -- drop table if exists public.users;
