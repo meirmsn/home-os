@@ -36,6 +36,14 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: routerRefresh }),
 }));
 
+vi.mock('@/app/(app)/_components/ByokKeyProvider', () => ({
+  useByokKey: () => ({
+    byokKey: null,
+    setByokKey: vi.fn(),
+    clearByokKey: vi.fn(),
+  }),
+}));
+
 import { StartTriage } from './StartTriage';
 
 const CARD_ID = '11111111-2222-3333-4444-555555555555';

@@ -17,6 +17,7 @@ import * as Sentry from '@sentry/nextjs';
 import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { posthog } from '@/lib/posthog';
+import { useByokKey } from '@/app/(app)/_components/ByokKeyProvider';
 
 /** Set of error_class values aligned with the D9 envelope. */
 type ErrorClass =
@@ -70,6 +71,7 @@ export function StartTriage({
   systemTag: string;
 }) {
   const router = useRouter();
+  const { byokKey } = useByokKey();
   const [stage, setStage] = useState<Stage>('idle');
   const [errorClass, setErrorClass] = useState<ErrorClass | null>(null);
 
@@ -84,12 +86,18 @@ export function StartTriage({
       system_tag: systemTag,
     });
 
+    // Build the fetch body — include byok_key when present per spec D3.
+    const fetchBody: Record<string, unknown> = { card_id: cardId };
+    if (byokKey) {
+      fetchBody.byok_key = byokKey;
+    }
+
     let response: Response;
     try {
       response = await fetch('/api/triage', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ card_id: cardId }),
+        body: JSON.stringify(fetchBody),
       });
     } catch (err) {
       const latency = Date.now() - start;
@@ -178,7 +186,7 @@ export function StartTriage({
     // surfaces the right server-render.)
     setErrorClass(error);
     setStage('retryable-error');
-  }, [cardId, systemTag, router, stage]);
+  }, [byokKey, cardId, systemTag, router, stage]);
 
   if (stage === 'in-progress-notice') {
     return (

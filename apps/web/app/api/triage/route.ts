@@ -138,6 +138,25 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Extract optional BYOK key from body (spec D3 — key transit via
+  // request body, never persisted).
+  const byokKey =
+    body && typeof body === 'object' && 'byok_key' in body
+      ? (body as { byok_key: unknown }).byok_key
+      : undefined;
+  const hasByokKey = typeof byokKey === 'string' && byokKey.trim().length > 0;
+
+  // Max-length guard — matches KEY_MAX_LEN in /api/key-validate (200 chars).
+  if (typeof byokKey === 'string' && byokKey.length > 200) {
+    return NextResponse.json(
+      {
+        error: 'validation_failed',
+        fields: { byok_key: 'byok_key must be ≤ 200 characters.' },
+      },
+      { status: 400 }
+    );
+  }
+
   // 3. Load + state-classify the card (RLS scopes visibility).
   const { data: cardRow, error: cardError } = await supabase
     .from('cards')
@@ -198,8 +217,10 @@ export async function POST(request: NextRequest) {
   // 6. Load photo bytes via the user-context client + Storage RLS.
   const images = await fetchCardPhotosAsBase64(supabase, user.id, cardId);
 
-  // 7. Call Claude.
-  const apiKey = (process.env.ANTHROPIC_API_KEY ?? '').trim();
+  // 7. Call Claude. Use BYOK key when present, fall back to server key.
+  const apiKey = hasByokKey
+    ? byokKey.trim()
+    : (process.env.ANTHROPIC_API_KEY ?? '').trim();
   if (!apiKey) {
     Sentry.captureException(new Error('ANTHROPIC_API_KEY is unset'), {
       tags: { route: 'POST /api/triage', stage: 'env_check' },
@@ -227,6 +248,16 @@ export async function POST(request: NextRequest) {
     // Map Anthropic SDK errors to D9 envelope shape.
     await revertState(supabase, user.id, cardId);
     if (err instanceof AnthropicAPIError) {
+      // BYOK-specific error responses (spec § error rescue map #6/#7).
+      if (hasByokKey && err.status === 401) {
+        return NextResponse.json({ error: 'byok_invalid' }, { status: 401 });
+      }
+      if (hasByokKey && err.status === 402) {
+        return NextResponse.json(
+          { error: 'byok_out_of_credits' },
+          { status: 402 }
+        );
+      }
       if (err.status === 429) {
         return NextResponse.json(
           {

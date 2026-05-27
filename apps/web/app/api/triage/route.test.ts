@@ -425,3 +425,41 @@ describe('POST /api/triage', () => {
     process.env.ANTHROPIC_API_KEY = 'sk-ant-test';
   });
 });
+
+describe('POST /api/triage — BYOK key handling', () => {
+  it('uses byok_key for the Anthropic call when present', async () => {
+    await POST(mockRequest({ card_id: VALID_UUID, byok_key: 'sk-ant-user' }));
+    expect(callInitialReadMock).toHaveBeenCalledWith(
+      expect.objectContaining({ apiKey: 'sk-ant-user' })
+    );
+  });
+
+  it('returns 401 byok_invalid when Anthropic returns 401 with BYOK key', async () => {
+    callInitialReadMock.mockRejectedValue(makeAnthropicError({ status: 401 }));
+    const res = await POST(
+      mockRequest({ card_id: VALID_UUID, byok_key: 'sk-ant-bad' })
+    );
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.error).toBe('byok_invalid');
+    expect(cardUpdateChain).toHaveBeenCalled(); // state reverted
+  });
+
+  it('returns 402 byok_out_of_credits when Anthropic returns 402 with BYOK key', async () => {
+    callInitialReadMock.mockRejectedValue(makeAnthropicError({ status: 402 }));
+    const res = await POST(
+      mockRequest({ card_id: VALID_UUID, byok_key: 'sk-ant-nocredit' })
+    );
+    expect(res.status).toBe(402);
+    const body = await res.json();
+    expect(body.error).toBe('byok_out_of_credits');
+  });
+
+  it('falls back to server key when byok_key is absent', async () => {
+    process.env.ANTHROPIC_API_KEY = 'sk-ant-server';
+    await POST(mockRequest({ card_id: VALID_UUID }));
+    expect(callInitialReadMock).toHaveBeenCalledWith(
+      expect.objectContaining({ apiKey: 'sk-ant-server' })
+    );
+  });
+});

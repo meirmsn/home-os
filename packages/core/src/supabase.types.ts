@@ -377,6 +377,7 @@ export type Database = {
           card_id: string;
         }[];
       };
+      mark_byok_used: { Args: { p_user: string }; Returns: undefined };
       start_triage: {
         Args: { p_card: string; p_user: string };
         Returns: {
