@@ -7,12 +7,14 @@ export function WalkthroughPrompt({ overdueCount }: WalkthroughPromptProps) {
   if (overdueCount === 0) return null;
 
   return (
-    <p
-      data-testid="walkthrough-prompt"
-      className="text-sm text-[var(--color-text-primary-inverse)]"
-    >
-      {overdueCount} {overdueCount === 1 ? 'item needs' : 'items need'} a
-      check-in
-    </p>
+    <div data-testid="walkthrough-prompt">
+      <p className="text-sm font-semibold text-[var(--color-text-primary-inverse)]">
+        {overdueCount} {overdueCount === 1 ? 'item needs' : 'items need'} a
+        check-in
+      </p>
+      <p className="mt-1 text-xs text-[var(--color-text-secondary-inverse)]">
+        Review overdue items one by one
+      </p>
+    </div>
   );
 }
