@@ -34,6 +34,7 @@ import { ClosedView } from './_components/ClosedView';
 import { DecideView } from './_components/DecideView';
 import { PlannedView } from './_components/PlannedView';
 import { MonitorView } from './_components/MonitorView';
+import type { CheckInPhoto, CheckInEntry } from './_components/CheckInTimeline';
 import { ReminderDueChip } from './_components/ReminderDueChip';
 
 export const dynamic = 'force-dynamic';
@@ -167,6 +168,8 @@ export default async function CardDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  // Server component renders once — Date.now() is stable within a single
+  const now = Date.now();
   const supabase = await createClient();
 
   // Explicit auth check in the page — the (app) layout also runs getUser()
@@ -357,7 +360,7 @@ export default async function CardDetailPage({
   // columns). When PR #4 lands, audit both call sites are still in
   // lock-step. Universal pattern: `kit/docs/guide/date-handling.md
   // § Trap 2`.
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = new Date(now).toISOString().slice(0, 10);
   const isReminderDue =
     card.state === 'planned' &&
     card.planned_reminder_date !== null &&
@@ -366,15 +369,8 @@ export default async function CardDetailPage({
   // Monitoring-state data: check-ins, check-in photos, reference photos,
   // overdue derivation, days-since-last-checkin. Only fetched when the
   // card is in monitoring state.
-  type MonitorCheckInPhoto = { slot: string; url: string };
-  type MonitorCheckInEntry = {
-    id: string;
-    createdAt: string;
-    notes: string | null;
-    photos: MonitorCheckInPhoto[];
-  };
-  const monitorCheckInEntries: MonitorCheckInEntry[] = [];
-  let monitorReferencePhotos: MonitorCheckInPhoto[] = [];
+  const monitorCheckInEntries: CheckInEntry[] = [];
+  let monitorReferencePhotos: CheckInPhoto[] = [];
   let monitorIsOverdue = false;
   let monitorDaysSinceLastCheckin: number | null = null;
 
@@ -397,7 +393,7 @@ export default async function CardDetailPage({
         .eq('touchpoint_type', 'checkin')
         .eq('touchpoint_id', ci.id);
 
-      const ciPhotos: MonitorCheckInPhoto[] = [];
+      const ciPhotos: CheckInPhoto[] = [];
       for (const pr of ciPhotoRows ?? []) {
         if (pr.storage_path) {
           const { data: ciSigned } = await supabase.storage
@@ -446,13 +442,13 @@ export default async function CardDetailPage({
 
     // Overdue derivation (G4 — server time).
     monitorIsOverdue =
-      card.next_check_at !== null && new Date(card.next_check_at) <= new Date();
+      card.next_check_at !== null && new Date(card.next_check_at).getTime() <= now;
 
     // Days since last check-in.
     if (checkIns.length > 0) {
       const lastCheckinAt = new Date(checkIns[0]!.created_at);
       monitorDaysSinceLastCheckin = Math.floor(
-        (Date.now() - lastCheckinAt.getTime()) / 86400000
+        (now - lastCheckinAt.getTime()) / 86400000
       );
     }
   }

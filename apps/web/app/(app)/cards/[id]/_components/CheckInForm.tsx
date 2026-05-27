@@ -74,10 +74,7 @@ export function CheckInForm(props: CheckInFormProps) {
     if (zoomFile) fd.append('photo_zoom', zoomFile);
     if (detailFile) fd.append('photo_detail', detailFile);
 
-    let photoCount = 0;
-    if (wideFile) photoCount++;
-    if (zoomFile) photoCount++;
-    if (detailFile) photoCount++;
+    const photoCount = [wideFile, zoomFile, detailFile].filter(Boolean).length;
 
     try {
       const res = await fetch(`/api/card/${props.cardId}/checkin`, {
