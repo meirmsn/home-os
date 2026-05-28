@@ -168,7 +168,7 @@ export default async function CardDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  // Server component renders once — Date.now() is stable within a single
+  // Server component renders once — Date.now() is stable within a single request.
   const now = Date.now();
   const supabase = await createClient();
 
@@ -442,7 +442,8 @@ export default async function CardDetailPage({
 
     // Overdue derivation (G4 — server time).
     monitorIsOverdue =
-      card.next_check_at !== null && new Date(card.next_check_at).getTime() <= now;
+      card.next_check_at !== null &&
+      new Date(card.next_check_at).getTime() <= now;
 
     // Days since last check-in.
     if (checkIns.length > 0) {

@@ -18,6 +18,9 @@ export type CheckInFormProps = {
   /** Reference photos from the last check-in (or capture photos if no
    *  prior check-in). Shown alongside the photo inputs for angle matching. */
   referencePhotos: CheckInPhoto[];
+  /** Optional callback fired after a successful check-in submission.
+   *  Used by WalkthroughMode (dashboard) to advance to the next card. */
+  onCheckinSuccess?: () => void;
 };
 
 type FetchState =
@@ -89,6 +92,7 @@ export function CheckInForm(props: CheckInFormProps) {
           has_notes: notes.trim() !== '',
           is_overdue: props.isOverdue,
         });
+        props.onCheckinSuccess?.();
         router.refresh();
         return;
       }
