@@ -32,7 +32,7 @@ two `<img>` share one `{scale,originX,originY}`; Pointer Events pinch+pan;
 segmented cadence picker (1200/750/400, default 750); bounce respects zoom; unit
 tests assert state machine + cadence values.
 **Risk**: medium
-**Status**: in_progress
+**Status**: done
 
 ## Task: Date pickers + slot selector + missing-photo edge cases
 
@@ -43,7 +43,7 @@ earliest↔latest); slot selector wide/medium/closeup default wide; missing-slot
 greying + placeholder; bounce disabled when either panel missing slot; img onError
 fallback; unit tests.
 **Risk**: medium
-**Status**: todo
+**Status**: in_progress
 
 ## Task: Compare sub-route wiring + entry points
 

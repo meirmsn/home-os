@@ -143,3 +143,93 @@ describe('<PhotoComparison> bounce + cadence', () => {
     expect(screen.getByTestId('compare-bounce-hint')).toBeTruthy();
   });
 });
+
+describe('<PhotoComparison> date + slot pickers', () => {
+  // A has all three slots; B (latest) has only wide.
+  const multiSlot: CompareTouchpoint[] = [
+    TP(
+      'tp-early',
+      '2026-05-01T08:00:00Z',
+      {
+        wide: 'url://a-wide',
+        medium: 'url://a-medium',
+        closeup: 'url://a-close',
+      },
+      'primary'
+    ),
+    TP('tp-mid', '2026-05-10T08:00:00Z', { wide: 'url://m-wide' }, 'checkin'),
+    TP('tp-late', '2026-05-20T08:00:00Z', { wide: 'url://b-wide' }, 'close'),
+  ];
+
+  it('defaults the slot selector to wide', () => {
+    renderComponent(multiSlot);
+    expect(
+      screen.getByTestId('compare-slot-wide').getAttribute('aria-checked')
+    ).toBe('true');
+  });
+
+  it('switching to a slot a date lacks shows the missing-slot placeholder for that panel only', () => {
+    renderComponent(multiSlot);
+    // Switch to medium: A has it, B (latest) does not.
+    fireEvent.click(screen.getByTestId('compare-slot-medium'));
+    expect(screen.getByTestId('compare-img-a').getAttribute('src')).toBe(
+      'url://a-medium'
+    );
+    // B panel shows the placeholder, not an image.
+    expect(screen.queryByTestId('compare-img-b')).toBeNull();
+    expect(screen.getByTestId('compare-missing-b').textContent).toContain(
+      'No photo for this slot'
+    );
+  });
+
+  it('disables bounce while a panel is in the missing-slot state', () => {
+    renderComponent(multiSlot);
+    expect(
+      screen.getByTestId('compare-bounce-toggle').hasAttribute('disabled')
+    ).toBe(false);
+    fireEvent.click(screen.getByTestId('compare-slot-closeup'));
+    // B lacks closeup -> bounce disabled.
+    expect(
+      screen.getByTestId('compare-bounce-toggle').hasAttribute('disabled')
+    ).toBe(true);
+  });
+
+  it('enforces distinct selection by disabling the sibling option in each picker', () => {
+    renderComponent(multiSlot);
+    const pickerA = screen.getByTestId(
+      'compare-date-picker-a'
+    ) as HTMLSelectElement;
+    const pickerB = screen.getByTestId(
+      'compare-date-picker-b'
+    ) as HTMLSelectElement;
+    // A defaults to tp-early, B to tp-late. In picker A, the tp-late option is
+    // disabled (it's B's selection); in picker B, tp-early is disabled.
+    const aLateOption = [...pickerA.options].find((o) => o.value === 'tp-late');
+    const bEarlyOption = [...pickerB.options].find(
+      (o) => o.value === 'tp-early'
+    );
+    expect(aLateOption?.disabled).toBe(true);
+    expect(bEarlyOption?.disabled).toBe(true);
+  });
+
+  it('changing date A swaps that panel to the new touchpoint photo', () => {
+    renderComponent(multiSlot);
+    fireEvent.change(screen.getByTestId('compare-date-picker-a'), {
+      target: { value: 'tp-mid' },
+    });
+    expect(screen.getByTestId('compare-img-a').getAttribute('src')).toBe(
+      'url://m-wide'
+    );
+    expect(screen.getByTestId('compare-date-a').textContent).toContain(
+      'May 10'
+    );
+  });
+
+  it('falls back to the missing-slot placeholder when an image errors (expired URL — G9)', () => {
+    renderComponent(multiSlot);
+    const imgA = screen.getByTestId('compare-img-a');
+    fireEvent.error(imgA);
+    expect(screen.queryByTestId('compare-img-a')).toBeNull();
+    expect(screen.getByTestId('compare-missing-a')).toBeTruthy();
+  });
+});

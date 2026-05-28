@@ -20,7 +20,10 @@ import {
   useState,
 } from 'react';
 import Link from 'next/link';
-import type { CompareTouchpoint } from '../compare/_lib/group-touchpoints';
+import type {
+  ComparePhoto,
+  CompareTouchpoint,
+} from '../compare/_lib/group-touchpoints';
 import {
   type Origin,
   type Point,
@@ -59,6 +62,22 @@ function humanDate(iso: string): string {
   });
 }
 
+/** The photo_slot enum, surfaced as the slot-selector axis. */
+type Slot = keyof ComparePhoto;
+
+const SLOT_OPTIONS: ReadonlyArray<{ value: Slot; label: string }> = [
+  { value: 'wide', label: 'Wide' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'closeup', label: 'Close-up' },
+] as const;
+
+/** Touchpoint-type -> a short hint shown next to each date in the pickers. */
+function typeHint(type: CompareTouchpoint['type']): string {
+  if (type === 'close') return 'Finished';
+  if (type === 'checkin') return 'Check-in';
+  return 'Capture';
+}
+
 /** Full-bleed photo-comparison surface — see file header. */
 export function PhotoComparison({
   cardId,
@@ -67,14 +86,37 @@ export function PhotoComparison({
 }: PhotoComparisonProps) {
   // Default pair: earliest (A) vs latest (B). touchpoints is sorted asc and
   // has length >= 2, so [0] and [last] are distinct (spec § D3, G8).
-  const dateAId = touchpoints[0]!.id;
-  const dateBId = touchpoints[touchpoints.length - 1]!.id;
-  const slot = 'wide' as const;
+  const [dateAId, setDateAId] = useState(touchpoints[0]!.id);
+  const [dateBId, setDateBId] = useState(
+    touchpoints[touchpoints.length - 1]!.id
+  );
+  const [slot, setSlot] = useState<Slot>('wide');
 
-  const tpA = touchpoints.find((t) => t.id === dateAId)!;
-  const tpB = touchpoints.find((t) => t.id === dateBId)!;
-  const urlA = tpA.photos[slot];
-  const urlB = tpB.photos[slot];
+  // URLs that 404'd after signed-URL expiry — treated as missing slot via
+  // <img onError> so the panel shows the placeholder, not a broken-image glyph
+  // (spec G9). Keyed by URL so a re-selection of a still-live photo recovers.
+  const [failedUrls, setFailedUrls] = useState<ReadonlySet<string>>(
+    () => new Set()
+  );
+  const markUrlFailed = useCallback((url: string) => {
+    setFailedUrls((prev) => {
+      if (prev.has(url)) return prev;
+      const next = new Set(prev);
+      next.add(url);
+      return next;
+    });
+  }, []);
+
+  const tpA = touchpoints.find((t) => t.id === dateAId) ?? touchpoints[0]!;
+  const tpB =
+    touchpoints.find((t) => t.id === dateBId) ??
+    touchpoints[touchpoints.length - 1]!;
+  const rawUrlA = tpA.photos[slot];
+  const rawUrlB = tpB.photos[slot];
+  // A panel is in the missing-slot state when it has no URL for the slot OR
+  // its URL failed to load (expired). Both render the same placeholder.
+  const urlA = rawUrlA && !failedUrls.has(rawUrlA) ? rawUrlA : undefined;
+  const urlB = rawUrlB && !failedUrls.has(rawUrlB) ? rawUrlB : undefined;
 
   const [transform, setTransform] = useState<Transform>({
     scale: 1,
@@ -95,8 +137,7 @@ export function PhotoComparison({
 
   // Bounce is only meaningful when both panels have a photo for the selected
   // slot (spec § D4 — disabled while either panel is in the missing-slot
-  // state). With Task 3's fixed wide-slot pair both are present; Task 4
-  // generalizes the gate to the slot selector.
+  // state, including an expired/404'd URL).
   const bounceEnabled = Boolean(urlA && urlB);
 
   // Effective bounce state: a user can only see bounce when both panels have
@@ -289,9 +330,12 @@ export function PhotoComparison({
                 alt="Photo A"
                 style={imgStyle}
                 draggable={false}
+                onError={() => markUrlFailed(displayedSrcA)}
                 data-testid="compare-img-a"
               />
-            ) : null}
+            ) : (
+              <MissingSlot date={tpA.date} side="a" />
+            )}
           </div>
           <div
             style={panelStyle}
@@ -309,9 +353,12 @@ export function PhotoComparison({
                 alt="Photo B"
                 style={imgStyle}
                 draggable={false}
+                onError={() => markUrlFailed(displayedSrcB)}
                 data-testid="compare-img-b"
               />
-            ) : null}
+            ) : (
+              <MissingSlot date={tpB.date} side="b" />
+            )}
           </div>
         </div>
 
@@ -339,12 +386,72 @@ export function PhotoComparison({
           Home OS
         </p>
 
-        {/* 5 — Controls: bounce toggle + cadence picker (+ zoom reset).
-            Date pickers + slot selector land in Task 4. */}
+        {/* 5 — Controls: date pickers + slot selector + bounce + cadence. */}
         <div
           className="mt-auto flex flex-col gap-3 pt-2"
           data-testid="compare-controls"
         >
+          {/* Date pickers — each lists only photo-bearing touchpoints; the
+              sibling's selection is disabled to enforce distinct dates (G8). */}
+          <div className="grid grid-cols-2 gap-2">
+            <label className="flex flex-col gap-1 text-xs text-[var(--color-text-secondary)]">
+              Date A
+              <select
+                value={dateAId}
+                onChange={(e) => setDateAId(e.target.value)}
+                data-testid="compare-date-picker-a"
+                className="min-h-11 rounded-md border border-[var(--color-border-default)] bg-[var(--color-background-raised)] px-2 py-2 text-sm text-[var(--color-text-primary-inverse)]"
+              >
+                {touchpoints.map((t) => (
+                  <option key={t.id} value={t.id} disabled={t.id === dateBId}>
+                    {humanDate(t.date)} · {typeHint(t.type)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-xs text-[var(--color-text-secondary)]">
+              Date B
+              <select
+                value={dateBId}
+                onChange={(e) => setDateBId(e.target.value)}
+                data-testid="compare-date-picker-b"
+                className="min-h-11 rounded-md border border-[var(--color-border-default)] bg-[var(--color-background-raised)] px-2 py-2 text-sm text-[var(--color-text-primary-inverse)]"
+              >
+                {touchpoints.map((t) => (
+                  <option key={t.id} value={t.id} disabled={t.id === dateAId}>
+                    {humanDate(t.date)} · {typeHint(t.type)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {/* Slot selector — wide / medium / closeup, default wide. */}
+          <div
+            role="radiogroup"
+            aria-label="Photo slot"
+            data-testid="compare-slot-selector"
+            className="flex justify-center gap-1"
+          >
+            {SLOT_OPTIONS.map((s) => (
+              <button
+                key={s.value}
+                type="button"
+                role="radio"
+                aria-checked={slot === s.value}
+                onClick={() => setSlot(s.value)}
+                data-testid={`compare-slot-${s.value}`}
+                className={`min-h-11 flex-1 rounded-md border px-3 py-2 text-sm transition-colors ${
+                  slot === s.value
+                    ? 'border-[var(--color-monitor)] bg-[var(--color-monitor)] font-semibold text-[var(--color-text-primary-inverse)]'
+                    : 'border-[var(--color-border-default)] text-[var(--color-text-primary-inverse)] hover:bg-[var(--color-background-raised)]'
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+
           <div className="flex flex-wrap items-center justify-center gap-2">
             <button
               type="button"
@@ -408,6 +515,21 @@ export function PhotoComparison({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Greyed placeholder shown when a date lacks the selected slot (or the
+ *  signed URL expired). */
+function MissingSlot({ date, side }: { date: string; side: 'a' | 'b' }) {
+  return (
+    <div
+      data-testid={`compare-missing-${side}`}
+      className="flex h-full w-full items-center justify-center bg-[var(--color-background-raised)] p-4 text-center"
+    >
+      <p className="text-xs text-[var(--color-text-secondary)]">
+        No photo for this slot on {humanDate(date)}
+      </p>
     </div>
   );
 }
