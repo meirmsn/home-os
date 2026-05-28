@@ -12,7 +12,7 @@ Per-task unit tests green before commit; `pnpm turbo run test:unit` green after 
 map, failed-sign drop, sort, count); `compare/page.tsx` compiles + redirects on
 < 2 touchpoints; renders a temporary stub.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: <PhotoComparison> side-by-side + synced pinch-zoom/pan
 
@@ -22,7 +22,7 @@ map, failed-sign drop, sort, count); `compare/page.tsx` compiles + redirects on
 two `<img>` share one `{scale,originX,originY}`; Pointer Events pinch+pan;
 `touch-action:none` on panels only; unit tests for layout + default pair.
 **Risk**: medium
-**Status**: todo
+**Status**: in_progress
 
 ## Task: Bounce mode + cadence picker
 
