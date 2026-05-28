@@ -8,6 +8,15 @@ Project build history. One entry per merged PR, most-recent first. Written by `/
 
 For forward-looking plan: `PLAN.md`. For deferred/long-term work: `PRODUCT-ROADMAP.md`.
 
+### photo-comparison-ui (2026-05-28)
+
+- **Branch**: `feat/photo-comparison-ui`
+- **Spec**: `specs/photo-comparison-ui/spec.md`
+- **Headline**: Compare any two photos of a home issue side by side — pinch to zoom both at once, or rapidly flip between them to make subtle changes jump out. Available on any issue you've photographed more than once.
+- **Summary**: Adds a "Compare photos" surface reachable from MONITOR, PLANNED, and CLOSED cards whenever the card has 2+ photo-bearing touchpoints. Side-by-side panels with synchronized pinch-zoom + pan, and an instant-cut bounce mode (slow 1200 / default 750 / fast 400 ms), plus per-slot (wide/medium/closeup) selection with missing-slot greying. Reads existing `card_photos` rows — no schema change.
+- **Commits**: 17 (2 Phase 0/1 spec + 1 PLAN move + 6 atomic implement + 6 Phase 3 gate fixes/evidence + 1 main merge + decisions doc)
+- **Quality gates**: all passed — simplify (1 fixed), docs-and-tests-review (2 fixed: 1 med + 1 low), review, cso, design-conformance (1 fixed), qa (live), benchmark (pass-with-note), preflight-final, convention; migration/RLS/slow-job/advisor gates n/a (no schema change)
+
 ### rls-auto-enable-drift (2026-05-28)
 
 - **Branch**: `fix/rls-auto-enable-drift`

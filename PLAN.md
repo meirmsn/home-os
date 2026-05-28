@@ -54,9 +54,7 @@ Each Planned row is one feature / one PR. Long-form context (problem statement, 
 
 ## Active
 
-| Feature               | Branch                     | Spec                                  | Hook                                                                             |
-| --------------------- | -------------------------- | ------------------------------------- | ------------------------------------------------------------------------------- |
-| `photo-comparison-ui` | `feat/photo-comparison-ui` | `specs/photo-comparison-ui/spec.md` | Side-by-side sync-zoom photo comparison with bounce mode on cards with 2+ photos |
+_No work in progress._
 
 ## Planned (v0)
 
