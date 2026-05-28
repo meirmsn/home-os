@@ -43,7 +43,7 @@
 **Blocks**: none
 **Done when**: `run.ts` per runner contract (env-key guard, bounded concurrency, per-entry error tolerance, report, non-zero exit); `eval:triage` script + `tsx` devDep added; lockfile updated; runner prints key-required error and exits 1 when ANTHROPIC_API_KEY unset (proves tsx loads module graph).
 **Risk**: medium
-**Status**: todo
+**Status**: done
 
 ## Task: T6 — README + doc note
 
