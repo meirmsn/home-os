@@ -16,6 +16,7 @@ vi.mock('@sentry/nextjs', () => ({
 afterEach(() => cleanup());
 
 const defaultProps: ClosedViewProps = {
+  cardId: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
   severity: 'soon',
   closedAt: '2026-05-26T12:00:00Z',
   diagnosis: 'Slow P-trap leak under the kitchen sink.',
@@ -31,6 +32,7 @@ const defaultProps: ClosedViewProps = {
     date: '2026-05-26T12:00:00Z',
   },
   thread: [],
+  photoTouchpointCount: 2,
 };
 
 describe('<ClosedView />', () => {
@@ -135,5 +137,18 @@ describe('<ClosedView />', () => {
   it('formats spend correctly for single cents (e.g. $0.01)', () => {
     render(<ClosedView {...defaultProps} actualSpendCents={1} />);
     expect(screen.getByTestId('closed-spend').textContent).toContain('$0.01');
+  });
+
+  it('renders the Compare photos link when photoTouchpointCount >= 2', () => {
+    render(<ClosedView {...defaultProps} photoTouchpointCount={2} />);
+    const link = screen.getByTestId('compare-photos-link');
+    expect(link.getAttribute('href')).toBe(
+      `/cards/${defaultProps.cardId}/compare`
+    );
+  });
+
+  it('hides the Compare photos link when photoTouchpointCount < 2', () => {
+    render(<ClosedView {...defaultProps} photoTouchpointCount={1} />);
+    expect(screen.queryByTestId('compare-photos-link')).toBeNull();
   });
 });

@@ -27,11 +27,23 @@ function buildConnectSrc(): string {
   return sources.join(' ');
 }
 
+/** Build CSP `img-src` from $NEXT_PUBLIC_SUPABASE_URL so signed Storage photos
+ *  load. Prod Supabase is https (already covered by the broad `https:`), but
+ *  the local stack serves Storage over http://host.docker.internal:<port> —
+ *  add its exact origin so card photos render in local dev / browser QA.
+ *  Prod is unchanged (its https origin is redundant with `https:`). */
+function buildImgSrc(): string {
+  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').trim();
+  const sources = ["'self'", 'data:', 'blob:', 'https:'];
+  if (supabaseUrl) sources.push(supabaseUrl);
+  return sources.join(' ');
+}
+
 const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://us-assets.i.posthog.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
+  `img-src ${buildImgSrc()}`,
   `connect-src ${buildConnectSrc()}`,
   "font-src 'self' data:",
   "frame-ancestors 'none'",
