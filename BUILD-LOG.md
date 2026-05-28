@@ -8,6 +8,24 @@ Project build history. One entry per merged PR, most-recent first. Written by `/
 
 For forward-looking plan: `PLAN.md`. For deferred/long-term work: `PRODUCT-ROADMAP.md`.
 
+### rls-auto-enable-drift (2026-05-28)
+
+- **Branch**: `fix/rls-auto-enable-drift`
+- **PR**: #41
+- **Headline**: Removes a database schema drift and closes the last two Supabase security-advisor warnings — no user-visible change.
+- **Summary**: Migration 017 brings the prod-only `rls_auto_enable()` event-trigger function + its `ensure_rls` trigger (auto-enables RLS on every new `public` table — defense-in-depth) into the repo. It pre-existed in prod from project-setup but was in no migration (untracked drift); surfaced by #40's `/ak-go-live` canary against the prod Advisor. `CREATE OR REPLACE` with the verbatim prod body + an idempotent `ensure_rls` create for local↔prod parity, plus `REVOKE EXECUTE ... FROM public, anon, authenticated` to clear the two `{anon,authenticated}_security_definer_function_executable` findings (event triggers fire independent of EXECUTE grants).
+- **Commits**: 1 (migration 017 + `supabase/README.md`) — direct follow-up; did not run the full `/ak-build` pipeline, so no `specs/<feature>/` artifacts (see `kit/ROADMAP.md § /ak-build no-silent-scope-down`).
+- **Quality gates**: splinter SECURITY → 0; prod Advisor secdef 2 → 0 (only the plan-gated `auth_leaked_password_protection` WARN remains — needs Supabase Pro); `ensure_rls` trigger verified live + 893 unit tests pass; CI green.
+
+### advisor-hardening (2026-05-28)
+
+- **Branch**: `fix/advisor-hardening`
+- **PR**: #40
+- **Headline**: Hardens the database so it passes Supabase's built-in security and performance checks — no user-visible change.
+- **Summary**: Migration 016 clears all 21 SECURITY + 20 PERFORMANCE (WARN) Supabase Advisor findings (verified against the canonical splinter query; prod re-checked via the Management API). Wraps `auth.uid()` → `(select auth.uid())` in the 20 RLS policies across `users`/`cards`/`card_photos`/`triage_conversations`/`usage_counters` (`auth_rls_initplan`). Flips the 9 user-facing RPCs from `SECURITY DEFINER` to `SECURITY INVOKER` (trust boundary → RLS + the migration-008 table grants; the internal `p_user = auth.uid()` guard is retained as defense-in-depth). Revokes direct EXECUTE on the signup-only `create_public_user_profile()` and pins `set_updated_at()`'s search_path. ALTER-only; no function bodies rewritten.
+- **Commits**: 1 (migration 016 + `supabase/README.md`) — direct migration; did not run the full `/ak-build` pipeline, so no `specs/<feature>/` artifacts (see `kit/ROADMAP.md § /ak-build no-silent-scope-down`).
+- **Quality gates**: splinter 41 → 0 WARN (local + prod); 893 unit tests pass; `rls-isolation` E2E 20/20 (incl. `claim_card_slot` foreign-`p_user` 42501 via real PostgREST); SQL impersonation confirms INVOKER RPCs work + RLS isolation holds both directions; CI green.
+
 ### dashboard (2026-05-27)
 
 - **Branch**: `feat/dashboard`
