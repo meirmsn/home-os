@@ -25,7 +25,7 @@
 **Blocks**: T5
 **Done when**: `score.ts` pure functions + `aggregate` per contract; `score.test.ts` green (math + threshold boundaries inclusive); `eval/**/*.test.ts` added to `vitest.config.ts` include.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: T4 — Dataset integrity test
 

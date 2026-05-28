@@ -37,6 +37,9 @@ export default defineConfig({
       'app/**/*.test.ts',
       'app/**/*.test.tsx',
       'middleware.test.ts',
+      // Triage eval harness lives under eval/ (outside lib/ + app/); without
+      // this glob the score + dataset integrity tests silently never run.
+      'eval/**/*.test.ts',
     ],
     exclude: ['node_modules', 'dist', '.next', 'e2e'],
   },
