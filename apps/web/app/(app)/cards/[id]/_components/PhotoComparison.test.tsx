@@ -6,7 +6,7 @@
 //       compare/_lib/sync-zoom-transform.test.ts (the pure module).
 
 import { afterEach, describe, expect, it } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { PhotoComparison } from './PhotoComparison';
 import type { CompareTouchpoint } from '../compare/_lib/group-touchpoints';
 
@@ -83,5 +83,63 @@ describe('<PhotoComparison> layout', () => {
     renderComponent();
     const panelA = screen.getByTestId('compare-panel-a');
     expect(panelA.style.touchAction).toBe('none');
+  });
+});
+
+describe('<PhotoComparison> bounce + cadence', () => {
+  it('toggles bounceOn via the Bounce/Stop button', () => {
+    renderComponent();
+    const toggle = screen.getByTestId('compare-bounce-toggle');
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    expect(toggle.textContent).toBe('Bounce');
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    expect(toggle.textContent).toBe('Stop');
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('defaults cadence to 750 ms and switches on click', () => {
+    renderComponent();
+    expect(
+      screen.getByTestId('compare-cadence-750').getAttribute('aria-checked')
+    ).toBe('true');
+    fireEvent.click(screen.getByTestId('compare-cadence-400'));
+    expect(
+      screen.getByTestId('compare-cadence-400').getAttribute('aria-checked')
+    ).toBe('true');
+    expect(
+      screen.getByTestId('compare-cadence-750').getAttribute('aria-checked')
+    ).toBe('false');
+  });
+
+  it('exposes all three cadence options mapped to 1200/750/400', () => {
+    renderComponent();
+    expect(screen.getByTestId('compare-cadence-1200').textContent).toBe('Slow');
+    expect(screen.getByTestId('compare-cadence-750').textContent).toBe(
+      'Default'
+    );
+    expect(screen.getByTestId('compare-cadence-400').textContent).toBe('Fast');
+  });
+
+  it('enables bounce when both panels have the slot', () => {
+    renderComponent();
+    expect(
+      screen.getByTestId('compare-bounce-toggle').hasAttribute('disabled')
+    ).toBe(false);
+    expect(screen.queryByTestId('compare-bounce-hint')).toBeNull();
+  });
+
+  it('disables bounce + shows the hint when a panel lacks the slot', () => {
+    // B (latest) has no wide photo -> bounce disabled.
+    const tps: CompareTouchpoint[] = [
+      TP('tp-early', '2026-05-01T08:00:00Z', { wide: 'url://a-wide' }),
+      TP('tp-late', '2026-05-20T08:00:00Z', { medium: 'url://b-medium' }),
+    ];
+    renderComponent(tps);
+    expect(
+      screen.getByTestId('compare-bounce-toggle').hasAttribute('disabled')
+    ).toBe(true);
+    expect(screen.getByTestId('compare-bounce-hint')).toBeTruthy();
   });
 });

@@ -15,6 +15,7 @@ import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -28,6 +29,11 @@ import {
   composeTransform,
   pinchToScale,
 } from '../compare/_lib/sync-zoom-transform';
+import {
+  type CadenceMs,
+  CADENCE_OPTIONS,
+  DEFAULT_CADENCE_MS,
+} from '../compare/_lib/cadence';
 
 export type PhotoComparisonProps = {
   cardId: string;
@@ -79,6 +85,47 @@ export function PhotoComparison({
     width: 1,
     height: 1,
   });
+
+  // Bounce mode: instant-cut alternation between A and B for the selected
+  // slot, at the picked cadence. Both panels show the same alternating frame
+  // so the change "jumps out" (spec § Bounce mode).
+  const [bounceOn, setBounceOn] = useState(false);
+  const [cadenceMs, setCadenceMs] = useState<CadenceMs>(DEFAULT_CADENCE_MS);
+  const [bounceFrame, setBounceFrame] = useState<0 | 1>(0);
+
+  // Bounce is only meaningful when both panels have a photo for the selected
+  // slot (spec § D4 — disabled while either panel is in the missing-slot
+  // state). With Task 3's fixed wide-slot pair both are present; Task 4
+  // generalizes the gate to the slot selector.
+  const bounceEnabled = Boolean(urlA && urlB);
+
+  // Effective bounce state: a user can only see bounce when both panels have
+  // the slot. Deriving this (rather than syncing `bounceOn` via setState in an
+  // effect) keeps a later slot switch that removes a photo from leaving a
+  // dead "on" toggle, with no cascading-render setState.
+  const isBouncing = bounceOn && bounceEnabled;
+
+  // rAF loop: swap the displayed frame when `now - lastSwap >= cadenceMs`.
+  // Reading performance.now() deltas (not setInterval) self-corrects after a
+  // backgrounded throttle — one late swap, not a burst (spec G7).
+  useEffect(() => {
+    if (!isBouncing) return;
+    let rafId = 0;
+    let lastSwap =
+      typeof performance !== 'undefined' ? performance.now() : Date.now();
+    /**
+     *
+     */
+    function tick(now: number) {
+      if (now - lastSwap >= cadenceMs) {
+        setBounceFrame((f) => (f === 0 ? 1 : 0));
+        lastSwap = now;
+      }
+      rafId = requestAnimationFrame(tick);
+    }
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [isBouncing, cadenceMs]);
 
   const captureBounds = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -191,6 +238,14 @@ export function PhotoComparison({
     display: 'block',
   };
 
+  // When bouncing, both panels show the SAME alternating frame (A then B then
+  // A...) so the instant cut is visible side-by-side. Otherwise each panel
+  // shows its own date's photo. The src swap is instant — no opacity/crossfade
+  // (spec § Bounce mode — instant cut).
+  const bounceSrc = bounceFrame === 0 ? urlA : urlB;
+  const displayedSrcA = isBouncing ? bounceSrc : urlA;
+  const displayedSrcB = isBouncing ? bounceSrc : urlB;
+
   return (
     <div
       data-testid="photo-comparison"
@@ -228,9 +283,9 @@ export function PhotoComparison({
             onDoubleClick={resetZoom}
             data-testid="compare-panel-a"
           >
-            {urlA ? (
+            {displayedSrcA ? (
               <img
-                src={urlA}
+                src={displayedSrcA}
                 alt="Photo A"
                 style={imgStyle}
                 draggable={false}
@@ -248,9 +303,9 @@ export function PhotoComparison({
             onDoubleClick={resetZoom}
             data-testid="compare-panel-b"
           >
-            {urlB ? (
+            {displayedSrcB ? (
               <img
-                src={urlB}
+                src={displayedSrcB}
                 alt="Photo B"
                 style={imgStyle}
                 draggable={false}
@@ -284,17 +339,72 @@ export function PhotoComparison({
           Home OS
         </p>
 
-        {/* 5 — Controls (zoom reset for now; pickers/bounce in later tasks). */}
-        <div className="mt-auto flex flex-wrap items-center justify-center gap-2 pt-2">
-          {transform.scale > 1 && (
+        {/* 5 — Controls: bounce toggle + cadence picker (+ zoom reset).
+            Date pickers + slot selector land in Task 4. */}
+        <div
+          className="mt-auto flex flex-col gap-3 pt-2"
+          data-testid="compare-controls"
+        >
+          <div className="flex flex-wrap items-center justify-center gap-2">
             <button
               type="button"
-              onClick={resetZoom}
-              data-testid="compare-reset-zoom"
-              className="min-h-11 rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm text-[var(--color-text-primary-inverse)] hover:bg-[var(--color-background-raised)]"
+              onClick={() => setBounceOn((b) => !b)}
+              disabled={!bounceEnabled}
+              aria-pressed={isBouncing}
+              data-testid="compare-bounce-toggle"
+              className={`min-h-11 rounded-md px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                isBouncing
+                  ? 'bg-[var(--color-act-soon)] text-[var(--color-text-primary-inverse)]'
+                  : 'bg-[var(--color-monitor)] text-[var(--color-text-primary-inverse)]'
+              }`}
             >
-              Reset zoom
+              {isBouncing ? 'Stop' : 'Bounce'}
             </button>
+
+            <div
+              role="radiogroup"
+              aria-label="Bounce cadence"
+              data-testid="compare-cadence-picker"
+              className="flex gap-1"
+            >
+              {CADENCE_OPTIONS.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={cadenceMs === c.value}
+                  onClick={() => setCadenceMs(c.value)}
+                  data-testid={`compare-cadence-${c.value}`}
+                  className={`min-h-11 rounded-md border px-3 py-2 text-sm transition-colors ${
+                    cadenceMs === c.value
+                      ? 'border-[var(--color-monitor)] bg-[var(--color-monitor)] font-semibold text-[var(--color-text-primary-inverse)]'
+                      : 'border-[var(--color-border-default)] text-[var(--color-text-primary-inverse)] hover:bg-[var(--color-background-raised)]'
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
+            {transform.scale > 1 && (
+              <button
+                type="button"
+                onClick={resetZoom}
+                data-testid="compare-reset-zoom"
+                className="min-h-11 rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm text-[var(--color-text-primary-inverse)] hover:bg-[var(--color-background-raised)]"
+              >
+                Reset zoom
+              </button>
+            )}
+          </div>
+
+          {!bounceEnabled && (
+            <p
+              data-testid="compare-bounce-hint"
+              className="text-center text-xs text-[var(--color-text-secondary)]"
+            >
+              Bounce needs the selected slot on both dates.
+            </p>
           )}
         </div>
       </div>

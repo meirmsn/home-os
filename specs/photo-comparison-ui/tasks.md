@@ -22,7 +22,7 @@ map, failed-sign drop, sort, count); `compare/page.tsx` compiles + redirects on
 two `<img>` share one `{scale,originX,originY}`; Pointer Events pinch+pan;
 `touch-action:none` on panels only; unit tests for layout + default pair.
 **Risk**: medium
-**Status**: in_progress
+**Status**: done
 
 ## Task: Bounce mode + cadence picker
 
@@ -32,7 +32,7 @@ two `<img>` share one `{scale,originX,originY}`; Pointer Events pinch+pan;
 segmented cadence picker (1200/750/400, default 750); bounce respects zoom; unit
 tests assert state machine + cadence values.
 **Risk**: medium
-**Status**: todo
+**Status**: in_progress
 
 ## Task: Date pickers + slot selector + missing-photo edge cases
 
