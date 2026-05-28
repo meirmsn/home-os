@@ -24,6 +24,7 @@ import type {
 import { BeforeCloseSummary } from './BeforeCloseSummary';
 import { ChoosePath } from './ChoosePath';
 import { CloseCardForm } from './CloseCardForm';
+import { ComparePhotosLink } from './ComparePhotosLink';
 import { ConversationRow, type ConversationRowData } from './ConversationRow';
 import { PathCard } from './PathCard';
 import { ReminderEditor } from './ReminderEditor';
@@ -63,6 +64,10 @@ export type PlannedViewProps = {
    *  Gotcha #8). Threaded to <CloseCardForm /> for days_in_planned
    *  computation in the PostHog event. */
   updatedAt: string;
+  /** Distinct photo-bearing touchpoint count — gates the "Compare photos"
+   *  link (spec § Entry points). Computed in page.tsx. Rare for planned
+   *  cards, but a card restored from monitoring can have 2+. */
+  photoTouchpointCount: number;
 };
 
 /** Human-readable label for the chosen-path banner. */
@@ -150,6 +155,11 @@ export function PlannedView(props: PlannedViewProps) {
         diyOverride={props.diyOverride}
         contractorEstimate={props.contractorEstimate}
         contractorOverride={props.contractorOverride}
+      />
+
+      <ComparePhotosLink
+        cardId={props.cardId}
+        photoTouchpointCount={props.photoTouchpointCount}
       />
 
       <ChoosePath

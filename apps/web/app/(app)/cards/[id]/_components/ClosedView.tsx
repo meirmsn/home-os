@@ -7,6 +7,7 @@
 // Does NOT: Implement re-open from closed (CLOSED is terminal in v0).
 
 import { BeforeAfterPhotos, type PhotoSlot } from './BeforeAfterPhotos';
+import { ComparePhotosLink } from './ComparePhotosLink';
 import { ConversationRow, type ConversationRowData } from './ConversationRow';
 import { severityChipClasses, type Severity } from './_severity-chip';
 
@@ -15,6 +16,7 @@ export type ClosedViewInputRow = ConversationRowData & {
 };
 
 export type ClosedViewProps = {
+  cardId: string;
   severity: Severity | null;
   closedAt: string | null;
   diagnosis: string | null;
@@ -24,6 +26,9 @@ export type ClosedViewProps = {
   before: PhotoSlot | null;
   after: PhotoSlot | null;
   thread: ClosedViewInputRow[];
+  /** Distinct photo-bearing touchpoint count — gates the "Compare photos"
+   *  link (spec § Entry points). Computed in page.tsx. */
+  photoTouchpointCount: number;
 };
 
 /** UTC-ISO → human-readable date (e.g. "Mon, May 26"). */
@@ -80,6 +85,11 @@ export function ClosedView(props: ClosedViewProps) {
       </header>
 
       <BeforeAfterPhotos before={props.before} after={props.after} />
+
+      <ComparePhotosLink
+        cardId={props.cardId}
+        photoTouchpointCount={props.photoTouchpointCount}
+      />
 
       {props.actualSpendCents !== null && (
         <div

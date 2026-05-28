@@ -12,6 +12,7 @@ import { CheckInForm, type CheckInFormProps } from './CheckInForm';
 import { CadenceEditor } from './CadenceEditor';
 import { MonitorViewOpenedCapture } from './MonitorViewOpenedCapture';
 import { ChangePathButton } from './ChangePathButton';
+import { ComparePhotosLink } from './ComparePhotosLink';
 import { ConversationRow, type ConversationRowData } from './ConversationRow';
 
 export type MonitorViewInputRow = ConversationRowData & {
@@ -29,6 +30,9 @@ export type MonitorViewProps = {
   checkIns: CheckInEntry[];
   referencePhotos: CheckInFormProps['referencePhotos'];
   thread: MonitorViewInputRow[];
+  /** Distinct photo-bearing touchpoint count — gates the "Compare photos"
+   *  link (spec § Entry points). Computed in page.tsx. */
+  photoTouchpointCount: number;
 };
 
 /** MonitorView — see file header. */
@@ -87,6 +91,11 @@ export function MonitorView(props: MonitorViewProps) {
       />
 
       <CheckInTimeline entries={props.checkIns} />
+
+      <ComparePhotosLink
+        cardId={props.cardId}
+        photoTouchpointCount={props.photoTouchpointCount}
+      />
 
       <CheckInForm
         cardId={props.cardId}
