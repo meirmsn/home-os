@@ -1,13 +1,22 @@
 ## Gate 9: /qa
 
-- Result: blocked (browser tooling — see reason)
+- Result: pass (live QA via gstack browse daemon)
 
-Browser-visual gate requires an authenticated headless-browser session viewing a card with 2+ photo-bearing touchpoints. This sandbox cannot stand up that session: (1) the Playwright browser binary (chromium v1223) is firewall-blocked from the Chrome-for-Testing CDN; (2) programmatic auth seeding fails (AuthRetryableFetchError from the admin API); (3) the pre-existing e2e/magic-link.spec.ts also fails locally — confirming the local authenticated-browser path is environmentally broken for ALL flows, not this feature. The gstack browse daemon (system Chromium) runs, but has no way to reach the authenticated compare screen here.
+Drove the live compare route (`/cards/<id>/compare`) in a real headless
+Chromium with a seeded authenticated session + a card carrying two photo
+touchpoints (primary wide+medium, close wide). Verified end-to-end:
 
-This gate is CI/preview-authoritative for this PR: the E2E spec exercises the
-real compare-route rendering in CI (chromium+webkit installed), and the Vercel
-preview deploy provides a live authenticated surface for manual visual review
-(flagged in the PR Test plan).
+- Auth + RLS-scoped load: compare route renders (no redirect — ≥2 gate passes).
+- Side-by-side panels render distinct photos (A=earlier, B=later).
+- Slot selector: clicking "Medium" toggles the radio (aria-checked flips) and
+  panel B (which lacks medium) shows the greyed placeholder
+  "No photo for this slot on Wed, May 20".
+- Bounce auto-disables in the missing-slot state, with the hint
+  "Bounce needs the selected slot on both dates." (spec D4).
+- Back link, date pickers, dates, wordmark all present.
+  Bounce rAF animation + pinch-zoom gestures are pinned by unit tests
+  (bounce frame-swap test added in e20405b; sync-zoom-transform table tests)
+  rather than driven here.
 
 ## Dismissals
 
