@@ -67,4 +67,24 @@ surface row; CLAUDE.md gotchas; `photo-comparison.spec.ts` E2E; full unit suite 
 
 ## Decisions
 
-(judgment calls recorded here as they happen)
+- **Ported the spike's sync-zoom transform math into `compare/_lib/` rather than
+  importing from `/spike`.** The `/spike` surface is operator-only and slated for
+  deletion (its own header marks it "deleted with photo-comparison-ui, D8"), so
+  importing across that boundary would couple the feature to a deletable path.
+  Copied `sync-zoom-transform.ts` + its table-driven test into the feature lib.
+- **Bounce shows the SAME alternating frame in BOTH panels** (rather than each
+  panel keeping its own static photo while a third element bounces). The spec's
+  "instant-cut alternation between the two dates' photo" reads most naturally as
+  a side-by-side flip both panels participate in, matching the spike's opacity-
+  swap model converted to an instant src swap.
+- **Effective bounce state is derived (`isBouncing = bounceOn && bounceEnabled`),
+  not synced via setState-in-effect.** ESLint's react-hooks rule flags
+  setState-in-effect as cascading-render risk; deriving the effective flag is the
+  boring fix and avoids a dead "on" toggle when a slot switch removes a photo.
+- **Used the real design tokens `--color-background-raised` / `--color-border-
+default`** (not the `--color-surface-raised` / `--color-border-subtle` that
+  existing card views reference but which are undefined in globals.css). The new
+  component uses the tokens that actually resolve.
+- **`<img onError>` reuses the missing-slot placeholder path (G9)** keyed by URL,
+  so an expired signed URL greys that panel rather than showing a broken-image
+  glyph, and a re-selection of a still-live photo recovers.
