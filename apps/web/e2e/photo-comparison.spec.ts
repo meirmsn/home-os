@@ -35,7 +35,16 @@ import {
 
 test.skip(!isLocalSupabase, localSupabaseSkipReason);
 
-const TINY_JPG = Uint8Array.from([0xff, 0xd8, 0xff, 0xd9]);
+// A valid 1x1 PNG. Must be real image bytes (not a 4-byte JPEG stub): an
+// undecodable image fires the panel's onError → markUrlFailed path, which
+// drops the slot to the missing-state and breaks the wide-loads-on-both
+// precondition this spec relies on.
+const TINY_PNG = Uint8Array.from(
+  Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    'base64'
+  )
+);
 
 test.describe('photo-comparison', () => {
   let email = '';
@@ -130,11 +139,11 @@ test.describe('photo-comparison', () => {
     for (const tp of touchpoints) {
       const touchpointId = crypto.randomUUID();
       for (const slot of tp.slots) {
-        const storagePath = `${userId}/cards/${cardId}/touchpoints/${touchpointId}/${slot}.jpg`;
+        const storagePath = `${userId}/cards/${cardId}/touchpoints/${touchpointId}/${slot}.png`;
         const up = await admin.storage
           .from('card-photos')
-          .upload(storagePath, TINY_JPG, {
-            contentType: 'image/jpeg',
+          .upload(storagePath, TINY_PNG, {
+            contentType: 'image/png',
             upsert: true,
           });
         if (up.error) throw up.error;
