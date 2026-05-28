@@ -92,13 +92,12 @@ for the AI core. `eval/triage/run.ts` feeds 75 labeled synthetic home-issue
 descriptions (`dataset.json`) through the _shipped_ prompt + tool schema (reusing
 `resolveSystemPrompt()` + `callInitialRead()` + `parseInitialRead()` directly,
 no HTTP/DB/auth), scores `severity_provisional` exact-match (gate ≥ 0.70) and the
-derived DIY-vs-hire path (gate ≥ 0.85) against the labels, prints a per-category
-
-- overall report, and exits non-zero on a gated-metric miss. **Run it before any
-  triage-prompt change**: `ANTHROPIC_API_KEY=... pnpm --filter web eval:triage`.
-  Not a CI step (non-deterministic + ~75 real API calls); only the deterministic
-  `score.test.ts` + `dataset.test.ts` run in CI. Full usage + how to add/correct
-  labels: [`eval/triage/README.md`](./eval/triage/README.md).
+derived DIY-vs-hire path (gate ≥ 0.85) against the labels, prints a per-category +
+overall report, and exits non-zero on a gated-metric miss. **Run it before any
+triage-prompt change**: `ANTHROPIC_API_KEY=... pnpm --filter web eval:triage`. Not
+a CI step (non-deterministic + ~75 real API calls); only the deterministic
+`score.test.ts` + `dataset.test.ts` run in CI. Full usage + how to add/correct
+labels: [`eval/triage/README.md`](./eval/triage/README.md).
 
 #### Other `_lib/` helpers
 
