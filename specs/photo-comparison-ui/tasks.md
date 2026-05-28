@@ -43,7 +43,7 @@ earliest↔latest); slot selector wide/medium/closeup default wide; missing-slot
 greying + placeholder; bounce disabled when either panel missing slot; img onError
 fallback; unit tests.
 **Risk**: medium
-**Status**: in_progress
+**Status**: done
 
 ## Task: Compare sub-route wiring + entry points
 
@@ -53,7 +53,7 @@ fallback; unit tests.
 Monitor/Planned/ClosedView render "Compare photos" link gated >= 2; compare route
 renders real `<PhotoComparison>`; view tests for link present/absent.
 **Risk**: low
-**Status**: todo
+**Status**: in_progress
 
 ## Task: Metrics event + unit-test sweep + E2E
 

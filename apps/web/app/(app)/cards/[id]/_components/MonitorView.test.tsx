@@ -40,6 +40,7 @@ const baseProps: MonitorViewProps = {
   checkIns: [],
   referencePhotos: [],
   thread: [],
+  photoTouchpointCount: 2,
 };
 
 afterEach(() => {
@@ -145,5 +146,17 @@ describe('<MonitorView />', () => {
     render(<MonitorView {...baseProps} severity={null} />);
     expect(screen.queryByTestId('monitor-severity-chip')).toBeNull();
     expect(screen.getByTestId('monitoring-chip')).toBeTruthy();
+  });
+
+  it('renders the Compare photos link when photoTouchpointCount >= 2', () => {
+    render(<MonitorView {...baseProps} photoTouchpointCount={2} />);
+    expect(screen.getByTestId('compare-photos-link').getAttribute('href')).toBe(
+      `/cards/${CARD_ID}/compare`
+    );
+  });
+
+  it('hides the Compare photos link when photoTouchpointCount < 2', () => {
+    render(<MonitorView {...baseProps} photoTouchpointCount={1} />);
+    expect(screen.queryByTestId('compare-photos-link')).toBeNull();
   });
 });

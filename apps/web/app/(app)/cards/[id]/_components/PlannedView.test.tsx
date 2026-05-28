@@ -47,11 +47,13 @@ afterEach(() => {
 });
 
 // Default reminder-state + close-flow props — extracted to keep each
-// existing test concise after prop expansions.
+// existing test concise after prop expansions. photoTouchpointCount defaults
+// to 0 so the Compare photos link is absent unless a test overrides it.
 const noReminder = {
   plannedReminderDate: null as string | null,
   isReminderDue: false,
   updatedAt: '2026-05-20T00:00:00Z',
+  photoTouchpointCount: 0,
 };
 
 describe('<PlannedView />', () => {
@@ -303,6 +305,7 @@ describe('<PlannedView /> — planned-state extensions', () => {
         plannedReminderDate={null}
         isReminderDue={false}
         updatedAt="2026-05-20T00:00:00Z"
+        photoTouchpointCount={0}
       />
     );
     expect(screen.getByTestId('reminder-editor-a')).toBeTruthy();
@@ -324,6 +327,7 @@ describe('<PlannedView /> — planned-state extensions', () => {
         plannedReminderDate="2026-12-01"
         isReminderDue={false}
         updatedAt="2026-05-20T00:00:00Z"
+        photoTouchpointCount={0}
       />
     );
     expect(screen.getByTestId('reminder-editor-b')).toBeTruthy();
@@ -346,6 +350,7 @@ describe('<PlannedView /> — planned-state extensions', () => {
         plannedReminderDate="2026-05-10"
         isReminderDue={true}
         updatedAt="2026-05-20T00:00:00Z"
+        photoTouchpointCount={0}
       />
     );
     expect(screen.getByTestId('reminder-editor-c')).toBeTruthy();
@@ -367,6 +372,7 @@ describe('<PlannedView /> — planned-state extensions', () => {
         plannedReminderDate={null}
         isReminderDue={false}
         updatedAt="2026-05-20T00:00:00Z"
+        photoTouchpointCount={0}
       />
     );
     // BeforeCloseSummary returns null for monitor, but ReminderEditor
@@ -419,5 +425,47 @@ describe('<PlannedView /> — close-flow extensions', () => {
       />
     );
     expect(screen.queryByTestId('close-card-form-collapsed')).toBeNull();
+  });
+
+  it('renders the Compare photos link when photoTouchpointCount >= 2', () => {
+    render(
+      <PlannedView
+        cardId={CARD_ID}
+        severity="soon"
+        diagnosis="d"
+        chosenPath="diy"
+        diyEstimate={diyEstimate()}
+        diyOverride={null}
+        contractorEstimate={contractorEstimate()}
+        contractorOverride={null}
+        monitoringCadenceDays={null}
+        thread={[]}
+        {...noReminder}
+        photoTouchpointCount={2}
+      />
+    );
+    expect(screen.getByTestId('compare-photos-link').getAttribute('href')).toBe(
+      `/cards/${CARD_ID}/compare`
+    );
+  });
+
+  it('hides the Compare photos link when photoTouchpointCount < 2', () => {
+    render(
+      <PlannedView
+        cardId={CARD_ID}
+        severity="soon"
+        diagnosis="d"
+        chosenPath="diy"
+        diyEstimate={diyEstimate()}
+        diyOverride={null}
+        contractorEstimate={contractorEstimate()}
+        contractorOverride={null}
+        monitoringCadenceDays={null}
+        thread={[]}
+        {...noReminder}
+        photoTouchpointCount={1}
+      />
+    );
+    expect(screen.queryByTestId('compare-photos-link')).toBeNull();
   });
 });
