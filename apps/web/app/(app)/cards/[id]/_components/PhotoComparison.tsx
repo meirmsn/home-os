@@ -37,6 +37,7 @@ import {
   CADENCE_OPTIONS,
   DEFAULT_CADENCE_MS,
 } from '../compare/_lib/cadence';
+import { PhotoComparisonOpenedCapture } from './PhotoComparisonOpenedCapture';
 
 export type PhotoComparisonProps = {
   cardId: string;
@@ -82,6 +83,7 @@ function typeHint(type: CompareTouchpoint['type']): string {
 export function PhotoComparison({
   cardId,
   issueName,
+  cardState,
   touchpoints,
 }: PhotoComparisonProps) {
   // Default pair: earliest (A) vs latest (B). touchpoints is sorted asc and
@@ -292,6 +294,12 @@ export function PhotoComparison({
       data-testid="photo-comparison"
       className="flex min-h-dvh flex-col bg-[var(--color-background)]"
     >
+      <PhotoComparisonOpenedCapture
+        cardId={cardId}
+        cardState={cardState}
+        touchpointCount={touchpoints.length}
+      />
+
       {/* Back affordance — outside the screenshot frame (top-left). */}
       <div className="px-4 pt-4">
         <Link

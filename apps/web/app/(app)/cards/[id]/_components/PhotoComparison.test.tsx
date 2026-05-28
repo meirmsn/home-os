@@ -5,10 +5,17 @@
 //       the earliest<->latest default. Gesture math is covered by
 //       compare/_lib/sync-zoom-transform.test.ts (the pure module).
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { PhotoComparison } from './PhotoComparison';
 import type { CompareTouchpoint } from '../compare/_lib/group-touchpoints';
+
+// The PostHog capture component is unit-tested separately; stub it here so
+// these layout/interaction tests don't depend on posthog-js init.
+vi.mock('./PhotoComparisonOpenedCapture', () => ({
+  PhotoComparisonOpenedCapture: () => null,
+}));
+
+import { PhotoComparison } from './PhotoComparison';
 
 const TP = (
   id: string,

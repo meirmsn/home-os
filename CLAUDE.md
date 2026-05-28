@@ -54,6 +54,12 @@ Project-specific silent-failure traps. For broader trap classes (`.trim()` on en
 
 - **Dashboard photo query batches signed URLs.** If the user has 20+ active cards, this is 20+ `storage.createSignedUrl` calls. Acceptable for v0 (~5ms each). If latency becomes an issue, batch via `createSignedUrls` (plural) API.
 
+- **Photo comparison: `touch-action: none` belongs on the panels, NOT `<html>`/`<body>`.** `<PhotoComparison>` (`cards/[id]/_components/PhotoComparison.tsx`) scopes `touch-action: none` to the two photo panel `<div>`s so pinch/pan works inside them while page scroll stays intact everywhere else. Putting it on the document root kills scroll for the whole page. Load-bearing PWA correctness detail from the spike (`.gstack/pwa-spike-result.md § 4`). The shared `{ scale, origin }` transform math lives in `cards/[id]/compare/_lib/sync-zoom-transform.ts` (ported from the operator-only `/spike` so the feature doesn't depend on a deletable path).
+
+- **Photo comparison batch-signs via `createSignedUrls` (PLURAL) — first call site; handle per-path errors.** `cards/[id]/compare/page.tsx` is the first plural-signing call site (the rest loop the singular `createSignedUrl`). Each `signed[]` entry carries its own `error`/`path`/`signedUrl`; a failed entry is dropped from the URL map (treated as a missing slot) rather than throwing — one un-signable photo must not blank the whole comparison. `<img onError>` flips a panel to the same missing-slot placeholder on signed-URL expiry mid-session.
+
+- **Photo-comparison ≥2 gate is enforced in TWO places (link + route redirect).** The "Compare photos" entry link (`ComparePhotosLink`, shown in Monitor/Planned/ClosedView) is gated on `photoTouchpointCount >= 2`; `cards/[id]/compare/page.tsx` independently `redirect()`s to `cards/[id]` when `< 2`. Both are needed: the link is the primary UX gate, the route redirect is defense-in-depth against a hand-typed `/compare` URL or a stale link. The count = distinct `touchpoint_id`s among `card_photos` (text-only check-ins have no rows, so they never count). When the threshold changes, update both.
+
 ## Env Var Naming
 
 | Base name                                          | GitHub Variable / Secret                                       | Vercel (`apps/web`)                                              |

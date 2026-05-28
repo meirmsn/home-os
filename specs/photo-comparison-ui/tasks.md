@@ -53,7 +53,7 @@ fallback; unit tests.
 Monitor/Planned/ClosedView render "Compare photos" link gated >= 2; compare route
 renders real `<PhotoComparison>`; view tests for link present/absent.
 **Risk**: low
-**Status**: in_progress
+**Status**: done
 
 ## Task: Metrics event + unit-test sweep + E2E
 
