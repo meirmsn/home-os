@@ -218,9 +218,9 @@ function printReport(report: ScoreReport): void {
   );
 }
 
-/**
- *
- */
+/** Entry point: guard the API key, resolve options + thresholds, run the
+ *  dataset through the live seam with bounded concurrency, print the report,
+ *  and exit non-zero on a gated-metric miss. */
 async function main(): Promise<void> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (typeof apiKey !== 'string' || apiKey.trim().length === 0) {

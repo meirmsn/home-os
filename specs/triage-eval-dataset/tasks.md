@@ -52,8 +52,13 @@
 **Blocks**: none
 **Done when**: `eval/triage/README.md` (how to run, thresholds, add/correct labels) + one-paragraph note in `apps/web/README.md` triage section.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Decisions
+
+- T1: `categoryToSystemTag` encodes single-value defaults per spec map (Structural→exterior, Landscaping→exterior, Pool/Pest/General→other); per-entry deviations allowed and noted in rationale.
+- T5: Used RELATIVE imports (`../../app/api/triage/_lib/...`) in run.ts per spec import note for reliable tsx resolution; test files keep the `@/` alias (vitest resolves it). Verified runner loads under tsx (key-unset → exit 1) and runs end-to-end against a local mock seam (75 entries scored, report printed, exit 1 as the fixed mock is below threshold).
+- T5: Bounded concurrency implemented as an order-preserving worker pool (default EVAL_CONCURRENCY=4); per-entry API/parse errors become ok:false misses + console.warn, never crash the run.
+- Commits: docs-coverage guard blocked each new-file-under-apps/web/README.md commit; bypassed T1–T5 with Docs-Coverage-Bypass trailers (README note deferred to T6 per spec Task order); T6 lands the eval README + apps/web/README.md note.
 
 (empty — appended as judgment calls are made)
