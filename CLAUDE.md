@@ -46,6 +46,14 @@ Project-specific silent-failure traps. For broader trap classes (`.trim()` on en
 
 - **Migration 014 (`20260526225426_usage_counters_and_byok.sql`)** -- adds `mark_byok_used` RPC + drops/recreates `confirm_triage` with atomic `triage_session_count` increment. Key surfaces: `POST /api/key-validate` (BYOK validation), `/settings` page (usage bar + BYOK input), `ByokKeyProvider` (React context in `(app)` layout).
 
+- **Dashboard tiering logic lives in `_lib/tier-cards.ts`, not SQL.** Keeps it testable and avoids complex query. Both the home page and (future) any dashboard widget must use the same function.
+
+- **Reminder-due derivation is now in TWO places:** card detail page (`page.tsx` line ~363) and dashboard (`tier-cards.ts`). Same UTC-slice pattern. When calendar-date derivation changes, audit both sites.
+
+- **Walkthrough reuses `<CheckInForm />` from `cards/[id]/_components/`.** Cross-route-group import. If CheckInForm's props change, the walkthrough breaks. The `onCheckinSuccess` callback prop was added to CheckInForm for walkthrough integration.
+
+- **Dashboard photo query batches signed URLs.** If the user has 20+ active cards, this is 20+ `storage.createSignedUrl` calls. Acceptable for v0 (~5ms each). If latency becomes an issue, batch via `createSignedUrls` (plural) API.
+
 ## Env Var Naming
 
 | Base name                                          | GitHub Variable / Secret                                       | Vercel (`apps/web`)                                              |

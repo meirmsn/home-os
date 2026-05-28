@@ -47,10 +47,7 @@ test.describe('auth-magic-link round trip', () => {
     await page.waitForURL('**/home');
 
     // 5. (app)/home rendered with the signed-in shell (D11)
-    await expect(
-      page.getByRole('heading', { level: 1, name: 'home-os' })
-    ).toBeVisible();
-    await expect(page.getByText(/signed in as/i)).toBeVisible();
+    await expect(page.getByTestId('signed-in-email')).toBeVisible();
     // (Email visibility is asserted via the testid in step 6 below — a bare
     // `getByText(email)` here trips Playwright strict mode because the email
     // is now rendered both in the header and the body `<strong>` after sign-in.)

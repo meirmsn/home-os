@@ -139,7 +139,7 @@ test.describe('capture-flow round trip', () => {
     page,
   }) => {
     await page.goto('/home');
-    await page.getByRole('link', { name: '+ Capture' }).click();
+    await page.getByRole('link', { name: 'Start capture' }).click();
     await page.waitForURL('**/capture');
 
     await page
