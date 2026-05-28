@@ -113,7 +113,7 @@ test.describe('photo-comparison', () => {
         user_id: userId,
         state: 'closed',
         initial_description: 'Water stain on the ceiling.',
-        system_tag: 'roofing',
+        system_tag: 'roof',
         room_tag: 'Living room',
         severity: 'soon',
         severity_confirmed: true,
