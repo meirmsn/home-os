@@ -232,14 +232,23 @@ export default async function CardDetailPage({
   // renders only when this is >= 2 (spec § Entry points + G6). Text-only
   // check-ins have no card_photos rows, so they never count — the rule
   // "only moments with >= 1 photo" falls out for free (spec G4). Cheap,
-  // RLS-scoped; deduped in JS to avoid a distinct-count RPC.
-  const { data: touchpointIdRows } = await supabase
-    .from('card_photos')
-    .select('touchpoint_id')
-    .eq('card_id', id);
-  const photoTouchpointCount = new Set(
-    (touchpointIdRows ?? []).map((r) => r.touchpoint_id)
-  ).size;
+  // RLS-scoped; deduped in JS to avoid a distinct-count RPC. Only the
+  // planned/monitoring/closed views render the link, so skip the query
+  // entirely for the other states (no wasted round-trip).
+  let photoTouchpointCount = 0;
+  if (
+    card.state === 'planned' ||
+    card.state === 'monitoring' ||
+    card.state === 'closed'
+  ) {
+    const { data: touchpointIdRows } = await supabase
+      .from('card_photos')
+      .select('touchpoint_id')
+      .eq('card_id', id);
+    photoTouchpointCount = new Set(
+      (touchpointIdRows ?? []).map((r) => r.touchpoint_id)
+    ).size;
+  }
 
   // Pull the most-recent primary/wide photo (if any). Storage URL is
   // only retrieved via a signed URL because the bucket is private.
