@@ -16,15 +16,6 @@ import type {
 import type { Category, Path } from './types';
 import { CATEGORIES } from './types';
 
-/**
- * Model's prediction for one entry, derived from a parsed RecordInitialRead.
- */
-export type Prediction = {
-  severity_provisional: Severity;
-  /** 'diy' iff contractor_tag_proposed === 'diy', else 'hire'. */
-  path: Path;
-};
-
 /** Severity ordinal for adjacency math: cosmetic<monitor<soon<urgent. */
 export const SEVERITY_ORDINAL: Record<Severity, number> = {
   cosmetic: 0,
