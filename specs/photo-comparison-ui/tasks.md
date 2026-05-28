@@ -63,7 +63,7 @@ renders real `<PhotoComparison>`; view tests for link present/absent.
 `photo_comparison_opened` fired from `<PhotoComparison>`; METRICS.md row + Sentry
 surface row; CLAUDE.md gotchas; `photo-comparison.spec.ts` E2E; full unit suite green.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Decisions
 
