@@ -23,6 +23,7 @@ import {
   aggregate,
   DEFAULT_THRESHOLDS,
   pathFromContractorTag,
+  pathMatch,
   severityAdjacent,
   severityExact,
   type EntryResult,
@@ -138,7 +139,7 @@ async function scoreEntry(
       severity_adjacent: severityAdjacent(predSeverity, entry.label_severity),
       label_path: entry.label_path,
       pred_path: predPath,
-      path_correct: predPath === entry.label_path,
+      path_correct: pathMatch(predPath, entry.label_path),
       label_system_tag: entry.label_system_tag,
       pred_system_tag: predSystemTag,
       system_tag_correct: predSystemTag === entry.label_system_tag,
@@ -256,4 +257,10 @@ async function main(): Promise<void> {
   process.exit(report.passed ? 0 : 1);
 }
 
-void main();
+main().catch((e) => {
+  // The harness is a regression gate — any unexpected throw must yield a
+  // deterministic non-zero exit, never a silent exit 0. Log e.message only
+  // (never the API key).
+  console.error('[eval] fatal:', e instanceof Error ? e.message : String(e));
+  process.exit(1);
+});
