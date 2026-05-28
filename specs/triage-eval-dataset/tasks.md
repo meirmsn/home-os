@@ -7,7 +7,7 @@
 **Blocks**: T2, T3, T4, T5
 **Done when**: `apps/web/eval/triage/types.ts` exports `DatasetEntry`, `CATEGORIES`/`Category`, `Path`, `categoryToSystemTag`; imports `Severity`/`SystemTag` from `_lib/parse-tool-output`; typecheck clean.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: T2 — Dataset
 
@@ -16,7 +16,7 @@
 **Blocks**: T4, T5
 **Done when**: `apps/web/eval/triage/dataset.json` has 75 entries (6×8 + 3×9), unique ids `^[a-z]+-\d{2}$`, balanced ≥7/category, labels spread across severity + path, defensible rationale per entry.
 **Risk**: medium
-**Status**: todo
+**Status**: done
 
 ## Task: T3 — Scoring + tests (test-first) + vitest include
 
