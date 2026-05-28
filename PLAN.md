@@ -54,7 +54,9 @@ Each Planned row is one feature / one PR. Long-form context (problem statement, 
 
 ## Active
 
-_No work in progress._
+| Feature               | Branch                     | Spec                                  | Hook                                                                             |
+| --------------------- | -------------------------- | ------------------------------------- | ------------------------------------------------------------------------------- |
+| `photo-comparison-ui` | `feat/photo-comparison-ui` | `specs/photo-comparison-ui/spec.md` | Side-by-side sync-zoom photo comparison with bounce mode on cards with 2+ photos |
 
 ## Planned (v0)
 
@@ -62,7 +64,6 @@ v0 Phase 1 — sorted by Leverage descending. Each row is one `/ak-build` cycle,
 
 | Feature                         | Hook                                                                                    | Impact                                                                      | Risk                                                                                | Cost           | Lev     | Deps              | Source                                                                           |
 | ------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------- | ------- | ----------------- | -------------------------------------------------------------------------------- |
-| `photo-comparison-ui`           | Side-by-side sync-zoom photo comparison with bounce mode on cards with 2+ photos        | 🟡 M — "show me the difference" surface for multi-photo cards               | 🟢 S — users can scroll photos manually; absence is friction on uncommon path       | 🟡 M — ~2–3 hr | **2.4** | ⛔ `monitor-beta` | ceo-review § Scope (Photo comparison) + design-review § Photo Comparison UI      |
 | `triage-eval-dataset`           | 75 synthetic issues + eval runner that gates every prompt change on regression accuracy | 🟡 M — quality floor for the AI core; makes triage trustworthy over time    | 🔴 L — every prompt change ships without regression detection                       | 🔴 L — ~5–7 hr | **2.4** | —                 | eng-review § Pre-Ship Requirements #2 + § Build Order step 15                    |
 | `contractor-question-retrieval` | Retrieval view groups contractor questions by type with a 30-day appointment nudge      | 🟢 S — aggregation convenience; questions already exist on individual cards | 🟢 S — users find questions per-card; friction only with many contractor-path cards | 🟡 M — ~2–3 hr | **1.6** | ⛔ `monitor-beta` | ceo-review § Scope (Contractor question tags) + eng-review § Build Order step 13 |
 
@@ -70,7 +71,6 @@ v0 Phase 1 — sorted by Leverage descending. Each row is one `/ak-build` cycle,
 
 **Trim candidates if scope is too wide** (per ceo-review § Sequencing):
 
-- `photo-comparison-ui` sync zoom + bounce → side-by-side only (PWA spike may force this anyway)
 - `contractor-question-retrieval` retrieval view → fold into `dashboard` as a manual filter
 
 <!--
