@@ -34,7 +34,7 @@
 **Blocks**: none
 **Done when**: `dataset.test.ts` asserts length===75, unique ids/regex, enum membership, category ∈ 9, per-category ≥7, non-empty description+rationale. Green. Does NOT import run.ts.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: T5 — Runner + package.json
 
