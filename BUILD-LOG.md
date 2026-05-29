@@ -8,6 +8,16 @@ Project build history. One entry per merged PR, most-recent first. Written by `/
 
 For forward-looking plan: `PLAN.md`. For deferred/long-term work: `PRODUCT-ROADMAP.md`.
 
+### contractor-question-retrieval (2026-05-28)
+
+- **Branch**: `feat/contractor-question-retrieval`
+- **Spec**: `specs/contractor-question-retrieval/spec.md`
+- **Headline**: A new Contractor Questions view collects every question your triage suggested across all your cards, grouped by the kind of pro you'd call — plumber, electrician, HVAC, and more — so you walk into any service visit with a ready checklist. When questions for one trade have sat for a month, the app gently nudges you to book the visit.
+- **Summary**: New `/(app)/contractor-questions` route reads `questions_for_contractor[]` from each card's effective contractor expansion (`cost_estimate_hire_override ?? cost_estimate_hire`), filters to non-closed/dismissed cards with a non-`diy` `contractor_tag`, and groups by that tag with human-readable labels. Each group renders a copy-friendly checklist; a group whose oldest open card is ≥30 days old shows an appointment nudge. A dashboard entry point links in. Read-only presentation feature — no schema migration (the data already exists from decide-state) — plus 2 new PostHog events.
+- **Eng details**: Pure `group-contractor-questions.ts` (filter → group-by-`contractor_tag` → UTC-slice oldest-card-age nudge, `NUDGE_AGE_DAYS=30`, injectable `now`) + `contractor-tag-label.ts` label map + server `page.tsx` (auth → RLS-scoped `cards` SELECT → Sentry-on-error → empty fall-through) + `ContractorQuestionsView` / `ContractorAppointmentNudge` (calm `--color-watch` left accent) / `ContractorQuestionsViewOpenedCapture` (once-per-session sentinel) + dashboard entry link. 2 events: `contractor_questions_view_opened`, `contractor_appointment_nudge_shown`. Closes the last v0 Phase 1 Planned row → Phase 1 ship gate met.
+- **Commits**: ~15 atomic commits per /ak-implement (1 Phase 0 skeleton + 1 Phase 1 spec + 6 implement + Phase 3 gate sinks/fixes/hero), before the /ship VERSION bump.
+- **Quality gates**: all passed — simplify (clean), docs-and-tests-review/Audit 1 (1 med + 1 low fixed; 1 low noted), review (3 low noted), cso (clean), design-review (1 fixed: nudge accent), design-conformance (clean), qa (1 fixed: singularize "1 open question"), benchmark (baseline), preflight-final + convention (clean). rls-coverage / migration-rollback / advisor n/a (no migration). `next build` deferred to CI (Google-Fonts firewall — TODOS.md § firewall-google-fonts); lint/typecheck/test:unit (993) green; desktop e2e 3/3 (mobile/WebKit → CI).
+
 ### triage-eval-dataset (2026-05-28)
 
 - **Branch**: `feat/triage-eval-dataset`
