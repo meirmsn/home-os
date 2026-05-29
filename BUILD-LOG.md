@@ -8,6 +8,16 @@ Project build history. One entry per merged PR, most-recent first. Written by `/
 
 For forward-looking plan: `PLAN.md`. For deferred/long-term work: `PRODUCT-ROADMAP.md`.
 
+### triage-eval-dataset (2026-05-28)
+
+- **Branch**: `feat/triage-eval-dataset`
+- **Spec**: `specs/triage-eval-dataset/spec.md`
+- **Headline**: Infrastructure update — no user-visible change in this PR.
+- **Summary**: Adds a triage eval harness — 75 labeled synthetic home-issue descriptions across 9 contractor categories plus an operator-run runner that scores the live triage prompt's severity + DIY/hire-path calls against the labels, so prompt changes can be regression-checked before they ship. Dataset integrity + scoring logic are unit-tested in CI; the accuracy run is operator-invoked with a real API key. This PR is branched off the `chore: sync from devshop v1.35.0 → v1.36.0` commit, so that sync lands in the same PR.
+- **Eng details**: New `apps/web/eval/triage/` — `dataset.json` (75 entries, 9/9/9 + 8×6), `score.ts` (pure: severity exact + ordinal adjacency, `pathFromContractorTag` diy/hire derivation, `aggregate` with errors-count-as-miss), `run.ts` (reuses `resolveSystemPrompt`/`callInitialRead`/`parseInitialRead` text-only via `images:[]`, bounded concurrency, deterministic non-zero exit on gate fail), `README.md`. Gated thresholds: severity exact ≥ 0.70, path ≥ 0.85 (env-overridable); adjacency + system-tag accuracy reported-only. 24 new vitest tests (`score.test.ts` + `dataset.test.ts`) wired into CI via an `eval/**/*.test.ts` include-glob addition; `eval:triage` script + `tsx` devDep added to `apps/web`. Not a CI gate (D6).
+- **Commits**: 11 (1 Phase 0 spec skeleton + 6 atomic implement + 2 /simplify fixes + 1 pre-ship fix + 1 Phase 3 gate sinks) atop the devshop v1.36.0 sync commit
+- **Quality gates**: applicable-gates-only run (zero-UI offline tooling). Passed: fast-job-local, changed-tests-local, /simplify (2 fixed), /cso (clean — key-leak path traced), preflight-final, convention. docs-and-tests-review (Audit 1) + /review surfaced 4 low findings (2 fixed, 2 documented no-ops); no high/medium. UI/app gates (responsive/design-review/design-conformance/qa/benchmark) + slow-job-lifecycle n/a or scope-overridden — /qa `blocked (n/a per scope)` override adversarially reviewed PASS.
+
 ### photo-comparison-ui (2026-05-28)
 
 - **Branch**: `feat/photo-comparison-ui`

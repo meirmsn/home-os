@@ -1,0 +1,677 @@
+[
+  {
+    "id": "hvac-01",
+    "category": "HVAC",
+    "description": "My furnace makes a loud booming sound a few seconds after it kicks on, then heats normally. It started doing this last week.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "hvac",
+    "rationale": "Delayed-ignition boom can indicate a dirty burner or gas buildup; not same-day but worth a tech soon for safety."
+  },
+  {
+    "id": "hvac-02",
+    "category": "HVAC",
+    "description": "The air coming out of my vents smells faintly musty when the AC first turns on, then it goes away after a minute or two.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "hvac",
+    "rationale": "Classic evaporator-coil mildew smell; a DIY coil cleaner and filter swap usually handles it. Watch if it worsens."
+  },
+  {
+    "id": "hvac-03",
+    "category": "HVAC",
+    "description": "I haven't changed my furnace filter in probably eight months and airflow from the vents seems weaker than it used to be.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "hvac",
+    "rationale": "Overdue filter is the most common DIY HVAC fix; weak airflow is the expected symptom, not an emergency."
+  },
+  {
+    "id": "hvac-04",
+    "category": "HVAC",
+    "description": "My carbon monoxide detector went off near the furnace and the furnace is running right now. I have a slight headache.",
+    "label_severity": "urgent",
+    "label_path": "hire",
+    "label_system_tag": "safety",
+    "rationale": "Active CO alarm plus symptoms is a same-day life-safety event; deviates to safety tag over hvac per spec allowance."
+  },
+  {
+    "id": "hvac-05",
+    "category": "HVAC",
+    "description": "My central AC stopped cooling. The outdoor unit fan spins but the air inside is just room temperature, and the line going into the house has ice on it.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "hvac",
+    "rationale": "Iced line set usually means low refrigerant or airflow problem; needs a tech within days, not life-threatening."
+  },
+  {
+    "id": "hvac-06",
+    "category": "HVAC",
+    "description": "The thermostat screen is blank and won't turn on. I tried pressing buttons but nothing happens.",
+    "label_severity": "soon",
+    "label_path": "diy",
+    "label_system_tag": "hvac",
+    "rationale": "Most often dead thermostat batteries or a tripped float switch — a homeowner can swap batteries first before calling anyone."
+  },
+  {
+    "id": "hvac-07",
+    "category": "HVAC",
+    "description": "There's a little condensation drip from the AC unit in my attic onto the drain pan, but the pan isn't overflowing.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "hvac",
+    "rationale": "Drain pan catching normal condensate; clearing the condensate line with vinegar is a routine DIY task. Watch for overflow."
+  },
+  {
+    "id": "hvac-08",
+    "category": "HVAC",
+    "description": "My mini-split's remote shows an error code E6 and the indoor unit beeps three times but won't start cooling.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "hvac",
+    "rationale": "Manufacturer error code on a sealed-refrigerant system points to a tech diagnostic; not urgent but won't self-resolve."
+  },
+  {
+    "id": "hvac-09",
+    "category": "HVAC",
+    "description": "One bedroom is always 5-6 degrees warmer than the rest of the house no matter the season. It's been like this since we moved in.",
+    "label_severity": "cosmetic",
+    "label_path": "diy",
+    "label_system_tag": "hvac",
+    "rationale": "Long-standing balance issue; adjusting the supply damper or vent is a comfort tweak, not a defect. Low urgency."
+  },
+  {
+    "id": "plumbing-01",
+    "category": "Plumbing",
+    "description": "Water is actively pouring out from under my kitchen sink and pooling on the cabinet floor. I shut the cabinet valve and it slowed but didn't stop.",
+    "label_severity": "urgent",
+    "label_path": "hire",
+    "label_system_tag": "plumbing",
+    "rationale": "Active uncontrolled leak with continuing flow after shutoff is same-day; risks cabinet and subfloor damage fast."
+  },
+  {
+    "id": "plumbing-02",
+    "category": "Plumbing",
+    "description": "My bathroom faucet drips about once every two seconds even when fully closed. It's been doing it for a couple weeks.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "plumbing",
+    "rationale": "A worn washer or cartridge; a homeowner can replace it for a few dollars. Wastes water but no immediate harm."
+  },
+  {
+    "id": "plumbing-03",
+    "category": "Plumbing",
+    "description": "The toilet in the guest bath runs constantly — I can hear water trickling into the bowl and the tank never fully fills.",
+    "label_severity": "soon",
+    "label_path": "diy",
+    "label_system_tag": "plumbing",
+    "rationale": "Flapper or fill-valve issue; cheap DIY part and clear instructions. Soon because it silently wastes a lot of water."
+  },
+  {
+    "id": "plumbing-04",
+    "category": "Plumbing",
+    "description": "My water heater has a small puddle forming underneath it and there's a faint rusty stain on the tank near the bottom.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "plumbing",
+    "rationale": "Tank-bottom rust and weeping usually means the tank is failing; replacement is a plumber job before it ruptures."
+  },
+  {
+    "id": "plumbing-05",
+    "category": "Plumbing",
+    "description": "My kitchen drain is slow and gurgles, and the sink takes about a minute to fully empty after I run the tap.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "plumbing",
+    "rationale": "Partial clog; a plunger, baking soda, or a hand auger is typical DIY. Annoying but low risk."
+  },
+  {
+    "id": "plumbing-06",
+    "category": "Plumbing",
+    "description": "There's a brown water stain on my ceiling directly below the upstairs bathroom and it feels slightly damp to the touch.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "interior",
+    "rationale": "Active hidden leak behind drywall; needs a plumber to find the source. Deviates to interior tag — the visible damage is a ceiling."
+  },
+  {
+    "id": "plumbing-07",
+    "category": "Plumbing",
+    "description": "My hot water ran out much faster than usual this morning and the water never got more than lukewarm at any tap.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "plumbing",
+    "rationale": "Failed heating element or thermostat on the water heater; a tech repair, not an emergency but disrupts daily use."
+  },
+  {
+    "id": "plumbing-08",
+    "category": "Plumbing",
+    "description": "When I flush the toilet, water backs up into the bathtub drain in the same bathroom. Multiple drains seem affected.",
+    "label_severity": "urgent",
+    "label_path": "hire",
+    "label_system_tag": "plumbing",
+    "rationale": "Cross-fixture backup indicates a main sewer-line clog; risk of sewage overflow makes it same/next-day for a plumber."
+  },
+  {
+    "id": "plumbing-09",
+    "category": "Plumbing",
+    "description": "My showerhead has hard white mineral crust around the holes and the spray is splitting into weird directions.",
+    "label_severity": "cosmetic",
+    "label_path": "diy",
+    "label_system_tag": "plumbing",
+    "rationale": "Limescale buildup; a vinegar soak fully fixes it. No urgency, purely a nuisance."
+  },
+  {
+    "id": "electrical-01",
+    "category": "Electrical",
+    "description": "I smell burning plastic near an outlet in my living room and the wall plate feels warm. Nothing is plugged in right now.",
+    "label_severity": "urgent",
+    "label_path": "hire",
+    "label_system_tag": "safety",
+    "rationale": "Warm outlet plus burning smell is an active fire hazard; cut the breaker and get an electrician same-day. Safety tag deviation."
+  },
+  {
+    "id": "electrical-02",
+    "category": "Electrical",
+    "description": "One outlet in my kitchen stopped working but the others on the wall are fine. The lights still work too.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "electrical",
+    "rationale": "Almost certainly a tripped GFCI that needs a reset button press; a homeowner can check before calling anyone."
+  },
+  {
+    "id": "electrical-03",
+    "category": "Electrical",
+    "description": "The lights in half my house flicker whenever the microwave or hair dryer runs, and it's gotten more noticeable lately.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "electrical",
+    "rationale": "Whole-circuit flicker under load can point to a loose neutral or panel issue; needs an electrician within days."
+  },
+  {
+    "id": "electrical-04",
+    "category": "Electrical",
+    "description": "My breaker for the bedroom trips every couple of days for no obvious reason and I have to go reset it.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "electrical",
+    "rationale": "Repeated tripping signals an overload or fault the breaker is protecting against; diagnosis is an electrician's job."
+  },
+  {
+    "id": "electrical-05",
+    "category": "Electrical",
+    "description": "A light switch in my hallway buzzes faintly and feels warm when the light is on. The light itself works fine.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "electrical",
+    "rationale": "Warm/buzzing switch suggests a loose connection or failing device — a fire-risk precursor, replace soon via an electrician."
+  },
+  {
+    "id": "electrical-06",
+    "category": "Electrical",
+    "description": "I want to swap a standard light switch for a dimmer in my dining room. The wiring looks like a single switch with two wires.",
+    "label_severity": "cosmetic",
+    "label_path": "diy",
+    "label_system_tag": "electrical",
+    "rationale": "Straightforward like-for-like device swap with the breaker off; a confident homeowner can do it. No urgency."
+  },
+  {
+    "id": "electrical-07",
+    "category": "Electrical",
+    "description": "Half the outlets in my garage went dead at once. The breaker isn't tripped and there's a GFCI outlet I haven't checked yet.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "electrical",
+    "rationale": "Downstream of a tripped GFCI is the likely cause; resetting it is a simple DIY first step before escalating."
+  },
+  {
+    "id": "electrical-08",
+    "category": "Electrical",
+    "description": "My ceiling fan wobbles a lot on high speed and makes a clicking sound, but it still spins and the light works.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "electrical",
+    "rationale": "Wobble is usually blade balance or loose mounting screws; a balance kit and tightening is routine DIY."
+  },
+  {
+    "id": "electrical-09",
+    "category": "Electrical",
+    "description": "There are scorch marks and a melted look around the prongs of my dryer's 240V outlet, and the dryer keeps cutting out.",
+    "label_severity": "urgent",
+    "label_path": "hire",
+    "label_system_tag": "safety",
+    "rationale": "Melted high-amperage outlet is an imminent fire hazard; stop using it and call an electrician same-day. Safety tag."
+  },
+  {
+    "id": "structural-01",
+    "category": "Structural",
+    "description": "There's a hairline crack in the drywall above my doorway, maybe a foot long. It looks the same as it did a year ago.",
+    "label_severity": "cosmetic",
+    "label_path": "diy",
+    "label_system_tag": "interior",
+    "rationale": "Stable hairline drywall crack over a door is normal settling; spackle and paint. Interior tag deviation per spec."
+  },
+  {
+    "id": "structural-02",
+    "category": "Structural",
+    "description": "I noticed a diagonal crack in my foundation wall in the basement that's about a quarter inch wide and seems to be getting wider.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "exterior",
+    "rationale": "A widening quarter-inch diagonal foundation crack warrants a structural eval soon; not collapse-imminent but progressing."
+  },
+  {
+    "id": "structural-03",
+    "category": "Structural",
+    "description": "My upstairs floor feels bouncy and slopes noticeably toward one corner of the room. A marble rolls across it on its own.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "exterior",
+    "rationale": "Sloping bouncy floor suggests joist or support failure; needs a structural assessment soon. Framing → exterior per map."
+  },
+  {
+    "id": "structural-04",
+    "category": "Structural",
+    "description": "A few of my interior doors have started sticking and won't latch properly over the past couple of months.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "interior",
+    "rationale": "Seasonal humidity or minor settling; planing or hinge adjustment is DIY. Worth watching in case settling accelerates."
+  },
+  {
+    "id": "structural-05",
+    "category": "Structural",
+    "description": "There's a large stair-step crack running through the mortar of my exterior brick wall and one brick has shifted outward.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "exterior",
+    "rationale": "Stair-step mortar cracking with displacement points to foundation movement; a pro evaluation within weeks."
+  },
+  {
+    "id": "structural-06",
+    "category": "Structural",
+    "description": "The deck attached to my house feels wobbly when several people stand on it and I can see the ledger board pulling slightly away from the wall.",
+    "label_severity": "urgent",
+    "label_path": "hire",
+    "label_system_tag": "exterior",
+    "rationale": "A separating deck ledger is a collapse hazard under load; stop using it and get it inspected immediately."
+  },
+  {
+    "id": "structural-07",
+    "category": "Structural",
+    "description": "Some of the trim and baseboard in my hallway has visible nail-pop bumps where the nails are pushing the paint out.",
+    "label_severity": "cosmetic",
+    "label_path": "diy",
+    "label_system_tag": "interior",
+    "rationale": "Nail pops are normal in newer framing as wood dries; reset and spot-paint. Purely cosmetic. Interior tag."
+  },
+  {
+    "id": "structural-08",
+    "category": "Structural",
+    "description": "A support post in my crawlspace looks like it's no longer fully touching the beam above it — there's a small gap at the top.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "exterior",
+    "rationale": "A gapping support post means load isn't transferring properly; structural pro needed soon to shim/jack correctly."
+  },
+  {
+    "id": "roof-01",
+    "category": "Roof",
+    "description": "After the windstorm last night I can see three or four shingles are missing from the front slope of my roof.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "roof",
+    "rationale": "Exposed underlayment invites leaks; a roofer should patch within days before the next rain, but no active interior damage yet."
+  },
+  {
+    "id": "roof-02",
+    "category": "Roof",
+    "description": "Water is dripping from my ceiling into a bucket every time it rains hard, and the drip has gotten faster over the last two storms.",
+    "label_severity": "urgent",
+    "label_path": "hire",
+    "label_system_tag": "roof",
+    "rationale": "An accelerating active roof leak risks structural and mold damage fast; tarp or emergency repair same/next-day."
+  },
+  {
+    "id": "roof-03",
+    "category": "Roof",
+    "description": "The shingles on my roof look a bit faded and there's some granule loss collecting in the gutters, but no leaks that I know of.",
+    "label_severity": "monitor",
+    "label_path": "hire",
+    "label_system_tag": "roof",
+    "rationale": "Granule loss signals aging shingles; worth a roofer's check at next convenience to plan replacement. Not urgent."
+  },
+  {
+    "id": "roof-04",
+    "category": "Roof",
+    "description": "My gutters are overflowing during rain and I can see them packed full of leaves and debris from the ground.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "roof",
+    "rationale": "Clogged gutters are a classic DIY clean-out; overflow can harm fascia over time so don't ignore, but low urgency."
+  },
+  {
+    "id": "roof-05",
+    "category": "Roof",
+    "description": "There's a section of flashing around my chimney that's lifted up and you can see a gap underneath it.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "roof",
+    "rationale": "Lifted chimney flashing is a common leak entry point; reseal soon via a roofer before water intrudes."
+  },
+  {
+    "id": "roof-06",
+    "category": "Roof",
+    "description": "I see a small patch of green moss growing on the north-facing section of my asphalt shingle roof.",
+    "label_severity": "cosmetic",
+    "label_path": "diy",
+    "label_system_tag": "roof",
+    "rationale": "Light moss on shingles is mostly cosmetic early on; gentle treatment and zinc strips are DIY. Low urgency."
+  },
+  {
+    "id": "roof-07",
+    "category": "Roof",
+    "description": "A few inches of my roof's ridge cap shingles have curled up at the edges and one corner looks like it could lift in wind.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "roof",
+    "rationale": "Curling ridge caps are vulnerable to wind uplift and leaks; a roofer should secure them within weeks."
+  },
+  {
+    "id": "roof-08",
+    "category": "Roof",
+    "description": "I noticed a faint dark stain spreading on the plywood in my attic right under where a roofing nail pokes through.",
+    "label_severity": "monitor",
+    "label_path": "hire",
+    "label_system_tag": "roof",
+    "rationale": "Stain around a nail can be minor condensation or a slow weep; have a roofer assess, watch for growth. Not urgent yet."
+  },
+  {
+    "id": "pool-01",
+    "category": "Pool",
+    "description": "My pool water has turned cloudy and slightly green over the past few days even though the pump is running.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "other",
+    "rationale": "Early algae/chemistry imbalance; shock and rebalance chemicals is standard DIY pool care. No pool enum value → other."
+  },
+  {
+    "id": "pool-02",
+    "category": "Pool",
+    "description": "The pool pump is making a loud grinding noise and the motor feels very hot to the touch when running.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "other",
+    "rationale": "Grinding + overheating motor risks seizing; a pool tech should service the bearings/motor soon. Specialist domain → other."
+  },
+  {
+    "id": "pool-03",
+    "category": "Pool",
+    "description": "My pool's water level drops about two inches a day, more than evaporation would explain, and the ground near one side feels soggy.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "other",
+    "rationale": "Rapid loss with soggy ground points to a plumbing or shell leak; needs a leak-detection specialist within days."
+  },
+  {
+    "id": "pool-04",
+    "category": "Pool",
+    "description": "There's a small crack in the plaster on the step of my pool, maybe two inches long. It doesn't seem to be leaking.",
+    "label_severity": "monitor",
+    "label_path": "hire",
+    "label_system_tag": "other",
+    "rationale": "Surface plaster crack should be watched and patched by a pool pro before it deepens; not urgent without leakage."
+  },
+  {
+    "id": "pool-05",
+    "category": "Pool",
+    "description": "My saltwater chlorinator shows a 'low salt' warning even though I added salt last week, and chlorine output seems weak.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "other",
+    "rationale": "Often a dirty salt cell or a sensor reading that resolves after circulation; cleaning the cell is DIY. Low urgency."
+  },
+  {
+    "id": "pool-06",
+    "category": "Pool",
+    "description": "I see exposed wiring near my pool's underwater light where the conduit has come loose at the niche.",
+    "label_severity": "urgent",
+    "label_path": "hire",
+    "label_system_tag": "safety",
+    "rationale": "Exposed wiring near water is an electrocution hazard; cut power and get a licensed pro immediately. Safety tag deviation."
+  },
+  {
+    "id": "pool-07",
+    "category": "Pool",
+    "description": "The skimmer basket on my pool has a crack and a piece broke off, so debris is getting past it into the pump basket.",
+    "label_severity": "cosmetic",
+    "label_path": "diy",
+    "label_system_tag": "other",
+    "rationale": "A cracked skimmer basket is a cheap drop-in replacement part; trivial DIY, no real urgency."
+  },
+  {
+    "id": "pool-08",
+    "category": "Pool",
+    "description": "My pool heater won't ignite — it clicks a few times then shows an ignition fault code on the display.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "other",
+    "rationale": "Gas pool-heater ignition faults involve gas and combustion; a specialist should diagnose. Soon, not safety-critical if heater is off."
+  },
+  {
+    "id": "pest-01",
+    "category": "Pest",
+    "description": "I'm seeing a steady trail of small ants marching along my kitchen counter to a spot near the sink every morning.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "other",
+    "rationale": "Common nuisance ants respond to DIY baits and sealing entry points; no pest enum value → other. Low urgency."
+  },
+  {
+    "id": "pest-02",
+    "category": "Pest",
+    "description": "I found small piles of what look like sawdust under a wooden beam in my basement and a few tiny holes in the wood.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "other",
+    "rationale": "Frass and bore holes suggest wood-boring insects or termites; a pest pro should inspect soon to limit structural damage."
+  },
+  {
+    "id": "pest-03",
+    "category": "Pest",
+    "description": "I hear scratching and scurrying sounds in my attic at night and found some droppings near the insulation.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "other",
+    "rationale": "Rodents in the attic can chew wiring (fire risk) and breed quickly; pro removal soon. Pest has no enum → other."
+  },
+  {
+    "id": "pest-04",
+    "category": "Pest",
+    "description": "There's a single small spider web in the corner of my garage ceiling and I see one spider in it.",
+    "label_severity": "cosmetic",
+    "label_path": "diy",
+    "label_system_tag": "other",
+    "rationale": "An isolated garage spider is harmless; knock down the web. Essentially no action needed. Pest → other."
+  },
+  {
+    "id": "pest-05",
+    "category": "Pest",
+    "description": "I noticed a wasp nest about the size of a softball forming under the eave right next to my front door.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "other",
+    "rationale": "An active wasp nest by a high-traffic door is a sting risk; pro removal soon, or careful DIY for the confident. Leaning hire."
+  },
+  {
+    "id": "pest-06",
+    "category": "Pest",
+    "description": "We've started seeing several cockroaches at night in the kitchen even though we keep it clean, and there were a couple in a cabinet.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "other",
+    "rationale": "Visible roaches by day/night usually mean an established population; professional treatment is most effective. Soon."
+  },
+  {
+    "id": "pest-07",
+    "category": "Pest",
+    "description": "There are a few small moths flying around my pantry and I found tiny webbing inside an old bag of flour.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "other",
+    "rationale": "Pantry moths are handled by tossing infested goods, cleaning, and traps — all DIY. Annoying, low urgency."
+  },
+  {
+    "id": "pest-08",
+    "category": "Pest",
+    "description": "I think a small animal, maybe a squirrel, has been getting into a gap where my roofline meets the gutter — I see chew marks.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "other",
+    "rationale": "Wildlife entry into the roof structure should be excluded by a pro to avoid nesting and damage. Soon, not same-day."
+  },
+  {
+    "id": "landscaping-01",
+    "category": "Landscaping",
+    "description": "After heavy rain, water pools in the same low spot in my backyard and takes two days to drain, near the foundation.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "exterior",
+    "rationale": "Standing water near the foundation can lead to seepage; regrading/drainage is a soon hire to protect the structure."
+  },
+  {
+    "id": "landscaping-02",
+    "category": "Landscaping",
+    "description": "A large branch on the oak tree near my house cracked in the last storm and is hanging down over my driveway.",
+    "label_severity": "urgent",
+    "label_path": "hire",
+    "label_system_tag": "exterior",
+    "rationale": "A hanging cracked branch over a driveway is a falling hazard to people and cars; arborist removal same/next-day."
+  },
+  {
+    "id": "landscaping-03",
+    "category": "Landscaping",
+    "description": "Some patches of my lawn have turned brown and dry while the rest is green, despite regular watering.",
+    "label_severity": "cosmetic",
+    "label_path": "diy",
+    "label_system_tag": "exterior",
+    "rationale": "Brown patches are usually fungus, grubs, or uneven coverage — DIY treatment and seeding. Purely aesthetic."
+  },
+  {
+    "id": "landscaping-04",
+    "category": "Landscaping",
+    "description": "My irrigation system has one zone where a sprinkler head is broken off and water just bubbles up out of the ground there.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "exterior",
+    "rationale": "A broken sprinkler head is a cheap screw-in replacement; common DIY. Wastes water, so don't wait forever."
+  },
+  {
+    "id": "landscaping-05",
+    "category": "Landscaping",
+    "description": "The soil along my house's foundation has eroded and now slopes back toward the house instead of away from it.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "exterior",
+    "rationale": "Negative grade directs water at the foundation; regrading soon prevents basement moisture. Often a pro/landscaper job."
+  },
+  {
+    "id": "landscaping-06",
+    "category": "Landscaping",
+    "description": "A few of my retaining wall blocks near the patio have shifted forward and the wall bows out slightly in the middle.",
+    "label_severity": "soon",
+    "label_path": "hire",
+    "label_system_tag": "exterior",
+    "rationale": "A bowing retaining wall is starting to fail and can collapse; assessment/repair soon by a pro. Not yet imminent."
+  },
+  {
+    "id": "landscaping-07",
+    "category": "Landscaping",
+    "description": "My wooden fence has one post that wobbles and leans because the base seems loose in the ground.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "exterior",
+    "rationale": "A single loose fence post can be reset in concrete by a handy homeowner; low urgency, mostly cosmetic/functional."
+  },
+  {
+    "id": "landscaping-08",
+    "category": "Landscaping",
+    "description": "Tree roots have started lifting and cracking a section of my concrete walkway, creating a raised tripping edge.",
+    "label_severity": "monitor",
+    "label_path": "hire",
+    "label_system_tag": "exterior",
+    "rationale": "Root-heaved walkway is a trip hazard worth addressing; root pruning/slab work is usually a pro. Watch the edge."
+  },
+  {
+    "id": "general-01",
+    "category": "General",
+    "description": "The caulk around my bathtub has cracked and pulled away from the wall in a few spots, leaving a small gap.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "interior",
+    "rationale": "Failed tub caulk lets water behind the wall over time; re-caulking is easy DIY. Watch for any soft drywall. Interior deviation."
+  },
+  {
+    "id": "general-02",
+    "category": "General",
+    "description": "One of my interior doors won't stay open — it slowly swings shut on its own because the frame seems out of level.",
+    "label_severity": "cosmetic",
+    "label_path": "diy",
+    "label_system_tag": "interior",
+    "rationale": "A self-closing door is fixed by bending a hinge pin slightly; trivial DIY. No real consequence. Interior deviation."
+  },
+  {
+    "id": "general-03",
+    "category": "General",
+    "description": "My garage door reverses immediately every time it tries to close, even though nothing is blocking the path.",
+    "label_severity": "soon",
+    "label_path": "diy",
+    "label_system_tag": "other",
+    "rationale": "Usually misaligned safety sensors at the base; realigning/cleaning them is DIY. Soon because the door is unusable."
+  },
+  {
+    "id": "general-04",
+    "category": "General",
+    "description": "There's a musty smell and some black speckling on the grout in the corner of my bathroom that keeps coming back after I clean it.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "interior",
+    "rationale": "Surface mildew in a damp bathroom; clean and improve ventilation. Watch in case it indicates a deeper moisture issue. Interior."
+  },
+  {
+    "id": "general-05",
+    "category": "General",
+    "description": "My smoke detector chirps once every minute and won't stop even though the light still blinks.",
+    "label_severity": "soon",
+    "label_path": "diy",
+    "label_system_tag": "safety",
+    "rationale": "Chirping means a low battery or end-of-life unit; swapping the battery is DIY, but a working detector matters → soon. Safety tag."
+  },
+  {
+    "id": "general-06",
+    "category": "General",
+    "description": "The paint on my hallway ceiling is peeling and flaking in a small area, though the surface underneath feels dry.",
+    "label_severity": "cosmetic",
+    "label_path": "diy",
+    "label_system_tag": "interior",
+    "rationale": "Dry-surface peeling paint is a scrape, prime, and repaint job; purely cosmetic DIY. Interior deviation."
+  },
+  {
+    "id": "general-07",
+    "category": "General",
+    "description": "My dishwasher leaves a pool of water in the bottom after every cycle and dishes on the top rack come out still dirty.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "appliance",
+    "rationale": "Standing water + poor cleaning often means a clogged filter or spray arm; cleaning them is DIY. Appliance tag."
+  },
+  {
+    "id": "general-08",
+    "category": "General",
+    "description": "My refrigerator isn't keeping things as cold as it used to and the coils on the back are coated in thick dust.",
+    "label_severity": "monitor",
+    "label_path": "diy",
+    "label_system_tag": "appliance",
+    "rationale": "Dusty condenser coils reduce cooling efficiency; vacuuming them is routine DIY maintenance. Appliance tag."
+  }
+]
