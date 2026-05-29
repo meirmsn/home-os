@@ -384,3 +384,61 @@ Evidence per check:
 **Follow-up tracker:** specs/triage-eval-dataset/spec.md § In scope > 'Explicitly OUT of scope' (Any UI / Any CI workflow change) + PLAN.md § Planned (v0) row 'triage-eval-dataset'
 
 <!-- adversarial-review-stamp: blockedGateOverride PASS @ 2026-05-29T00:01:22Z -->
+
+---
+
+<!-- audited-at: f9b0b00ab6c4bbce0fa7fd3f10ebb1f50f73c5b1 -->
+
+## Audit 2
+
+Post-pre-ship polish re-audit (Phase 5.8). Range
+`d56d3f28dcb7d97ebd3d56c02eda581d590fa3ed..f9b0b00`. The only non-doc/non-bookkeeping
+code change is `apps/web/eval/triage/run.ts` (`539096e`): (1) `main()` is now wrapped in
+a `.catch` that logs `e.message` (never the API key) and calls `process.exit(1)` — a
+deterministic fatal-exit guard for the regression gate; (2) `path_correct` swaps the
+inline `predPath === entry.label_path` for the already-tested `pathMatch()` helper. These
+resolve the two LOW findings from Audit 1 (Gate 5 tests-nit + Gate 6 `.catch` nit). The
+remaining commits are spec/gate-sink artifacts (`specs/**`), BUILD-LOG/PLAN bookkeeping,
+and a VERSION/CHANGELOG bump — not product code.
+
+findings: high=0 medium=0 low=0
+
+**clean — polish range introduced no docs/test gaps.**
+
+### Tests
+
+- **No new gated logic — confirmed intentional, documented choice.** The `pathMatch()`
+  swap introduces zero new behavior: it replaces a trivial inline `===` with the
+  identical helper, which is already covered by a full `{diy,hire}×{diy,hire}` matrix
+  in `score.test.ts:102-107` (and exercised transitively by `aggregate` tests via the
+  `entry()` helper at `score.test.ts:43`). The gated _derivation_
+  (`pathFromContractorTag`) was already in tested `score.ts`. Net effect: `run.ts` now
+  routes path equality through the same tested contract as severity — strictly tighter,
+  no gap.
+- **The `.catch` fatal-exit path is operator-script error handling, correctly outside
+  the unit-test contract.** `run.ts` is intentionally not unit-tested per spec D6 (CI
+  posture) — it imports `@anthropic-ai/sdk` and would invite a network call. Both test
+  files' headers state "Does NOT: Import run.ts" (`score.test.ts:6`, `dataset.test.ts:7`),
+  and `run.ts`'s own header says "Does NOT: Run in CI". The `.catch` only adds a
+  deterministic non-zero exit on an unexpected throw — there is no _gated_ metric logic
+  in it to pin; the gated math (severity scorers, path derivation, `aggregate`, threshold
+  boundaries) all live in `score.ts` and remain fully covered. This is the documented,
+  intentional D6 boundary, not a new test gap.
+
+### Docs
+
+- **`apps/web/eval/triage/README.md` — no contradiction; the change strengthens an
+  existing claim.** The README already documents the exit contract ("exits `0` on pass
+  or `1` when a gated metric is below threshold", lines 22-23) and the error tolerance
+  ("API or parse errors ... counted as misses ... the run continues — one bad entry never
+  crashes the harness", lines 51-53). The new `.catch` is consistent with both: per-entry
+  errors are still swallowed into misses by `scoreEntry`; the `.catch` is the
+  belt-and-suspenders guard for an _unexpected_ top-level throw, which the README never
+  promised would exit 0. No README sentence describes the old inline path logic (it
+  documents the path _derivation_ at the metric level, not the `===` mechanics). No edit
+  needed.
+- **`apps/web/README.md` — unaffected.** The eval blurb names the reused seam and the two
+  gate thresholds at the metric level; it describes neither the inline-vs-helper path
+  mechanics nor the top-level exit-handler shape, so neither change touches it.
+- **CLAUDE.md — unaffected.** It carries no eval-harness section (the spec scoped the doc
+  note to `apps/web/README.md` only — Audit 1 Gate 5 confirmed this). Nothing to update.
