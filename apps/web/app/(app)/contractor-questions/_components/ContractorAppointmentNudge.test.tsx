@@ -37,6 +37,23 @@ describe('ContractorAppointmentNudge', () => {
     );
   });
 
+  it('carries the calm accent border that distinguishes it from question cards', () => {
+    // Regression guard for the design-review finding (commit 590c7d2): the
+    // nudge must stay visually distinct from the question cards below it via
+    // the left accent in the --color-watch token. A refactor dropping the
+    // accent would otherwise leave every other assertion green.
+    render(
+      <ContractorAppointmentNudge
+        contractorType="plumber"
+        questionCount={2}
+        oldestCardDays={31}
+      />
+    );
+    const banner = screen.getByTestId('contractor-appointment-nudge');
+    expect(banner.className).toContain('border-l-4');
+    expect(banner.className).toContain('border-l-[var(--color-watch)]');
+  });
+
   it('fires contractor_appointment_nudge_shown once on mount with the raw tag', () => {
     const { rerender } = render(
       <ContractorAppointmentNudge
