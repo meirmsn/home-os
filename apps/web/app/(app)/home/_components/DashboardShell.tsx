@@ -58,6 +58,16 @@ export function DashboardShell({
         disabled={walkthroughActive}
       />
 
+      <div className="px-4 pt-3">
+        <Link
+          href="/contractor-questions"
+          data-testid="contractor-questions-link"
+          className="inline-flex min-h-11 items-center text-sm text-[var(--color-text-primary-inverse)] underline underline-offset-2"
+        >
+          Contractor questions
+        </Link>
+      </div>
+
       <div className="py-4">
         {walkthroughActive ? (
           <WalkthroughMode

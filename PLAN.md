@@ -58,17 +58,11 @@ _No work in progress._
 
 ## Planned (v0)
 
-v0 Phase 1 — sorted by Leverage descending. Each row is one `/ak-build` cycle, one PR. Deps use feature names so reordering doesn't break cross-references.
+_v0 Phase 1 is complete — every Planned row has shipped. The last, `contractor-question-retrieval`, ships in this PR. Shipped history lives in `BUILD-LOG.md`._
 
-| Feature                         | Hook                                                                               | Impact                                                                      | Risk                                                                                | Cost           | Lev     | Deps | Source                                                                           |
-| ------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------- | ------- | ---- | -------------------------------------------------------------------------------- |
-| `contractor-question-retrieval` | Retrieval view groups contractor questions by type with a 30-day appointment nudge | 🟢 S — aggregation convenience; questions already exist on individual cards | 🟢 S — users find questions per-card; friction only with many contractor-path cards | 🟡 M — ~2–3 hr | **1.6** | —    | ceo-review § Scope (Contractor question tags) + eng-review § Build Order step 13 |
+**Phase 1 ship gate (met)**: all v0 Phase 1 features shipped + `.gstack/pwa-spike-result.md` documented + eval runner clean + multi-user RLS test green = ready for first-user invites.
 
-**Phase 1 ship gate**: all Planned rows green + `.gstack/pwa-spike-result.md` documented + eval runner clean + multi-user RLS test green = ready for first-user invites.
-
-**Trim candidates if scope is too wide** (per ceo-review § Sequencing):
-
-- `contractor-question-retrieval` retrieval view → fold into `dashboard` as a manual filter
+**Next**: v0 → v1 transition — bump this header to `## Planned (v1)` and pull in / score the Phase 2 items from `PRODUCT-ROADMAP.md § v1` (e.g. `ai-photo-change-detection`, `cross-card-contractor-surfacing`, `house-profile`). Deferred to a dedicated planning pass — not auto-pulled here.
 
 <!--
 Maintenance conventions:

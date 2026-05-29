@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0.0] - 2026-05-28
+
+### Added
+
+- A new Contractor Questions view collects every question your triage suggested across all your cards and groups them by the kind of pro you'd call — plumber, electrician, HVAC, and more — so you walk into any service visit with a ready, copy-friendly checklist. Reachable from a new dashboard entry point.
+- Appointment nudge: when the questions for one trade have sat unaddressed for 30+ days, that group shows a calm banner suggesting you book the visit. The nudge uses the `--color-watch` accent so it reads as a gentle prompt, not an alarm.
+- Two PostHog events for the new view: `contractor_questions_view_opened` (group count + total question cards) and `contractor_appointment_nudge_shown` (contractor type, question count, oldest-card age).
+
 ## [0.1.1.0] - 2026-05-28
 
 ### Added
