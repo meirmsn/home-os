@@ -893,3 +893,27 @@ findings: high=0 medium=1 low=2
 - T2 (low) — noted/accepted: unreachable defensive branch in group-contractor-questions.ts; no test warranted.
 
 See `## Gate 5: docs-and-tests-review` above for full Audit 1 detail.
+
+## Audit 2
+
+<!-- audited-at: 41b803bdc48862a6963289ce37783dc5b20d5c13 -->
+
+Post-pre-ship docs + tests re-audit (Phase 5.8) over range `a5a1012..HEAD` (HEAD `41b803b`). This range contains ONLY post-pre-ship commits — verified `git log --oneline a5a1012..HEAD`:
+
+- `966136d` chore(contractor-question-retrieval): Phase 3 review.md (gauntlet pass, 0 blocked)
+- `6c3a8fa` chore(build-log): record contractor-question-retrieval (BUILD-LOG + PLAN bookkeeping)
+- `41b803b` chore: bump version and changelog (v0.2.0.0)
+
+`git diff --stat a5a1012..HEAD` touches only: BUILD-LOG.md, CHANGELOG.md, PLAN.md, VERSION, and the two specs/ files (review.md Phase 3 + gates/review.md verdict reword). No runtime or test code in range.
+
+findings: high=0 medium=0 low=0
+
+clean — range is docs/bookkeeping + version bump only.
+
+Audit notes (all verified accurate; no defects):
+
+- DOCS — CLAUDE.md gotchas / READMEs / OVERVIEW.md / ARCHITECTURE.md / METRICS.md: none touched in range; no claim invalidated. Feature references in OVERVIEW.md / ARCHITECTURE.md / apps/web/README.md predate this range (Audit 1 territory). METRICS.md documents both new events (`contractor_questions_view_opened`, `contractor_appointment_nudge_shown`) with payload shapes that match the shipped capture components verbatim (`group_count` + `total_question_cards`; `contractor_type` + `question_count` + `oldest_card_days`).
+- DOCS — BUILD-LOG Headline/Summary: accurate vs shipped. Summary's `cost_estimate_hire_override ?? cost_estimate_hire` effective-expansion read, non-`diy` `contractor_tag` filter, and group-by-tag are confirmed in `group-contractor-questions.ts` (override coalesce line 93, diff null/`diy` skip line 115, bucket-by-tag line 128). `NUDGE_AGE_DAYS=30` confirmed. Quality-gates line's "Audit 1 (1 med + 1 low fixed; 1 low noted)" is consistent with Audit 1's `high=0 medium=1 low=2`.
+- DOCS — CHANGELOG entry: accurate; user-facing prose matches the shipped read-only view + 30-day nudge + 2 events. VERSION bump `0.1.1.0 → 0.2.0.0` (MINOR segment under this project's 4-segment scheme) is appropriate for a new user-facing feature.
+- DOCS — PLAN.md: correctly retires the last v0 Phase 1 Planned row and reframes the ship gate as met; consistent with BUILD-LOG's "Closes the last v0 Phase 1 Planned row."
+- TESTS: range introduces no new code branch or behavior — it is docs + version bump only, so no test is owed. Feature test files (5: lib grouping, label util, 3 component tests) shipped in pre-range commits and are unaffected.
