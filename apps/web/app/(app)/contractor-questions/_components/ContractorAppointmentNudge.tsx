@@ -50,7 +50,7 @@ export function ContractorAppointmentNudge({
     <div
       data-testid="contractor-appointment-nudge"
       role="status"
-      className="rounded-md border border-[var(--color-border-default)] bg-[var(--color-background-raised)] px-4 py-3 text-sm text-[var(--color-text-primary-inverse)]"
+      className="rounded-md border border-l-4 border-[var(--color-border-default)] border-l-[var(--color-watch)] bg-[var(--color-background-raised)] px-4 py-3 text-sm text-[var(--color-text-primary-inverse)]"
     >
       You have {questionCount} open question{questionCount === 1 ? '' : 's'} for
       your {label} contractor.
