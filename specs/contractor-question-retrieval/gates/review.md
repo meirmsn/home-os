@@ -2,7 +2,7 @@
 
 **Scope:** `git diff origin/main...HEAD` (HEAD `477903a`, branch `feat/contractor-question-retrieval`). Read-only presentation feature: new `/(app)/contractor-questions` route + pure grouping lib + label util + 3 client components + dashboard entry-point link + 2 PostHog events + METRICS.md rows. No migration, no new API route, no LLM call, no data write.
 
-**Verdict:** `findings (3) pending` — 0 high, 0 medium, 3 low. No correctness, SQL-safety, trust-boundary, or RLS defects found. All three findings are low-severity quality/consistency notes; none block ship.
+**Verdict:** `findings (3) noted` — 0 high, 0 medium, 3 low. No correctness, SQL-safety, trust-boundary, or RLS defects found. All three findings are low-severity quality/consistency notes; none block ship — routed as noted/accepted per the halt-on-find low-severity policy (rationale per finding below). Orchestrator routing: low → note + proceed.
 
 **Scope check:** CLEAN. Intent (spec D1-D4 + In scope) matches the diff exactly. All 6 task-order items delivered (lib, label util, route+view+nudge+empty state, dashboard link, 2 metrics events, e2e + render tests). No scope creep; no missing requirements.
 
