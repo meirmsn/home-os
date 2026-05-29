@@ -85,6 +85,20 @@ All route handlers export `dynamic = 'force-dynamic'`, derive `p_user` from `get
 | `round-state.ts`       | `computeQaRoundState(rows)` — pure-fn over the thread; returns `{ qaUserCount, nextRound, priorWasLocationAsk, priorAssistantToolName }`. `qaUserCount` filters `role='user' AND is_location_ask=false` (location asks are free).                                       |
 | `estimate-shapes.ts`   | Shared `parseDiyExpansion(input)` + `parseContractorExpansion(input)`. Same module used by `parse-qa-output.ts` (LLM-output validation) AND `api/card/[id]/estimate/_lib/parse-estimate-override.ts` (user-PATCH validation) — single contract on two trust boundaries. |
 
+#### Triage eval harness (`eval/triage/`)
+
+Operator-run regression gate for the triage **initial read** — the quality floor
+for the AI core. `eval/triage/run.ts` feeds 75 labeled synthetic home-issue
+descriptions (`dataset.json`) through the _shipped_ prompt + tool schema (reusing
+`resolveSystemPrompt()` + `callInitialRead()` + `parseInitialRead()` directly,
+no HTTP/DB/auth), scores `severity_provisional` exact-match (gate ≥ 0.70) and the
+derived DIY-vs-hire path (gate ≥ 0.85) against the labels, prints a per-category +
+overall report, and exits non-zero on a gated-metric miss. **Run it before any
+triage-prompt change**: `ANTHROPIC_API_KEY=... pnpm --filter web eval:triage`. Not
+a CI step (non-deterministic + ~75 real API calls); only the deterministic
+`score.test.ts` + `dataset.test.ts` run in CI. Full usage + how to add/correct
+labels: [`eval/triage/README.md`](./eval/triage/README.md).
+
 #### Other `_lib/` helpers
 
 - `api/card/_lib/title-from-description.ts` — pure-fn title derivation.

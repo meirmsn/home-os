@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
-    "test": "vitest run"
+    "test": "vitest run",
+    "eval:triage": "tsx eval/triage/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",
@@ -38,6 +39,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "happy-dom": "^20.9.0",
     "tailwindcss": "^4",
+    "tsx": "^4.0.0",
     "typescript": "^5",
     "vitest": "^2.0.0"
   }
