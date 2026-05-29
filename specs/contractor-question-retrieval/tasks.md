@@ -56,7 +56,7 @@ already exists.
 **Blocks**: none
 **Done when**: `contractor-questions.spec.ts` written for 375px + 1440px, dashboard-link nav + nudge case; correct against seed helpers. (CI-slow verifiable.)
 **Risk**: low
-**Status**: todo
+**Status**: done (lints clean + lists under both breakpoint projects; full run is CI-slow / pre-ship — no webServer block in playwright.config, needs `pnpm dev` up)
 
 ## Decisions
 
@@ -66,3 +66,4 @@ already exists.
 - **Tokens (Task 3)**: spec named `--color-surface-raised` / `--color-border-subtle`, but globals.css `@theme` only defines `--color-background-raised` / `--color-border-default` (the spec names are dead tokens used by DashboardCard). Used the actually-defined tokens (matching CadenceEditor/ChoosePath) so surfaces/borders render.
 - **Task 5 folded into Task 3**: the two capture components are imported+mounted by the view, so they ship in the same atomic vertical-slice commit. Each got a dedicated `.test.tsx` (rather than a `.devshop-test-coverage-exempt` entry — the `(app)` route-group parens break the exempt-check's cited-path regex, so dedicated tests are the clean path).
 - **Nudge copy (Task 3)**: used the exact spec D3 copy ("You have {N} open questions for your {Label} contractor.") verbatim, including always-plural "questions", to keep e2e/acceptance exact-match stable.
+- **E2E breakpoints (Task 6)**: playwright.config already defines `mobile` (375px) + `desktop` (1440px) projects, so the single Core-user-story test runs at both breakpoints automatically — dropped a manual viewport loop (it created a redundant 2×2 matrix). qa-walk screenshot is named by `testInfo.project.name` to avoid cross-project collisions; written to `specs/contractor-question-retrieval/screenshots/`.
