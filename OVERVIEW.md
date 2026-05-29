@@ -62,6 +62,7 @@ Out of scope (small end): starter-home owners with few issues — manageable men
 - PLANNED tab with dot indicator when any reminder is due
 - Two empty-state shapes — first-time vs nothing-active (PLANNED at full weight)
 - User can reorder cards manually; AI-suggested severity always visible
+- Contractor Questions — a cross-card retrieval view (`/(app)/contractor-questions`, linked from the dashboard) that gathers every question triage suggested, grouped by the kind of pro you'd call (plumber, electrician, HVAC, …), as a ready pre-appointment checklist; a per-trade nudge surfaces when a trade's oldest open question-card has sat ≥30 days.
 
 ### Settings
 
