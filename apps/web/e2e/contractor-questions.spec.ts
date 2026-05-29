@@ -206,7 +206,7 @@ test.describe('contractor-question-retrieval', () => {
       await expect(
         electricianGroup.getByTestId('contractor-appointment-nudge')
       ).toContainText(
-        'You have 1 open questions for your Electrician contractor.'
+        'You have 1 open question for your Electrician contractor.'
       );
       await expect(
         page

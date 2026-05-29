@@ -24,6 +24,19 @@ describe('ContractorAppointmentNudge', () => {
     );
   });
 
+  it('singularizes the noun when there is exactly one question', () => {
+    render(
+      <ContractorAppointmentNudge
+        contractorType="electrician"
+        questionCount={1}
+        oldestCardDays={45}
+      />
+    );
+    expect(screen.getByTestId('contractor-appointment-nudge').textContent).toBe(
+      'You have 1 open question for your Electrician contractor.'
+    );
+  });
+
   it('fires contractor_appointment_nudge_shown once on mount with the raw tag', () => {
     const { rerender } = render(
       <ContractorAppointmentNudge

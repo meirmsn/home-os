@@ -73,7 +73,7 @@ describe('ContractorQuestionsView', () => {
       within(plumber).getByTestId('contractor-appointment-nudge')
     ).toBeTruthy();
     expect(nudges[0]!.textContent).toContain(
-      'You have 1 open questions for your Plumber contractor.'
+      'You have 1 open question for your Plumber contractor.'
     );
   });
 
