@@ -442,3 +442,8 @@ findings: high=0 medium=0 low=0
   mechanics nor the top-level exit-handler shape, so neither change touches it.
 - **CLAUDE.md — unaffected.** It carries no eval-harness section (the spec scoped the doc
   note to `apps/web/README.md` only — Audit 1 Gate 5 confirmed this). Nothing to update.
+
+## Product update verification
+
+- Gate B (automated claim-vs-diff): clean — every Detail noun evidenced in the diff.
+- Gate A (operator): blurbs unchanged since Phase 0; no post-spec product change (only a run.ts robustness fix + bookkeeping); infra Headline + Gate-B-clean Detail accepted as accurate at d7ef9d6a564b47f7b57c4ee28e96c25fe9068fe1.
