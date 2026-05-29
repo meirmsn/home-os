@@ -38,7 +38,7 @@ already exists.
 **Blocks**: none
 **Done when**: `DashboardShell.tsx` renders a `/contractor-questions` link in the header region; test asserts it.
 **Risk**: low
-**Status**: todo
+**Status**: done
 
 ## Task: Metrics events
 
