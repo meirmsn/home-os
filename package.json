@@ -29,7 +29,7 @@
     "turbo": "^2.0.0",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.0",
-    "vercel": "^50.42.0"
+    "vercel": "^54.18.7"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
