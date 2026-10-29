@@ -57,7 +57,7 @@ What it taught me: with the agent writing the code, my time went into the specs 
 
 ## Run it
 
-Not runnable without a Supabase stack and an Anthropic API key; the hosted backend is frozen. The original setup is the devcontainer in [`.devcontainer/`](.devcontainer/), which runs Supabase locally: reopen in the container, then `pnpm db:reset` and `pnpm turbo run dev`. It hasn't been re-checked since the app was retired. Otherwise, see the screenshots, captured per feature by the test suite: [triage Q&A](specs/triage-conversation/hero/), [decide](specs/decide-state/hero/), [monitoring](specs/monitor-beta/hero/), [photo comparison](specs/photo-comparison-ui/hero/), [contractor questions](specs/contractor-question-retrieval/hero/), [close](specs/close-flow/hero/).
+Not runnable without a Supabase stack and an Anthropic API key; the hosted backend is frozen. The original setup is the devcontainer in [`.devcontainer/`](.devcontainer/), which runs Supabase locally: reopen in the container, then `pnpm db:reset` and `pnpm turbo run dev` (test, build and lint commands, local URLs and doc map: [`DEVELOPMENT.md`](DEVELOPMENT.md)). It hasn't been re-checked since the app was retired. Otherwise, see the screenshots, captured per feature by the test suite: [triage Q&A](specs/triage-conversation/hero/), [decide](specs/decide-state/hero/), [monitoring](specs/monitor-beta/hero/), [photo comparison](specs/photo-comparison-ui/hero/), [contractor questions](specs/contractor-question-retrieval/hero/), [close](specs/close-flow/hero/).
 
 ## Feedback
 
