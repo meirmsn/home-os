@@ -195,7 +195,10 @@ jobs:
 
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Pinned to match SUPABASE_CLI_VERSION in .devcontainer/compose.yml:
+          # `latest` drifts `supabase gen types` output (e.g. new
+          # `ComputedFields` lines) and fails the type-drift check.
+          version: 2.98.2
 
       - name: Start local Supabase (with edge-runtime health-check retry)
         # Runs unconditionally — ambient signal that supabase start still
