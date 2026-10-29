@@ -20,16 +20,13 @@ jobs:
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v3
-        with:
-          version: latest
 
       - uses: actions/setup-node@v4
         with:
-          # Node 22+ required: pnpm 11.x (pnpm/action-setup@v3 with
-          # version: latest) imports `node:sqlite`, a Node-22-only
-          # builtin. setup-node's pnpm-cache restore step crashes on
-          # Node 20 with ERR_UNKNOWN_BUILTIN_MODULE. Keep in lockstep
-          # with the repo's .nvmrc (also 22).
+          # Node 22: keep in lockstep with the repo's .nvmrc (also 22).
+          # pnpm/action-setup@v3 takes pnpm from package.json's
+          # `packageManager` (no `version:`), so setup-node's pnpm cache
+          # resolves the same store path `pnpm install` actually uses.
           node-version: '22'
           cache: 'pnpm'
 
@@ -175,13 +172,11 @@ jobs:
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v3
-        with:
-          version: latest
 
       - uses: actions/setup-node@v4
         with:
           # Match fast-job pin; see /devshop/template/.nvmrc for the
-          # source-of-truth (Node 22 — pnpm 11.x needs `node:sqlite`).
+          # source-of-truth (Node 22).
           node-version: '22'
           cache: 'pnpm'
 
@@ -200,7 +195,10 @@ jobs:
 
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Pinned to match SUPABASE_CLI_VERSION in .devcontainer/compose.yml:
+          # `latest` drifts `supabase gen types` output (e.g. new
+          # `ComputedFields` lines) and fails the type-drift check.
+          version: 2.98.2
 
       - name: Start local Supabase (with edge-runtime health-check retry)
         # Runs unconditionally — ambient signal that supabase start still
