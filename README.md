@@ -1,10 +1,10 @@
 # Home OS
 
-> **Status: Retired — shipped and used; the backend is frozen, so there is no live demo** · last touched 2026-05
-
-<img src="docs/readme/decide.png" alt="An issue card after triage: 'Slow leak at the P-trap. Manageable with a wrench and an hour.' Below it, a DIY card (intermediate, 1–2 h, $12–$43, materials, tools, steps, when to stop and call a pro) next to a Contractor card (plumber, $150–$400), and buttons to choose DIY, choose Contractor, monitor, or dismiss." width="520">
+<img src="docs/readme/social-preview.png" alt="Home OS: photo plus a few questions, then a diagnosis, then DIY or a pro, tracked with photos to done. Beside the text, an issue card after triage: 'Slow leak at the P-trap. Manageable with a wrench and an hour.', with a DIY card (intermediate, 1–2 h, $12–$43, materials, tools, steps, when to stop and call a pro) next to a Contractor card (plumber, $150–$400)." width="720">
 
 <sub>The decide step, captured by the end-to-end test suite with seeded data.</sub>
+
+> **Status: Retired — shipped and used; the backend is frozen, so there is no live demo** · last touched 2026-05
 
 Home OS takes a homeowner from "what is that stain?" to a closed issue: photograph it, let the AI triage it with a few questions, choose DIY or a pro with costs in hand, and track it with photos until it's done.
 
@@ -12,7 +12,7 @@ You capture an issue with a photo and a sentence. The AI gives a first read and 
 
 ## Approach
 
-Built with the devshop method: an AI coding agent wrote each feature's spec, code, tests and PR. I (@meirmsn) reviewed and merged the PRs, and improved the devshop between features. The agent committed under my account with a Claude co-author trailer; @meirmsn-agent is the account that does that work now.
+Built with the devshop method: an AI coding agent (Claude Code) wrote each feature's spec, code, tests and PR. Human in the loop: me (@meirmsn); I reviewed and merged the PRs and improved the devshop between features. Robot hands: Claude Code, committing under @meirmsn with a Claude co-author trailer.
 
 What it taught me: with the agent writing the code, my time went into the specs and the reviews. The first real production bug ([#23](https://github.com/meirmsn/home-os/pull/23)) was one neither could catch: a database grant that the local stack has by default and the production project didn't.
 
