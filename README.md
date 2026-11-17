@@ -1,10 +1,20 @@
-# Home OS
+<div align="center">
 
-<img src="docs/readme/social-preview.png" alt="Home OS: photo plus a few questions, then a diagnosis, then DIY or a pro, tracked with photos to done. Beside the text, an issue card after triage: 'Slow leak at the P-trap. Manageable with a wrench and an hour.', with a DIY card (intermediate, 1–2 h, $12–$43, materials, tools, steps, when to stop and call a pro) next to a Contractor card (plumber, $150–$400)." width="720">
+<img src="docs/readme/social-preview.png" alt="home-os" width="720">
 
-<sub>The decide step, captured by the end-to-end test suite with seeded data.</sub>
+# home-os
 
-> **Status: Retired — shipped and used; the backend is frozen, so there is no live demo** · last touched 2026-05
+**Home-maintenance companion: photo + AI questions → diagnosis → DIY or a pro, tracked with photos to done.**
+
+[What it does](#what-it-does) · [How it works](#how-it-works) · [Run it](#run-it) · [Build log](#build-log)
+
+![Status: retired](https://img.shields.io/badge/status-retired-lightgrey)
+![Last commit](https://img.shields.io/github/last-commit/meirmsn/home-os)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
+Retired — shipped and used; the backend is frozen, so there is no live demo · last touched 2026-05
+
+</div>
 
 Home OS takes a homeowner from "what is that stain?" to a closed issue: photograph it, let the AI triage it with a few questions, choose DIY or a pro with costs in hand, and track it with photos until it's done.
 
