@@ -1,8 +1,10 @@
+<a id="readme-top"></a>
+
 <div align="center">
 
 <img src="docs/readme/social-preview.png" alt="home-os" width="720">
 
-# home-os
+# Home OS
 
 **Home-maintenance companion: photo + AI questions → diagnosis → DIY or a pro, tracked with photos to done.**
 
@@ -16,6 +18,19 @@ Retired — shipped and used; the backend is frozen, so there is no live demo ·
 
 </div>
 
+<details><summary>Contents</summary>
+
+- [Approach](#approach)
+- [What it does](#what-it-does)
+- [How it works](#how-it-works)
+- [Build log](#build-log)
+- [Known limitations](#known-limitations)
+- [Run it](#run-it)
+- [Feedback](#feedback)
+- [License](#license)
+
+</details>
+
 Home OS takes a homeowner from "what is that stain?" to a closed issue: photograph it, let the AI triage it with a few questions, choose DIY or a pro with costs in hand, and track it with photos until it's done.
 
 You capture an issue with a photo and a sentence. The AI gives a first read and a severity, asks up to three clarifying questions, then confirms an assessment with a DIY path and a contractor path side by side. You pick one, park it as planned, or put it on a check-in schedule. Check-ins add photos over time, and closing a card records what you spent next to a before/after pair. The tone is deliberately calm: the dashboard shows what actually needs attention, not a list of everything wrong with the house.
@@ -26,6 +41,8 @@ Built with the devshop method: an AI coding agent (Claude Code) wrote each featu
 
 What it taught me: with the agent writing the code, my time went into the specs and the reviews. The first real production bug ([#23](https://github.com/meirmsn/home-os/pull/23)) was one neither could catch: a database grant that the local stack has by default and the production project didn't.
 
+<p align="right"><small><a href="#readme-top">back to top</a></small></p>
+
 ## What it does
 
 - Gives a calm first read on a photo and a sentence, with a severity (act soon, watch, note), before you spend any of your weekly AI sessions.
@@ -34,6 +51,8 @@ What it taught me: with the agent writing the code, my time went into the specs 
 - Puts issues you aren't fixing yet on a check-in schedule, and batches overdue check-ins into one walkthrough.
 - Compares photos of the same spot across dates side by side, with synced zoom and a "bounce" mode that flips between them.
 - Gathers every question triage suggested asking a pro, grouped by trade (plumber, electrician, …), as a checklist for the visit.
+
+<p align="right"><small><a href="#readme-top">back to top</a></small></p>
 
 ## How it works
 
@@ -44,7 +63,11 @@ What it taught me: with the agent writing the code, my time went into the specs 
 - **Spike first:** an operator-only spike page proved phone camera capture and synced zoom before any product code; the real comparison view reuses only its zoom math. Considered and rejected: a single "top item" dashboard, because it forces the app's priority on someone with several real concerns.
 - More detail: [`OVERVIEW.md`](OVERVIEW.md) (product) and [`ARCHITECTURE.md`](ARCHITECTURE.md) (system).
 
+<p align="right"><small><a href="#readme-top">back to top</a></small></p>
+
 ## Build log
+
+<details><summary>Show all 9 entries</summary>
 
 - **2026-05-13** — Email magic-link sign-in; database with per-user access rules; a spike proving camera capture and synced-zoom comparison on a phone.
 - **2026-05-15** — Capture (photo, description, room and system tags, a 20-a-week cap, reversible dismiss) and the AI's first read. First production deploy.
@@ -56,6 +79,12 @@ What it taught me: with the agent writing the code, my time went into the specs 
 - **2026-05-28** — Photo comparison; triage eval set; contractor-questions view; database security and performance hardening.
 - **Stopped** — No product work after 28 May 2026, only dependency bumps. The app was retired and the backend frozen.
 
+</details>
+
+Full notes: [CHANGELOG.md](CHANGELOG.md).
+
+<p align="right"><small><a href="#readme-top">back to top</a></small></p>
+
 ## Known limitations
 
 - No live demo: the hosted backend is frozen.
@@ -65,14 +94,22 @@ What it taught me: with the agent writing the code, my time went into the specs 
 - A failed sign-in link shows a generic error with no reason.
 - Estimates are AI-generated ranges, not quotes, and there are no contractor listings: it tells you which kind of pro to call, not who.
 
+<p align="right"><small><a href="#readme-top">back to top</a></small></p>
+
 ## Run it
 
 Not runnable without a Supabase stack and an Anthropic API key; the hosted backend is frozen. The original setup is the devcontainer in [`.devcontainer/`](.devcontainer/), which runs Supabase locally: reopen in the container, then `pnpm db:reset` and `pnpm turbo run dev` (test, build and lint commands, local URLs and doc map: [`DEVELOPMENT.md`](DEVELOPMENT.md)). It hasn't been re-checked since the app was retired. Otherwise, see the screenshots, captured per feature by the test suite: [triage Q&A](specs/triage-conversation/hero/), [decide](specs/decide-state/hero/), [monitoring](specs/monitor-beta/hero/), [photo comparison](specs/photo-comparison-ui/hero/), [contractor questions](specs/contractor-question-retrieval/hero/), [close](specs/close-flow/hero/).
+
+<p align="right"><small><a href="#readme-top">back to top</a></small></p>
 
 ## Feedback
 
 Suggestions and critiques welcome — open an issue or a discussion.
 
+<p align="right"><small><a href="#readme-top">back to top</a></small></p>
+
 ## License
 
 [MIT](LICENSE)
+
+<p align="right"><small><a href="#readme-top">back to top</a></small></p>
